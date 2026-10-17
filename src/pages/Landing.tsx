@@ -1083,7 +1083,7 @@ const Landing = () => {
                 className="text-lg text-muted-foreground max-w-lg mb-8 leading-relaxed">
                 Conheça a prévia da Queenify para organizar produtos digitais e acompanhar os recursos em preparação. Cobranças e ferramentas dependem da ativação das integrações.
               </motion.p>
-              <p className="-mt-5 mb-7 text-xs text-muted-foreground">A demonstração visual ao lado usa dados fictícios. Não representa vendas reais.</p>
+              <p className="-mt-5 mb-7 text-xs text-muted-foreground">A demonstração visual da plataforma usa dados fictícios. Não representa vendas reais.</p>
 
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, duration: 0.5 }}
                 className="flex flex-col sm:flex-row items-start gap-3">
