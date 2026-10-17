@@ -462,7 +462,7 @@ function PixelsTab({ userId }: { userId?: string }) {
     <div className="space-y-4">
       <Card className="p-4 bg-muted/20">
         <p className="text-sm">
-          <strong>Como funciona:</strong> Configure aqui o Pixel ID e Access Token de cada plataforma. Quando uma venda é aprovada, a Queenify dispara o evento <code>Purchase</code> server-side direto pra API de cada plataforma — sem depender de cookies do navegador (à prova de bloqueadores).
+          <strong>Como funciona:</strong> Depois de configurar e testar uma integração, eventos de compras aprovadas poderão ser enviados server-side ao provedor conectado. A cobertura, o consentimento e a deduplicação dependem da configuração e dos recursos de cada plataforma.
         </p>
       </Card>
 
