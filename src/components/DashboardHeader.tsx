@@ -540,7 +540,7 @@ const DashboardHeader = ({ onMenuToggle, supportOpen = false, onSupportChange }:
 
       {/* Support Chat Widget */}
       {showSupport && (
-        <div className={`fixed bottom-4 ${isMobile ? 'left-3 right-3' : 'right-4 w-80'} bg-card border border-border rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden`} style={{ height: isMobile ? 380 : 420 }}>
+        <div className={`dashboard-support-chat fixed bottom-4 ${isMobile ? 'left-3 right-3' : 'right-4 w-80'} bg-card border border-border rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden`} style={{ height: isMobile ? 380 : 420 }}>
           <div className="p-3 border-b border-sidebar-border bg-sidebar flex items-center gap-2">
             <BrandLogo size="small" alt="" />
             <div>

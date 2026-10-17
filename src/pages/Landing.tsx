@@ -993,7 +993,7 @@ const Landing = () => {
         initial={{ y: -80 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl"
+        className="landing-header-safe fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 group">
@@ -1586,7 +1586,7 @@ const Landing = () => {
           initial={{ opacity: 0, y: 30, scale: 0.85 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ delay: 0.8, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed bottom-20 sm:bottom-24 right-6 z-50"
+          className="safe-area-landing-launcher fixed bottom-20 sm:bottom-24 right-6 z-50"
           style={{ perspective: 800 }}
         >
           <motion.div

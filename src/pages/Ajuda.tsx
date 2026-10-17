@@ -148,7 +148,7 @@ const SupportChatbot = ({ onClose }: { onClose: () => void }) => {
   const handleEscalate = () => openSupportEmail(messages);
 
   return (
-    <div className="fixed bottom-4 right-4 w-[380px] max-w-[calc(100vw-2rem)] h-[500px] max-h-[calc(100vh-2rem)] bg-card border border-border rounded-2xl shadow-2xl flex flex-col z-[100] overflow-hidden">
+    <div className="safe-area-chat-panel fixed bottom-4 right-4 w-[380px] max-w-[calc(100vw-2rem)] h-[500px] max-h-[calc(100vh-2rem)] bg-card border border-border rounded-2xl shadow-2xl flex flex-col z-[100] overflow-hidden">
       <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-primary/5">
         <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
           <Bot className="w-4 h-4 text-primary" />
@@ -349,7 +349,7 @@ const Ajuda = () => {
       {!chatOpen && (
         <button
           onClick={() => setChatOpen(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 rounded-full gradient-gold shadow-lg flex items-center justify-center hover:scale-105 transition-transform z-50"
+          className="safe-area-help-launcher fixed bottom-6 right-6 w-14 h-14 rounded-full gradient-gold shadow-lg flex items-center justify-center hover:scale-105 transition-transform z-50"
         >
           <MessageCircle className="w-6 h-6 text-primary-foreground" />
         </button>

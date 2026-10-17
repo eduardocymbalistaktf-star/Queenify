@@ -15,7 +15,7 @@ const TutorialGuideOverlay = () => {
   const isLast = currentStepIndex >= currentTutorial.steps.length - 1;
 
   return (
-    <div className="fixed bottom-4 right-4 z-[9999] w-[360px] max-w-[calc(100vw-2rem)] animate-in slide-in-from-bottom-4 duration-300">
+    <div className="safe-area-floating-panel fixed bottom-4 right-4 z-[9999] w-[360px] max-w-[calc(100vw-2rem)] animate-in slide-in-from-bottom-4 duration-300">
       <div className="bg-card border border-border rounded-2xl shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="px-4 py-3 border-b border-border gradient-gold flex items-center justify-between">

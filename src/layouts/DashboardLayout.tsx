@@ -15,7 +15,7 @@ const DashboardLayout = forwardRef<HTMLDivElement, DashboardLayoutProps>(({ chil
   useRealtimeNotifications();
 
   return (
-    <div ref={ref} className="flex min-h-screen bg-background">
+    <div ref={ref} className="app-shell flex min-h-screen bg-background">
       {/* Mobile overlay */}
       {isMobile && sidebarOpen && (
         <div
@@ -27,7 +27,7 @@ const DashboardLayout = forwardRef<HTMLDivElement, DashboardLayoutProps>(({ chil
       {/* Sidebar */}
       {isMobile ? (
         <div
-          className={`fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ${
+          className={`dashboard-mobile-sidebar fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ${
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >

@@ -36,7 +36,7 @@ export default defineConfig(({ mode }) => ({
         theme_color: "#35b8f2",
         background_color: "#0b1018",
         display: "standalone",
-        orientation: "portrait",
+        orientation: "any",
         start_url: process.env.VITE_BASE_PATH || "/",
         icons: [
           { src: `${process.env.VITE_BASE_PATH || "/"}queenify-192.png`, sizes: "192x192", type: "image/png" },
