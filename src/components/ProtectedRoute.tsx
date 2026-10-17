@@ -1,16 +1,38 @@
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useLocation } from "react-router-dom";
 import { useHasPermission, ROUTE_PERMISSIONS } from "@/hooks/useUserRoles";
+import { supabase } from "@/integrations/supabase/client";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { session, loading } = useAuth();
   const location = useLocation();
+  const [mfaStatus, setMfaStatus] = useState<"checking" | "none" | "ok" | "required" | "error">("checking");
+  const [mfaRetry, setMfaRetry] = useState(0);
   const requiredPermission = ROUTE_PERMISSIONS[location.pathname] || null;
   const { data: hasPermission, isLoading: permLoading } = useHasPermission(
     requiredPermission || "__skip__"
   );
 
-  if (loading || (requiredPermission && permLoading)) {
+  useEffect(() => {
+    if (!session) { setMfaStatus("none"); return; }
+    let active = true;
+    setMfaStatus("checking");
+    const checkAssurance = async () => {
+      const [{ data: assurance, error: assuranceError }, { data: factors, error: factorsError }] = await Promise.all([
+        supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
+        supabase.auth.mfa.listFactors(),
+      ]);
+      if (!active) return;
+      if (assuranceError || factorsError) { setMfaStatus("error"); return; }
+      const hasVerifiedTotp = !!factors?.totp?.some(factor => factor.status === "verified");
+      setMfaStatus(hasVerifiedTotp && assurance?.currentLevel !== "aal2" ? "required" : "ok");
+    };
+    void checkAssurance();
+    return () => { active = false; };
+  }, [session?.access_token, session?.user.id, mfaRetry]);
+
+  if (loading || (session && (mfaStatus === "checking" || (requiredPermission && permLoading)))) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -20,6 +42,22 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (!session) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (mfaStatus === "required") {
+    return <Navigate to="/login?mfa=required" replace state={{ from: location }} />;
+  }
+
+  if (mfaStatus === "error") {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="glass-card p-8 text-center max-w-md">
+          <h2 className="text-xl font-bold text-foreground mb-2">Verificação de segurança indisponível</h2>
+          <p className="text-sm text-muted-foreground mb-4">Não foi possível confirmar o nível de autenticação desta sessão. Tente novamente antes de continuar.</p>
+          <button onClick={() => setMfaRetry(value => value + 1)} className="px-6 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors">Tentar novamente</button>
+        </div>
+      </div>
+    );
   }
 
   if (requiredPermission && hasPermission === false) {

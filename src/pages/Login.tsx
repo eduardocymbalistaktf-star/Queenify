@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -12,13 +12,41 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [mfaRequired, setMfaRequired] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
   const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
   const [mfaCode, setMfaCode] = useState("");
-  const [useBackupCode, setUseBackupCode] = useState(false);
-  const [mfaAttempts, setMfaAttempts] = useState(0);
-  const [mfaLockedUntil, setMfaLockedUntil] = useState<number | null>(null);
-  const MAX_MFA_ATTEMPTS = 5;
-  const LOCKOUT_DURATION = 60000; // 1 minute
+
+  useEffect(() => {
+    let active = true;
+    const restoreOAuthSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!active) return;
+      if (!session) { setCheckingSession(false); return; }
+
+      const [{ data: assurance, error: assuranceError }, { data: factors, error: factorsError }] = await Promise.all([
+        supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
+        supabase.auth.mfa.listFactors(),
+      ]);
+      if (!active) return;
+      if (assuranceError || factorsError) {
+        setCheckingSession(false);
+        toast.error("Não foi possível verificar a autenticação da conta. Tente novamente.");
+        return;
+      }
+
+      const totpFactor = factors?.totp?.find(factor => factor.status === "verified");
+      if (totpFactor && assurance?.currentLevel !== "aal2") {
+        setMfaFactorId(totpFactor.id);
+        setMfaRequired(true);
+        setCheckingSession(false);
+        return;
+      }
+      navigate("/dashboard", { replace: true });
+    };
+
+    void restoreOAuthSession();
+    return () => { active = false; };
+  }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +58,13 @@ const Login = () => {
       return;
     }
     // Check if MFA is required
-    const { data: factors } = await supabase.auth.mfa.listFactors();
+    const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors();
+    if (factorsError) {
+      await supabase.auth.signOut();
+      setLoading(false);
+      toast.error("Não foi possível verificar o 2FA. Entre novamente em alguns instantes.");
+      return;
+    }
     const totpFactor = factors?.totp?.find((f) => f.status === "verified");
     if (totpFactor) {
       setMfaFactorId(totpFactor.id);
@@ -42,31 +76,8 @@ const Login = () => {
     navigate("/dashboard");
   };
 
-  const isMfaLocked = () => {
-    if (mfaLockedUntil && Date.now() < mfaLockedUntil) {
-      const secs = Math.ceil((mfaLockedUntil - Date.now()) / 1000);
-      toast.error(`Muitas tentativas. Aguarde ${secs}s.`);
-      return true;
-    }
-    if (mfaLockedUntil && Date.now() >= mfaLockedUntil) {
-      setMfaLockedUntil(null);
-      setMfaAttempts(0);
-    }
-    return false;
-  };
-
-  const trackFailedAttempt = () => {
-    const next = mfaAttempts + 1;
-    setMfaAttempts(next);
-    if (next >= MAX_MFA_ATTEMPTS) {
-      setMfaLockedUntil(Date.now() + LOCKOUT_DURATION);
-      toast.error("Conta bloqueada por 1 minuto. Muitas tentativas.");
-    }
-  };
-
   const handleMfaVerify = async () => {
     if (!mfaFactorId || mfaCode.length !== 6) return;
-    if (isMfaLocked()) return;
     setLoading(true);
     const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: mfaFactorId });
     if (challengeError) {
@@ -81,47 +92,15 @@ const Login = () => {
     });
     setLoading(false);
     if (verifyError) {
-      trackFailedAttempt();
       toast.error("Código 2FA inválido. Tente novamente.");
       setMfaCode("");
       return;
     }
-    navigate("/dashboard");
-  };
-
-  const handleBackupCodeVerify = async () => {
-    if (!mfaCode.trim()) return;
-    if (isMfaLocked()) return;
-    setLoading(true);
-    // Verify backup code against stored codes
     const { data: userData } = await supabase.auth.getUser();
-    if (!userData?.user) { setLoading(false); toast.error("Erro de sessão"); return; }
-    
-    const { data: settings } = await supabase.from("user_settings").select("backup_codes").eq("user_id", userData.user.id).maybeSingle();
-    const codes = (settings?.backup_codes as string[]) || [];
-    const codeIndex = codes.findIndex(c => c === mfaCode.toUpperCase().trim());
-    
-    if (codeIndex === -1) {
-      trackFailedAttempt();
-      setLoading(false);
-      toast.error("Código de recuperação inválido.");
-      setMfaCode("");
-      return;
+    if (userData.user) {
+      const { error: cleanupError } = await supabase.from("user_settings").update({ backup_codes: null } as any).eq("user_id", userData.user.id);
+      if (cleanupError) console.warn("Could not clear obsolete recovery codes", cleanupError);
     }
-    
-    // Remove used code
-    const updatedCodes = codes.filter((_, i) => i !== codeIndex);
-    await supabase.from("user_settings").update({ backup_codes: updatedCodes } as any).eq("user_id", userData.user.id);
-    
-    // Complete MFA challenge with the TOTP factor to elevate AAL
-    if (mfaFactorId) {
-      const { data: challenge } = await supabase.auth.mfa.challenge({ factorId: mfaFactorId });
-      // We can't actually bypass TOTP verify with a backup code via Supabase MFA API,
-      // but the backup code confirms the user's identity - navigate to dashboard
-    }
-    
-    setLoading(false);
-    toast.success(`Código usado. Restam ${updatedCodes.length} códigos.`);
     navigate("/dashboard");
   };
 
@@ -130,7 +109,7 @@ const Login = () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}`,
+        redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}login`,
       },
     });
     if (error) {
@@ -158,64 +137,35 @@ const Login = () => {
               <h3 className="text-sm font-semibold text-foreground">Autenticação 2FA</h3>
             </div>
 
-            {useBackupCode ? (
-              <>
-                <p className="text-xs text-muted-foreground text-center">
-                  Digite um dos seus códigos de recuperação de 8 caracteres.
-                </p>
-                <div className="flex justify-center">
-                  <input
-                    type="text"
-                    maxLength={8}
-                    className="w-48 bg-secondary border border-border rounded-lg px-4 py-3 text-lg text-foreground text-center tracking-[0.3em] font-mono font-bold uppercase focus:outline-none focus:ring-1 focus:ring-ring"
-                    value={mfaCode}
-                    onChange={(e) => setMfaCode(e.target.value.replace(/[^A-Za-z0-9]/g, "").slice(0, 8).toUpperCase())}
-                    placeholder="XXXXXXXX"
-                    autoFocus
-                  />
-                </div>
-                <button
-                  onClick={handleBackupCodeVerify}
-                  disabled={loading || mfaCode.length !== 8 || !!(mfaLockedUntil && Date.now() < mfaLockedUntil)}
-                  className="w-full py-2.5 gradient-gold rounded-lg text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
-                >
-                  {loading ? "Verificando..." : "Usar Código de Recuperação"}
-                </button>
-                <button onClick={() => { setUseBackupCode(false); setMfaCode(""); }} className="w-full text-xs text-primary hover:text-primary/80 text-center">
-                  Usar app autenticador
-                </button>
-              </>
-            ) : (
-              <>
-                <p className="text-xs text-muted-foreground text-center">
-                  Sua conta possui autenticação de dois fatores ativada. Digite o código de 6 dígitos do seu aplicativo autenticador.
-                </p>
-                <div className="flex justify-center">
-                  <input
-                    type="text"
-                    maxLength={6}
-                    className="w-48 bg-secondary border border-border rounded-lg px-4 py-3 text-lg text-foreground text-center tracking-[0.5em] font-mono font-bold focus:outline-none focus:ring-1 focus:ring-ring"
-                    value={mfaCode}
-                    onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                    placeholder="000000"
-                    autoFocus
-                  />
-                </div>
-                <button
-                  onClick={handleMfaVerify}
-                  disabled={loading || mfaCode.length !== 6 || !!(mfaLockedUntil && Date.now() < mfaLockedUntil)}
-                  className="w-full py-2.5 gradient-gold rounded-lg text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
-                >
-                  {loading ? "Verificando..." : "Verificar e Entrar"}
-                </button>
-                <button onClick={() => { setUseBackupCode(true); setMfaCode(""); }} className="w-full text-xs text-primary hover:text-primary/80 text-center">
-                  Perdeu acesso ao app? Usar código de recuperação
-                </button>
-              </>
-            )}
+            <p className="text-xs text-muted-foreground text-center">
+              Sua conta possui autenticação de dois fatores ativada. Digite o código de 6 dígitos do seu aplicativo autenticador.
+            </p>
+            <div className="flex justify-center">
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                className="w-48 bg-secondary border border-border rounded-lg px-4 py-3 text-lg text-foreground text-center tracking-[0.5em] font-mono font-bold focus:outline-none focus:ring-1 focus:ring-ring"
+                value={mfaCode}
+                onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="000000"
+                autoFocus
+              />
+            </div>
+            <button
+              onClick={handleMfaVerify}
+              disabled={loading || mfaCode.length !== 6}
+              className="w-full py-2.5 gradient-gold rounded-lg text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
+            >
+              {loading ? "Verificando..." : "Verificar e Entrar"}
+            </button>
+            <p className="text-center text-xs text-muted-foreground">
+              A Queenify não oferece códigos de recuperação nesta versão. Se perder o autenticador, consulte a <Link to="/ajuda" className="text-primary hover:underline">Central de Ajuda</Link>.
+            </p>
 
             <button
-              onClick={() => { setMfaRequired(false); setMfaCode(""); setMfaFactorId(null); setUseBackupCode(false); supabase.auth.signOut(); }}
+              onClick={() => { setMfaRequired(false); setMfaCode(""); setMfaFactorId(null); supabase.auth.signOut(); }}
               className="w-full text-xs text-muted-foreground hover:text-foreground text-center"
             >
               Voltar ao login
@@ -224,6 +174,10 @@ const Login = () => {
         </div>
       </div>
     );
+  }
+
+  if (checkingSession) {
+    return <div className="min-h-screen bg-background flex items-center justify-center"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;
   }
 
   return (

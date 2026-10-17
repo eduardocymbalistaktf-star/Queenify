@@ -103,13 +103,10 @@ const Configuracoes = () => {
   const [bankAccount, setBankAccount] = useState("");
 
   // Security
-  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [verificationCode, setVerificationCode] = useState("");
-  const [generatedCode, setGeneratedCode] = useState("");
-  const [codeSent, setCodeSent] = useState(false);
-  const [codeVerified, setCodeVerified] = useState(false);
+  const [passwordChangeCode, setPasswordChangeCode] = useState("");
+  const [reauthRequested, setReauthRequested] = useState(false);
   const [sendingCode, setSendingCode] = useState(false);
   
   // 2FA TOTP
@@ -121,8 +118,6 @@ const Configuracoes = () => {
   const [totpEnabled, setTotpEnabled] = useState(false);
   const [totpChallengeId, setTotpChallengeId] = useState<string | null>(null);
   const [totpLoading, setTotpLoading] = useState(false);
-  const [backupCodes, setBackupCodes] = useState<string[] | null>(null);
-  const [showBackupCodes, setShowBackupCodes] = useState(false);
 
   // Appearance
   const [selectedTheme, setSelectedTheme] = useState("dark");
@@ -180,7 +175,7 @@ const Configuracoes = () => {
     });
   }, [user]);
 
-  // Check existing TOTP factors + backup codes
+  // Check existing TOTP factors
   useEffect(() => {
     if (!user) return;
     supabase.auth.mfa.listFactors().then(({ data }) => {
@@ -190,9 +185,6 @@ const Configuracoes = () => {
         setTotpFactorId(totp.id);
       }
     });
-    supabase.from("user_settings").select("backup_codes").eq("user_id", user.id).maybeSingle().then(({ data }) => {
-      if (data?.backup_codes) setBackupCodes(data.backup_codes as string[]);
-    });
   }, [user]);
 
 
@@ -200,13 +192,17 @@ const Configuracoes = () => {
     setTotpLoading(true);
     const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp", friendlyName: "Queenify 2FA" });
     if (error) { toast.error("Erro ao configurar 2FA: " + error.message); setTotpLoading(false); return; }
+    const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: data.id });
+    if (challengeError) {
+      await supabase.auth.mfa.unenroll({ factorId: data.id });
+      toast.error("Não foi possível iniciar a verificação 2FA. Tente novamente.");
+      setTotpLoading(false);
+      return;
+    }
     setTotpQrUrl(data.totp.qr_code);
     setTotpSecret(data.totp.secret);
     setTotpFactorId(data.id);
     setTotpEnrolling(true);
-    
-    const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: data.id });
-    if (challengeError) { toast.error("Erro no desafio 2FA"); setTotpLoading(false); return; }
     setTotpChallengeId(challengeData.id);
     setTotpLoading(false);
   };
@@ -217,22 +213,12 @@ const Configuracoes = () => {
     const { error } = await supabase.auth.mfa.verify({ factorId: totpFactorId, challengeId: totpChallengeId, code: totpVerifyCode });
     if (error) { toast.error("Código inválido. Tente novamente."); setTotpLoading(false); return; }
     
-    // Generate backup codes
-    const codes = Array.from({ length: 8 }, () => {
-      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-      return Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
-    });
-    setBackupCodes(codes);
-    setShowBackupCodes(true);
-    
-    // Save backup codes to DB
-    if (user) {
-      await supabase.from("user_settings").update({ backup_codes: codes } as any).eq("user_id", user.id);
-    }
-    
     setTotpEnabled(true);
     setTotpEnrolling(false);
     setTotpVerifyCode("");
+    setTotpChallengeId(null);
+    setTotpQrUrl(null);
+    setTotpSecret(null);
     setTotpLoading(false);
     
     // Internal notification
@@ -241,14 +227,15 @@ const Configuracoes = () => {
         user_id: user.id,
         type: "security",
         title: "2FA Ativado",
-        message: "A autenticação de dois fatores foi ativada na sua conta. Seus códigos de recuperação foram gerados.",
+        message: "A autenticação de dois fatores por app autenticador foi ativada na sua conta.",
       });
     }
-    toast.success("2FA ativado! Salve seus códigos de recuperação.");
+    toast.success("2FA ativado pelo app autenticador.");
   };
 
   const handleUnenrollTotp = async () => {
     if (!totpFactorId) return;
+    if (!window.confirm("Desativar o 2FA reduz a proteção da sua conta. Deseja continuar?")) return;
     setTotpLoading(true);
     const { error } = await supabase.auth.mfa.unenroll({ factorId: totpFactorId });
     if (error) { toast.error("Erro ao desativar 2FA: " + error.message); setTotpLoading(false); return; }
@@ -257,9 +244,6 @@ const Configuracoes = () => {
     setTotpEnrolling(false);
     setTotpQrUrl(null);
     setTotpSecret(null);
-    setBackupCodes(null);
-    setShowBackupCodes(false);
-    if (user) await supabase.from("user_settings").update({ backup_codes: null } as any).eq("user_id", user.id);
     
     // Internal notification
     if (user) {
@@ -274,18 +258,23 @@ const Configuracoes = () => {
     toast.success("Autenticação de dois fatores desativada.");
   };
 
-  const handleRegenerateBackupCodes = async () => {
-    if (!user) return;
-    setTotpLoading(true);
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    const codes = Array.from({ length: 8 }, () =>
-      Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join("")
-    );
-    await supabase.from("user_settings").update({ backup_codes: codes } as any).eq("user_id", user.id);
-    setBackupCodes(codes);
-    setShowBackupCodes(true);
+  const handleCancelTotpEnrollment = async () => {
+    if (totpFactorId) {
+      setTotpLoading(true);
+      const { error } = await supabase.auth.mfa.unenroll({ factorId: totpFactorId });
+      if (error) {
+        toast.error("Não foi possível cancelar a configuração 2FA. Tente novamente.");
+        setTotpLoading(false);
+        return;
+      }
+    }
+    setTotpFactorId(null);
+    setTotpChallengeId(null);
+    setTotpEnrolling(false);
+    setTotpQrUrl(null);
+    setTotpSecret(null);
+    setTotpVerifyCode("");
     setTotpLoading(false);
-    toast.success("Novos códigos gerados! Os anteriores foram invalidados.");
   };
 
   const applyColor = async (colorId: string) => {
@@ -389,42 +378,25 @@ const Configuracoes = () => {
     await updateSettings.mutateAsync({ pix_key: pixKey, bank_name: bankName, bank_agency: bankAgency, bank_account: bankAccount });
   };
 
-  const handleSendVerificationCode = async () => {
-    if (!currentPassword) { toast.error("Informe a senha atual"); return; }
+  const handleRequestPasswordChangeCode = async () => {
+    if (!user?.email) { toast.error("Não foi possível identificar o e-mail da conta"); return; }
     setSendingCode(true);
-    
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: user!.email!,
-      password: currentPassword,
-    });
-    if (signInError) { setSendingCode(false); toast.error("Senha atual incorreta"); return; }
-    
-    const code = String(Math.floor(1000 + Math.random() * 9000));
-    setGeneratedCode(code);
-    setCodeSent(true);
+    const { error } = await supabase.auth.reauthenticate();
+    if (error) { setSendingCode(false); toast.error("Não foi possível enviar o código de segurança. Tente novamente."); return; }
+    setReauthRequested(true);
     setSendingCode(false);
-    toast.success(`Código de verificação enviado para ${user!.email}`, { description: `(Demo) Seu código é: ${code}` });
-  };
-
-  const handleVerifyCode = () => {
-    if (verificationCode === generatedCode) {
-      setCodeVerified(true);
-      toast.success("Código verificado com sucesso!");
-    } else {
-      toast.error("Código incorreto. Tente novamente.");
-    }
+    toast.success(`Código de segurança enviado para ${user.email}.`);
   };
 
   const handleChangePassword = async () => {
-    if (!codeVerified) { toast.error("Verifique o código de e-mail primeiro"); return; }
-    if (newPassword.length < 6) { toast.error("A senha deve ter no mínimo 6 caracteres"); return; }
+    if (!reauthRequested || !passwordChangeCode.trim()) { toast.error("Solicite e informe o código de segurança enviado por e-mail"); return; }
+    if (newPassword.length < 12) { toast.error("A senha deve ter no mínimo 12 caracteres"); return; }
     if (newPassword !== confirmPassword) { toast.error("As senhas não coincidem"); return; }
     
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    const { error } = await supabase.auth.updateUser({ password: newPassword, nonce: passwordChangeCode.trim() });
     if (error) { toast.error(error.message); } else {
       toast.success("Senha alterada com sucesso!");
-      setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
-      setVerificationCode(""); setGeneratedCode(""); setCodeSent(false); setCodeVerified(false);
+      setNewPassword(""); setConfirmPassword(""); setPasswordChangeCode(""); setReauthRequested(false);
     }
   };
 
@@ -529,46 +501,33 @@ const Configuracoes = () => {
             ) : (
               <>
                 <div className="p-4 bg-primary/10 border border-primary/30 rounded-xl">
-                  <div className="flex items-center gap-2 mb-1"><Shield className="w-4 h-4 text-primary" /><p className="text-sm font-semibold text-foreground">Verificação em 3 etapas</p></div>
-                  <p className="text-xs text-muted-foreground">1. Informe a senha atual → 2. Confirme o código enviado por e-mail → 3. Defina a nova senha.</p>
+                  <div className="flex items-center gap-2 mb-1"><Shield className="w-4 h-4 text-primary" /><p className="text-sm font-semibold text-foreground">Confirmação segura</p></div>
+                  <p className="text-xs text-muted-foreground">Solicite um código real enviado pelo Supabase ao e-mail da conta. O código será validado pelo servidor ao salvar a nova senha.</p>
                 </div>
 
-                {/* Step 1: Current password */}
-                <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Etapa 1 — Senha atual</label>
-                  <input type="password" className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-foreground" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Digite sua senha atual" disabled={codeSent} />
-                </div>
-                {!codeSent && (
-                  <button onClick={handleSendVerificationCode} disabled={sendingCode || !currentPassword} className="px-4 py-2 gradient-gold rounded-lg text-sm font-semibold text-primary-foreground disabled:opacity-50">
-                    {sendingCode ? "Enviando..." : "Enviar código de verificação"}
+                {!reauthRequested && (
+                  <button onClick={handleRequestPasswordChangeCode} disabled={sendingCode} className="px-4 py-2 gradient-gold rounded-lg text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                    {sendingCode ? "Enviando..." : "Enviar código de segurança"}
                   </button>
                 )}
 
-                {/* Step 2: Verification code */}
-                {codeSent && !codeVerified && (
-                  <div className="space-y-3 p-4 bg-secondary/50 border border-border rounded-xl">
-                    <label className="text-xs text-muted-foreground block">Etapa 2 — Código de 4 dígitos enviado para {user?.email}</label>
-                    <div className="flex items-center gap-3">
-                      <input type="text" maxLength={4} className="w-32 bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-foreground text-center tracking-[0.5em] font-mono font-bold" value={verificationCode} onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="0000" />
-                      <button onClick={handleVerifyCode} disabled={verificationCode.length !== 4} className="px-4 py-2 gradient-gold rounded-lg text-sm font-semibold text-primary-foreground disabled:opacity-50">Verificar</button>
-                    </div>
-                    <button onClick={handleSendVerificationCode} className="text-xs text-primary hover:underline">Reenviar código</button>
-                  </div>
-                )}
-
-                {/* Step 3: New password */}
-                {codeVerified && (
+                {reauthRequested && (
                   <>
-                    <div className="flex items-center gap-2 text-success text-xs"><Check className="w-4 h-4" /> Código verificado com sucesso</div>
+                    <div className="flex items-center gap-2 text-success text-xs"><Check className="w-4 h-4" /> Código enviado para {user?.email}</div>
                     <div>
-                      <label className="text-xs text-muted-foreground block mb-1">Etapa 3 — Nova senha</label>
-                      <input type="password" className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-foreground" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Mínimo 6 caracteres" />
+                      <label className="text-xs text-muted-foreground block mb-1">Código de segurança</label>
+                      <input type="text" inputMode="numeric" autoComplete="one-time-code" className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-foreground" value={passwordChangeCode} onChange={(e) => setPasswordChangeCode(e.target.value.trim())} placeholder="Digite o código recebido" />
+                      <button type="button" onClick={handleRequestPasswordChangeCode} disabled={sendingCode} className="mt-2 text-xs text-primary hover:underline disabled:opacity-50">{sendingCode ? "Enviando..." : "Reenviar código"}</button>
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground block mb-1">Nova senha</label>
+                      <input type="password" autoComplete="new-password" minLength={12} className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-foreground" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Mínimo 12 caracteres" />
                     </div>
                     <div>
                       <label className="text-xs text-muted-foreground block mb-1">Confirmar nova senha</label>
-                      <input type="password" className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-foreground" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                      <input type="password" autoComplete="new-password" minLength={12} className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-foreground" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
                     </div>
-                    <button onClick={handleChangePassword} className="px-4 py-2 gradient-gold rounded-lg text-sm font-semibold text-primary-foreground">Alterar Senha</button>
+                    <button onClick={handleChangePassword} disabled={!passwordChangeCode.trim() || newPassword.length < 12 || newPassword !== confirmPassword} className="px-4 py-2 gradient-gold rounded-lg text-sm font-semibold text-primary-foreground disabled:opacity-50">Alterar Senha</button>
                   </>
                 )}
 
@@ -590,47 +549,12 @@ const Configuracoes = () => {
                 Adicione uma camada extra de segurança usando um aplicativo autenticador (Google Authenticator, Authy, etc.).
               </p>
 
-              {/* Backup codes display */}
-              {showBackupCodes && backupCodes && (
-                <div className="p-4 bg-destructive/5 border border-destructive/20 rounded-xl space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-destructive" />
-                    <p className="text-xs font-semibold text-foreground">Códigos de Recuperação</p>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground">
-                    Guarde estes códigos em um local seguro. Cada código pode ser usado uma única vez caso você perca acesso ao seu app autenticador.
-                  </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {backupCodes.map((code, i) => (
-                      <code key={i} className="text-xs font-mono bg-secondary px-3 py-1.5 rounded text-foreground text-center select-all">{code}</code>
-                    ))}
-                  </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => { navigator.clipboard.writeText(backupCodes.join("\n")); toast.success("Códigos copiados!"); }} className="px-3 py-1.5 bg-secondary border border-border rounded-lg text-xs text-foreground hover:bg-secondary/80">
-                      Copiar códigos
-                    </button>
-                    <button onClick={() => setShowBackupCodes(false)} className="px-3 py-1.5 gradient-gold rounded-lg text-xs font-semibold text-primary-foreground">
-                      Já salvei meus códigos
-                    </button>
-                  </div>
-                </div>
-              )}
-
               {totpEnabled ? (
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 text-success text-xs">
                     <Check className="w-4 h-4" /> 2FA está ativo na sua conta
                   </div>
-                  {backupCodes && !showBackupCodes && (
-                    <div className="flex gap-2 flex-wrap">
-                      <button onClick={() => setShowBackupCodes(true)} className="px-3 py-1.5 bg-secondary border border-border rounded-lg text-xs text-muted-foreground hover:text-foreground transition-colors">
-                        Ver códigos de recuperação
-                      </button>
-                      <button onClick={handleRegenerateBackupCodes} disabled={totpLoading} className="px-3 py-1.5 bg-secondary border border-primary/30 rounded-lg text-xs text-primary hover:bg-primary/10 transition-colors disabled:opacity-50">
-                        {totpLoading ? "Gerando..." : "Regenerar códigos"}
-                      </button>
-                    </div>
-                  )}
+                  <p className="text-xs text-muted-foreground">Esta versão exige o código do app autenticador no login e não fornece códigos alternativos de recuperação. Mantenha o autenticador acessível antes de trocar de aparelho.</p>
                   <button onClick={handleUnenrollTotp} disabled={totpLoading} className="px-4 py-2 bg-destructive/10 border border-destructive/30 text-destructive rounded-lg text-xs font-medium hover:bg-destructive/20 transition-colors disabled:opacity-50">
                     {totpLoading ? "Desativando..." : "Desativar 2FA"}
                   </button>
@@ -658,7 +582,7 @@ const Configuracoes = () => {
                       </button>
                     </div>
                   </div>
-                  <button onClick={() => { setTotpEnrolling(false); setTotpQrUrl(null); setTotpSecret(null); }} className="text-xs text-muted-foreground hover:text-foreground">Cancelar</button>
+                  <button onClick={handleCancelTotpEnrollment} disabled={totpLoading} className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-50">{totpLoading ? "Cancelando..." : "Cancelar configuração"}</button>
                 </div>
               ) : (
                 <button onClick={handleEnrollTotp} disabled={totpLoading} className="px-4 py-2 gradient-gold rounded-lg text-sm font-semibold text-primary-foreground disabled:opacity-50">
