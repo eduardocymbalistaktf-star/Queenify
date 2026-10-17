@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, CreditCard, ShieldCheck } from "lucide-react";
-import queenifyBee from "@/assets/queenify-bee-blue.svg";
+import queenifyBee from "@/assets/queenify-bee-blue.png";
 import BackButton from "@/components/BackButton";
 
 const Taxas = () => (

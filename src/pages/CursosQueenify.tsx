@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { GraduationCap, Play, Clock, Star, Lock, ArrowRight, BookOpen, TrendingUp, Palette, Users } from "lucide-react";
-import queenifyBee from "@/assets/queenify-bee-blue.svg";
+import queenifyBee from "@/assets/queenify-bee-blue.png";
 import BackButton from "@/components/BackButton";
 
 const fadeUp = { hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } };

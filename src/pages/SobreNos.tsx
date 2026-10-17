@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Heart, Target, Eye, Users, Sparkles, ShieldCheck, Globe, Award } from "lucide-react";
-import queenifyBee from "@/assets/queenify-bee-blue.svg";
+import queenifyBee from "@/assets/queenify-bee-blue.png";
 import BackButton from "@/components/BackButton";
 
 const fadeUp = { hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } };

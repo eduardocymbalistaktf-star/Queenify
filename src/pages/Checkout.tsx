@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { trackPageView } from "@/hooks/usePageTracking";
 import { useUtmCapture, getStoredUtms } from "@/hooks/useUtmCapture";
 import { CreditCard, QrCode, FileText, ShieldCheck, Lock, ChevronLeft, Check, Plus, Package, Star, RefreshCw, Zap } from "lucide-react";
-import queenifyBee from "@/assets/queenify-bee-blue.svg";
+import queenifyBee from "@/assets/queenify-bee-blue.png";
 import { toast } from "sonner";
 import { createCardToken, loadMercadoPago } from "@/lib/mercadopago";
 

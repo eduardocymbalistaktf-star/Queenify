@@ -8,7 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
-import queenifyBee from "@/assets/queenify-bee-blue.svg";
+import queenifyBee from "@/assets/queenify-bee-blue.png";
 
 type MenuItem = {
   icon: any;

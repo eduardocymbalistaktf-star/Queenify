@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import queenifyBee from "@/assets/queenify-bee-blue.svg";
+import queenifyBee from "@/assets/queenify-bee-blue.png";
 import { getUserLevel, levels } from "@/components/LevelCard";
 import frameBronze from "@/assets/frame-bronze.png";
 import frameSilver from "@/assets/frame-silver.png";

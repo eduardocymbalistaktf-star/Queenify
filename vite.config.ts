@@ -31,7 +31,8 @@ export default defineConfig(({ mode }) => ({
       manifest: {
         name: "Queenify",
         short_name: "Queenify",
-        description: "Plataforma de vendas digitais",
+        description: "Conheça a prévia Queenify para organizar produtos digitais.",
+        lang: "pt-BR",
         theme_color: "#35b8f2",
         background_color: "#0b1018",
         display: "standalone",

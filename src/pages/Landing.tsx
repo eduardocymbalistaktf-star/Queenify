@@ -10,8 +10,9 @@ import {
   Sparkles, Smartphone, MessageCircle, Megaphone, Menu, X,
   TrendingUp, BarChart3, Globe, Bot, Rocket, ArrowRight,
   CheckCircle2, Play, Target, Layers, RefreshCcw, Gauge,
+  ShieldCheck, CircleDashed, CircleAlert, WalletCards,
 } from "lucide-react";
-import queenifyBee from "@/assets/queenify-bee-blue.svg";
+import queenifyBee from "@/assets/queenify-bee-blue.png";
 import dashboardMockup from "@/assets/dashboard-mockup.jpg";
 import mobileMockup from "@/assets/mobile-mockup.jpg";
 
@@ -126,11 +127,29 @@ const faqs = [
 ];
 
 const navLinks = [
+  { label: "Como funciona", href: "#como-funciona" },
   { label: "Recursos", href: "#features" },
+  { label: "Simulador", href: "#simulador" },
+  { label: "Integrações", href: "#integracoes" },
   { label: "Taxas", href: "#pricing" },
   { label: "FAQ", href: "#faq" },
   { label: "Ajuda", href: "/ajuda" },
   { label: "Sobre nós", href: "/sobre" },
+];
+
+const workflowSteps = [
+  { title: "Organize o produto", desc: "Reúna nome, descrição, materiais de entrega e informações que o cliente precisa antes de comprar.", icon: Layers },
+  { title: "Prepare a oferta", desc: "Revise preço, comunicação e apresentação. As opções disponíveis podem variar durante a prévia.", icon: PaintBucket },
+  { title: "Valide o pagamento", desc: "Conecte um provedor e teste aprovação, falha, reembolso e notificações antes de aceitar vendas reais.", icon: WalletCards },
+  { title: "Acompanhe os dados", desc: "Quando os eventos estiverem conectados, use os registros para entender conversão e melhorar a oferta.", icon: BarChart3 },
+];
+
+const integrationStatus = [
+  { name: "Supabase Auth", status: "Configurado para a prévia", detail: "Login disponível. Recuperação de conta e regras de acesso ainda precisam de validação completa.", icon: ShieldCheck, tone: "ready" },
+  { name: "Pagamentos", status: "Pendente", detail: "Falta concluir a configuração do provedor e testar o ciclo de cobrança, reembolso e repasse.", icon: WalletCards, tone: "pending" },
+  { name: "Meta Pixel e TikTok", status: "Em preparação", detail: "Dependem de credenciais, eventos corretos e validação no ambiente de cada plataforma.", icon: Target, tone: "pending" },
+  { name: "Google Ads", status: "Pausado", detail: "A integração deve permanecer desativada até configurar e validar o envio de conversões.", icon: CircleAlert, tone: "paused" },
+  { name: "QueenIA", status: "Pendente", detail: "A interface existe; respostas automáticas dependem da publicação da função e da chave do provedor de IA.", icon: Bot, tone: "pending" },
 ];
 
 /* ─── Parallax hook for sections ─── */
@@ -888,6 +907,8 @@ const Landing = () => {
   const { session, loading } = useAuth();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [simulatorPrice, setSimulatorPrice] = useState("297");
+  const [simulatorOrders, setSimulatorOrders] = useState("20");
   const heroRef = useRef<HTMLElement>(null);
   const { scrollYProgress: heroScroll } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
   const heroY = useTransform(heroScroll, [0, 1], [0, 150]);
@@ -900,6 +921,10 @@ const Landing = () => {
     "Organize seus produtos digitais.",
     "Acompanhe os registros da conta.",
   ], 70, 35, 2200);
+  const safePrice = Math.min(Math.max(Number(simulatorPrice) || 0, 0), 1_000_000);
+  const safeOrders = Math.min(Math.max(Number(simulatorOrders) || 0, 0), 1_000_000);
+  const estimatedGross = safePrice * safeOrders;
+  const formattedGross = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(estimatedGross);
 
   // Parallax refs for sections
   const whyParallax = useParallax(60);
@@ -1111,6 +1136,122 @@ const Landing = () => {
             <CinematicShowcase />
           </div>
         </motion.div>
+      </section>
+
+      {/* ─── How Queenify is intended to fit the creator workflow ─── */}
+      <section id="como-funciona" className="section-light py-20 sm:py-28 px-4 border-t border-border relative">
+        <div className="max-w-7xl mx-auto relative z-10">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.15 }} variants={stagger}>
+            <motion.div variants={fadeUp} className="text-center max-w-3xl mx-auto mb-14">
+              <span className="text-xs font-bold uppercase tracking-widest text-primary mb-4 block">Um caminho claro para o produtor</span>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold">Da ideia à operação, em etapas</h2>
+              <p className="text-muted-foreground mt-4 leading-relaxed">
+                Este é o fluxo que a Queenify está sendo preparada para apoiar. As etapas de cobrança e acompanhamento integrado só estarão prontas após as conexões e testes indicados abaixo.
+              </p>
+            </motion.div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+              {workflowSteps.map((step, index) => (
+                <motion.article key={step.title} variants={fadeUp} className="glass-card p-6 relative overflow-hidden group hover:border-primary/35 transition-colors">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-105 transition-transform">
+                      <step.icon className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs font-bold tracking-[0.18em] text-muted-foreground">0{index + 1}</span>
+                  </div>
+                  <h3 className="font-display text-lg font-bold mb-2">{step.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
+                </motion.article>
+              ))}
+            </div>
+            <motion.div variants={fadeUp} className="mt-7 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-primary/20 bg-primary/[0.05] p-5 sm:px-7">
+              <div className="flex items-start gap-3">
+                <CircleAlert className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                <p className="text-sm text-muted-foreground"><strong className="text-foreground">Prévia em evolução:</strong> conheça as telas, mas não aceite pagamentos reais até que o provedor esteja ativo e validado.</p>
+              </div>
+              <button onClick={() => document.getElementById("integracoes")?.scrollIntoView({ behavior: "smooth" })} className="text-sm font-semibold text-primary hover:underline shrink-0">
+                Ver integrações <ArrowRight className="w-4 h-4 inline ml-1" />
+              </button>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ─── Gross revenue estimator ─── */}
+      <section id="simulador" className="py-20 sm:py-28 px-4 border-t border-border relative overflow-hidden">
+        <div aria-hidden className="absolute -top-24 right-0 w-[420px] h-[420px] rounded-full bg-primary/[0.08] blur-[130px] pointer-events-none" />
+        <div className="max-w-6xl mx-auto relative z-10">
+          <div className="grid lg:grid-cols-[1fr_0.9fr] gap-10 lg:gap-16 items-center">
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={stagger}>
+              <motion.span variants={fadeUp} className="text-xs font-bold uppercase tracking-widest text-primary mb-4 block">Ferramenta interativa</motion.span>
+              <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold leading-tight">Faça uma conta rápida para sua oferta</motion.h2>
+              <motion.p variants={fadeUp} className="text-muted-foreground mt-4 leading-relaxed max-w-xl">
+                Ajuste o preço e a quantidade hipotética de pedidos para visualizar o faturamento bruto. É uma simulação matemática, sem previsão de vendas e sem descontar taxas, reembolsos, impostos ou outros custos.
+              </motion.p>
+              <motion.div variants={fadeUp} className="mt-7 flex flex-wrap gap-2" aria-label="Exemplos de preço para o simulador">
+                {[97, 297, 497].map((price) => (
+                  <button key={price} type="button" onClick={() => setSimulatorPrice(String(price))} className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors">
+                    Usar {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(price)}
+                  </button>
+                ))}
+              </motion.div>
+            </motion.div>
+
+            <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.6 }} className="glass-card p-6 sm:p-8 border-primary/20 shadow-xl shadow-primary/[0.06]">
+              <div className="grid sm:grid-cols-2 gap-4">
+                <label className="block">
+                  <span className="block text-sm font-semibold mb-2">Preço por pedido (R$)</span>
+                  <input aria-label="Preço por pedido em reais" type="number" min="0" max="1000000" step="0.01" inputMode="decimal" value={simulatorPrice} onChange={(event) => setSimulatorPrice(event.currentTarget.value)} className="w-full rounded-xl border border-border bg-background/80 px-4 py-3 text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                </label>
+                <label className="block">
+                  <span className="block text-sm font-semibold mb-2">Pedidos hipotéticos</span>
+                  <input aria-label="Quantidade hipotética de pedidos" type="number" min="0" max="1000000" step="1" inputMode="numeric" value={simulatorOrders} onChange={(event) => setSimulatorOrders(event.currentTarget.value)} className="w-full rounded-xl border border-border bg-background/80 px-4 py-3 text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                </label>
+              </div>
+              <div aria-live="polite" className="mt-6 rounded-2xl bg-primary/[0.09] border border-primary/15 p-5 sm:p-6">
+                <div className="text-xs uppercase tracking-widest font-bold text-muted-foreground mb-2">Faturamento bruto estimado</div>
+                <div className="text-3xl sm:text-4xl font-display font-bold text-primary tabular-nums">{formattedGross}</div>
+                <p className="text-xs text-muted-foreground mt-3">Exemplo ilustrativo. Não representa receita líquida nem garante conversões.</p>
+              </div>
+              <button type="button" onClick={() => { setSimulatorPrice("297"); setSimulatorOrders("20"); }} className="mt-4 text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4">Restaurar exemplo</button>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Integration readiness ─── */}
+      <section id="integracoes" className="section-light py-20 sm:py-28 px-4 border-t border-border relative">
+        <div className="max-w-7xl mx-auto relative z-10">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.15 }} variants={stagger}>
+            <motion.div variants={fadeUp} className="max-w-3xl mb-12">
+              <span className="text-xs font-bold uppercase tracking-widest text-primary mb-4 block">Transparência de integração</span>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold">O que está pronto e o que falta conectar</h2>
+              <p className="text-muted-foreground mt-4 leading-relaxed">A situação abaixo descreve a prévia atual. Cada integração precisa de configuração, testes de segurança e validação ponta a ponta antes de uso comercial.</p>
+            </motion.div>
+            <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
+              {integrationStatus.map((integration) => (
+                <motion.article key={integration.name} variants={fadeUp} className="glass-card p-5 sm:p-6 h-full">
+                  <div className="flex items-start justify-between gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary"><integration.icon className="w-5 h-5" /></div>
+                    <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${integration.tone === "ready" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : integration.tone === "paused" ? "bg-muted text-muted-foreground" : "bg-amber-500/10 text-amber-700 dark:text-amber-400"}`}>
+                      {integration.status}
+                    </span>
+                  </div>
+                  <h3 className="font-display text-lg font-bold mb-2">{integration.name}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{integration.detail}</p>
+                </motion.article>
+              ))}
+            </div>
+            <motion.div variants={fadeUp} className="mt-8 rounded-2xl border border-border bg-background/70 p-6 sm:p-8">
+              <div className="flex items-center gap-3 mb-5"><CircleDashed className="w-5 h-5 text-primary" /><h3 className="font-display text-xl font-bold">Checklist antes de liberar vendas</h3></div>
+              <div className="grid sm:grid-cols-2 gap-x-8 gap-y-3 text-sm text-muted-foreground">
+                {["Validar checkout em ambiente de testes, incluindo falhas e reembolsos", "Revisar acesso por usuário, políticas do banco e proteção contra abuso", "Confirmar taxas, prazos, repasses e informações legais", "Testar webhooks, notificações, suporte e monitoramento de incidentes"].map((item) => (
+                  <div key={item} className="flex gap-2.5 items-start"><CircleDashed className="w-4 h-4 text-primary shrink-0 mt-0.5" /><span>{item}</span></div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-5">Os itens são critérios de prontidão; a lista não indica que uma certificação ou auditoria externa já tenha sido concluída.</p>
+            </motion.div>
+          </motion.div>
+        </div>
       </section>
 
       {/* ─── Why Queenify – Split Layout ─── */}
