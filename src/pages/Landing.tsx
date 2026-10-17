@@ -4,9 +4,9 @@ import { trackPageView } from "@/hooks/usePageTracking";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import {
-  ShieldCheck, Headphones, Zap, MousePointerClick, Cpu,
+  Headphones, Zap, MousePointerClick, Cpu,
   CreditCard, Clock, PaintBucket, Handshake, Store, Users,
-  Trophy, Crown, Star, Shield, ChevronDown,
+  ChevronDown,
   Sparkles, Smartphone, MessageCircle, Megaphone, Menu, X,
   TrendingUp, BarChart3, Globe, Bot, Rocket, ArrowRight,
   CheckCircle2, Play, Target, Layers, RefreshCcw, Gauge,
@@ -81,7 +81,7 @@ const GlowDot = ({ delay = 0, x = 0, y = 0, size = 2 }: { delay?: number; x?: nu
   />
 );
 const whyFeatures = [
-  { icon: Layers, title: "Cadastro fácil de produtos", desc: "Cadastre seu produto digital em minutos. Sem burocracia, sem complicação. Cursos, e-books, mentorias e mais." },
+  { icon: Layers, title: "Cadastro de produtos", desc: "Organize as informações dos seus produtos digitais. Os tipos de produto e as entregas disponíveis podem variar durante a prévia." },
   { icon: TrendingUp, title: "Checkout configurável", desc: "Conheça as opções de personalização disponíveis. Cobranças dependem da ativação do provedor de pagamento." },
   { icon: Zap, title: "Dados financeiros", desc: "Consulte os registros da conta. Saques e prazos ainda dependem da integração financeira." },
 ];
@@ -112,14 +112,6 @@ const techGrid = [
   { icon: MousePointerClick, label: "Funil & Upsell" },
   { icon: Sparkles, label: "Cupons & Webhooks" },
   { icon: Bot, label: "Suporte com IA" },
-  { icon: ArrowRight, label: "E muito mais..." },
-];
-
-const levels = [
-  { name: "Bronze", icon: Shield, range: "R$10.000+", color: "text-muted-foreground" },
-  { name: "Silver", icon: Star, range: "R$100.000+", color: "text-[hsl(0,0%,75%)]" },
-  { name: "Gold", icon: Trophy, range: "R$500.000+", color: "text-primary" },
-  { name: "Crown", icon: Crown, range: "R$1.000.000+", color: "text-primary" },
 ];
 
 const faqs = [
@@ -731,7 +723,7 @@ const DashboardCloneMobile = () => (
 
 /* ───────────────────────────────────────────────────────────────────────
    CHECKOUT EDITOR PHONE — replica da aba "Checkout" de Gerenciar Produto
-   Usado na seção "Para seu negócio lucrar mais"
+   Usado na seção de prévia do checkout
    ─────────────────────────────────────────────────────────────────────── */
 const CheckoutEditorPhone = () => (
   <div
@@ -831,7 +823,7 @@ const CheckoutEditorPhone = () => (
               FINALIZAR COMPRA
             </div>
             <div className="flex items-center justify-center gap-1 text-[7px]" style={{ color: "hsl(0 0% 55%)" }}>
-              <ShieldCheck className="w-2 h-2" /> Pagamento 100% seguro
+              <span>Mockup demonstrativo · pagamento não conectado</span>
             </div>
           </div>
         </div>
@@ -904,10 +896,9 @@ const Landing = () => {
   const mockupY = useTransform(heroScroll, [0, 1], [0, 80]);
   const navigate = useNavigate();
   const typedText = useTypingEffect([
-    "Tudo em um só lugar.",
-    "Checkout que converte.",
-    "Pixel & Tracking nativo.",
-    "Suporte com IA.",
+    "Conheça a prévia Queenify.",
+    "Organize seus produtos digitais.",
+    "Acompanhe os registros da conta.",
   ], 70, 35, 2200);
 
   // Parallax refs for sections
@@ -915,7 +906,6 @@ const Landing = () => {
   const platformParallax = useParallax(50);
   const powerParallax = useParallax(60);
   const techParallax = useParallax(40);
-  const levelsParallax = useParallax(50);
   const pricingParallax = useParallax(50);
   const faqParallax = useParallax(40);
   const ctaParallax = useParallax(60);
@@ -1091,7 +1081,7 @@ const Landing = () => {
 
               <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.7 }}
                 className="text-4xl sm:text-5xl lg:text-6xl font-display font-bold leading-[1.1] mb-6">
-                Venda mais, com menos complicação.{" "}
+                Organize seu negócio digital.{" "}
                 <span className="bg-gradient-to-r from-primary via-[hsl(43,96%,70%)] to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-[shimmer_3s_ease-in-out_infinite]">
                   {typedText}
                   <motion.span animate={{ opacity: [1, 0] }} transition={{ duration: 0.6, repeat: Infinity, repeatType: "reverse" }}
@@ -1145,7 +1135,7 @@ const Landing = () => {
                 <span className="text-primary">Encontra uma parceira.</span>
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-8 max-w-lg">
-                Na Queenify, sabemos que vender online vai além de colocar um produto à venda. É sobre ter estrutura, suporte e ferramentas que realmente funcionam.
+                A Queenify está em fase de validação. Esta prévia apresenta as áreas disponíveis e sinaliza os recursos que ainda dependem de integrações.
               </p>
               <Link to="/signup" className="inline-flex items-center gap-2 px-6 py-3 gradient-gold rounded-xl text-sm font-bold text-primary-foreground hover:opacity-90 transition-all hover:scale-[1.03]">
                 Cadastrar agora <ArrowRight className="w-4 h-4" />
@@ -1181,12 +1171,12 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto relative z-10">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.1 }} variants={stagger}>
             <motion.div variants={fadeUp} className="text-center mb-14">
-              <span className="text-xs font-bold uppercase tracking-widest text-primary mb-4 block">Plataforma completa</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-primary mb-4 block">Prévia da plataforma</span>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold">
-                Para seu negócio lucrar mais
+                Organize seu negócio digital
               </h2>
               <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
-                Do checkout até assinaturas e recorrência — tudo que você precisa em um só lugar.
+                Explore as telas disponíveis. Cobranças, recorrência e dados integrados aguardam ativação e testes.
               </p>
             </motion.div>
 
@@ -1222,12 +1212,6 @@ const Landing = () => {
                 >
                   <div className="w-[420px] h-[420px] rounded-full bg-primary/[0.18] blur-[120px]" />
                 </motion.div>
-                <motion.div initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}
-                  transition={{ delay: 0.5, duration: 0.5 }}
-                  className="absolute -bottom-2 -right-2 glass-card px-5 py-3 rounded-xl border-primary/20 shadow-lg">
-                  <p className="text-2xl font-display font-bold text-foreground">+2.2M</p>
-                  <p className="text-[10px] text-muted-foreground">Usuários confiam na plataforma</p>
-                </motion.div>
               </motion.div>
             </div>
           </motion.div>
@@ -1249,11 +1233,11 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto relative z-10">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.1 }} variants={stagger}>
             <motion.div variants={fadeUp} className="text-center mb-14">
-              <span className="text-xs font-bold uppercase tracking-widest text-primary mb-4 block">Ferramentas exclusivas</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-primary mb-4 block">Recursos em configuração</span>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold">
-                Tudo que você precisa para <span className="text-primary">escalar</span>
+                Recursos para sua operação <span className="text-primary">digital</span>
               </h2>
-              <p className="text-muted-foreground mt-4 max-w-xl mx-auto">Recursos avançados que não existem em outras plataformas.</p>
+              <p className="text-muted-foreground mt-4 max-w-xl mx-auto">A disponibilidade de cada recurso depende da integração e validação indicadas na própria tela.</p>
             </motion.div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -1288,8 +1272,8 @@ const Landing = () => {
         <div className="max-w-5xl mx-auto relative z-10">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.15 }} variants={stagger}>
             <motion.div variants={fadeUp} className="text-center mb-12">
-              <h2 className="text-2xl sm:text-3xl font-display font-bold">Tudo incluso na plataforma</h2>
-              <p className="text-muted-foreground mt-3">Uma lista crescente de recursos para maximizar suas vendas.</p>
+              <h2 className="text-2xl sm:text-3xl font-display font-bold">Áreas previstas na Queenify</h2>
+              <p className="text-muted-foreground mt-3">Algumas áreas estão em desenvolvimento ou aguardam conexão com provedores externos.</p>
             </motion.div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {techGrid.map((t) => (
@@ -1297,42 +1281,6 @@ const Landing = () => {
                   className="glass-card p-4 flex flex-col items-center text-center gap-2.5 group hover:border-primary/40 transition-colors">
                   <t.icon className="w-5 h-5 text-primary group-hover:scale-110 transition-transform duration-300" />
                   <span className="text-xs font-medium text-foreground">{t.label}</span>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ─── Levels ─── */}
-      <section ref={levelsParallax.ref} className="section-light py-20 px-4 border-t border-border relative">
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <motion.div animate={{ opacity: [0.02, 0.06, 0.02], scale: [1, 1.1, 1] }} transition={{ duration: 10, repeat: Infinity }}
-            className="absolute top-[20%] right-[15%] w-[350px] h-[350px] rounded-full bg-primary/[0.04] blur-[100px]" />
-          <FloatingParticle delay={0.7} x={12} y={50} size={3} />
-          <FloatingParticle delay={2.2} x={90} y={30} size={4} />
-          <GoldenStreak delay={1} x={60} y={10} rotation={25} width={90} />
-          <GoldenStreak delay={3.5} x={25} y={80} rotation={-45} width={80} />
-          <GlowDot delay={0.5} x={5} y={35} size={2} />
-          <GlowDot delay={2.5} x={80} y={75} size={3} />
-        </div>
-        <div className="max-w-5xl mx-auto relative z-10">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.15 }} variants={stagger}>
-            <motion.div variants={fadeUp} className="text-center mb-12">
-              <h2 className="text-2xl sm:text-3xl font-display font-bold">Níveis da Plataforma</h2>
-              <p className="text-muted-foreground mt-3">Quanto mais você vende, mais benefícios exclusivos.</p>
-              <p className="text-xs text-muted-foreground/80 mt-2 max-w-xl mx-auto">
-                Os níveis começam a partir de <span className="text-foreground font-semibold">R$ 10.000</span> em faturamento.
-                Abaixo disso, sua conta fica sem nível até atingir o Bronze.
-              </p>
-            </motion.div>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {levels.map((lv) => (
-                <motion.div key={lv.name} variants={fadeUp} whileHover={{ y: -6, transition: { duration: 0.3 } }}
-                  className="glass-card p-5 text-center group hover:border-primary/30 transition-all">
-                  <lv.icon className={`w-8 h-8 mx-auto mb-2 ${lv.color} group-hover:scale-110 transition-transform duration-300`} />
-                  <h3 className={`text-lg font-display font-bold ${lv.color}`}>{lv.name}</h3>
-                  <p className="text-xs text-muted-foreground mt-1">{lv.range}</p>
                 </motion.div>
               ))}
             </div>
@@ -1368,7 +1316,7 @@ const Landing = () => {
             </motion.div>
             <motion.div variants={fadeUp} className="mt-8 space-y-3">
               <Link to="/signup" className="inline-flex items-center gap-2 px-8 py-4 gradient-gold rounded-xl text-base font-bold text-primary-foreground hover:opacity-90 transition-all hover:scale-[1.03] shadow-lg shadow-primary/20">
-                Começar agora <ArrowRight className="w-4 h-4" />
+                Criar conta para acompanhar a prévia <ArrowRight className="w-4 h-4" />
               </Link>
               <p className="text-xs text-muted-foreground">
                 <Link to="/taxas" className="text-primary hover:underline">Ver estado atual das taxas →</Link>
@@ -1439,7 +1387,7 @@ const Landing = () => {
               <img src={queenifyBee} alt="" className="w-28 h-28 mx-auto mb-6 object-contain"
                 style={{ background: "transparent", mixBlendMode: "normal" }} />
               <h2 className="text-3xl sm:text-4xl font-display font-bold mb-4">Pronto para começar?</h2>
-              <p className="text-muted-foreground mb-8 max-w-lg mx-auto">Cadastre-se gratuitamente e comece a vender seus produtos digitais hoje mesmo.</p>
+              <p className="text-muted-foreground mb-8 max-w-lg mx-auto">Crie uma conta para conhecer a Queenify e acompanhar a liberação dos recursos. As vendas aguardam a ativação das integrações financeiras.</p>
               <Link to="/signup" className="inline-flex items-center gap-2 px-10 py-4 gradient-gold rounded-xl text-base font-bold text-primary-foreground hover:opacity-90 transition-all hover:scale-[1.03] shadow-lg shadow-primary/20">
                 Criar conta <ArrowRight className="w-4 h-4" />
               </Link>
