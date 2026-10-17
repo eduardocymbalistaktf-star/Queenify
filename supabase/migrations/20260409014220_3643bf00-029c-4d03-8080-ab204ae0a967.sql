@@ -1,0 +1,1 @@
+ALTER TABLE public.user_settings ADD COLUMN IF NOT EXISTS backup_codes TEXT[] DEFAULT NULL;

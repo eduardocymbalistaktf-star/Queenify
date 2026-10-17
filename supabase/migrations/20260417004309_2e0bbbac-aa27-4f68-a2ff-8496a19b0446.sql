@@ -1,0 +1,1 @@
+ALTER TABLE public.external_webhook_tokens ADD COLUMN IF NOT EXISTS webhook_secret text;

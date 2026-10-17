@@ -1,0 +1,1 @@
+ALTER TABLE public.products ADD COLUMN tracking_pixel text DEFAULT NULL;

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Queenify - Plataforma de Vendas Digitais</title>
+    <meta name="description" content="Queenify: plataforma completa para vender produtos digitais, cursos e infoprodutos." />
+    <meta name="author" content="Queenify" />
+
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <!-- The hosting provider must also serve the response headers in vercel.json or public/_headers. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://sdk.mercadopago.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.mercadopago.com https://*.mercadopago.com https://*.lovable.app https://*.lovable.dev; frame-src 'self' https://www.youtube.com https://player.vimeo.com https://*.mercadopago.com; form-action 'self'; worker-src 'self' blob:; manifest-src 'self';" />
+
+    <!-- iOS PWA -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Queenify" />
+    <link rel="apple-touch-icon" href="%BASE_URL%queenify-192.png" />
+
+    <!-- Theme -->
+    <meta name="theme-color" content="#D4A843" />
+
+    <meta property="og:title" content="Queenify" />
+    <meta property="og:description" content="Plataforma completa para vender produtos digitais." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@Queenify" />
+    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

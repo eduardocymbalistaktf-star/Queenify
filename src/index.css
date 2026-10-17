@@ -1,0 +1,357 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  :root {
+    --background: 0 0% 4%;
+    --foreground: 0 0% 95%;
+
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 43 96% 56%;
+    --primary-foreground: 0 0% 4%;
+
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 85%;
+
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 62%;  /* AA: 5.92:1 vs --background */
+
+    --accent: 43 96% 56%;
+    --accent-foreground: 0 0% 4%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 98%;
+
+    --border: 0 0% 14%;
+    --input: 0 0% 14%;
+    --ring: 43 96% 56%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 6%;
+    --sidebar-foreground: 0 0% 75%;
+    --sidebar-primary: 43 96% 56%;
+    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 0 0% 14%;
+    --sidebar-ring: 43 96% 56%;
+
+    --chart-orange: 25 95% 53%;
+    --chart-purple: 270 70% 60%;
+    --chart-green: 142 71% 45%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-family: 'Inter', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  /* AA-compliant focus ring — visible on both dark and .section-light surfaces.
+     Uses double-ring (offset + colored) so it survives any background. */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  /* Tone down for inputs that already render their own ring via shadcn */
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline-offset: 0;
+  }
+}
+
+@layer utilities {
+  .glass-card {
+    @apply bg-card border border-border rounded-xl;
+    background: linear-gradient(135deg, hsl(0 0% 8% / 0.9), hsl(0 0% 5% / 0.95));
+  }
+
+  /* ─── Inverted "light" section ───────────────────────────────────────
+     White background pocket inside the dark theme. Re-scopes the design
+     tokens so all child semantic classes (text-foreground, bg-card,
+     border-border, glass-card…) flip cleanly without hardcoded colors.
+     The gold primary is darkened slightly here for AA contrast on white. */
+  .section-light {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 6%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 6%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 6%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 32%;
+    --border: 0 0% 88%;
+    --input: 0 0% 88%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 10%;
+    --primary: 38 92% 42%;          /* darker gold for AA on white */
+    --primary-foreground: 0 0% 100%;
+    --accent: 38 92% 42%;
+    --accent-foreground: 0 0% 100%;
+    --ring: 38 92% 42%;
+    background-color: hsl(0 0% 100%) !important;
+    color: hsl(var(--foreground));
+    /* Lift above the fixed aurora overlay so the white surface stays clean */
+    position: relative;
+    z-index: 1;
+    isolation: isolate;
+  }
+  .section-light .glass-card {
+    background: linear-gradient(135deg, hsl(0 0% 100%), hsl(0 0% 97%));
+    border-color: hsl(0 0% 90%);
+    box-shadow: 0 1px 2px hsl(0 0% 0% / 0.04), 0 8px 24px hsl(0 0% 0% / 0.06);
+  }
+  .section-light .text-gradient-gold {
+    background: linear-gradient(135deg, hsl(38 92% 38%), hsl(28 95% 42%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .section-light .gradient-gold {
+    background: linear-gradient(135deg, hsl(38 92% 42%), hsl(28 95% 45%));
+  }
+  .section-light .glow-gold {
+    box-shadow: 0 0 24px hsl(38 92% 42% / 0.18);
+  }
+
+  /* ─── Gold-emphasis dashboard mode ───────────────────────────────────
+     Optional theme variant applied to <body> via the toggle. Boosts gold
+     saturation and lifts surface contrast for a more "premium" feel. */
+  .theme-gold-emphasis {
+    --primary: 45 100% 58%;            /* AA: 11.6:1 vs --background */
+    --ring: 45 100% 58%;
+    --card: 0 0% 9%;
+    --border: 0 0% 20%;
+    --muted-foreground: 0 0% 70%;      /* AAA: 8.5:1 */
+  }
+  .theme-gold-emphasis .glass-card {
+    background: linear-gradient(135deg, hsl(0 0% 10% / 0.95), hsl(0 0% 6% / 0.98));
+    border-color: hsl(45 100% 58% / 0.22);
+  }
+  .theme-gold-emphasis .glow-gold {
+    box-shadow: 0 0 28px hsl(45 100% 58% / 0.30);
+  }
+  .theme-gold-emphasis .kpi-highlight {
+    box-shadow: 0 1px 2px hsl(0 0% 0% / 0.04),
+                0 10px 30px hsl(0 0% 0% / 0.10),
+                0 0 0 1px hsl(45 100% 58% / 0.18);
+  }
+  .theme-gold-emphasis .kpi-highlight::before {
+    background: linear-gradient(135deg, hsl(45 100% 58% / 0.7), transparent 60%);
+  }
+
+  /* ─── Highlight KPI card microinteractions ─────────────────────────── */
+  .kpi-highlight {
+    position: relative;
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.35s ease;
+    box-shadow: 0 1px 2px hsl(0 0% 0% / 0.04),
+                0 10px 30px hsl(0 0% 0% / 0.08),
+                0 0 0 1px hsl(38 92% 42% / 0.06);
+  }
+  .kpi-highlight::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, hsl(38 92% 42% / 0.55), transparent 60%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.6;
+    transition: opacity 0.35s ease;
+  }
+  .kpi-highlight::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(120% 80% at 0% 0%, hsl(45 100% 55% / 0.10), transparent 55%);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .kpi-highlight:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px hsl(0 0% 0% / 0.06),
+                0 22px 40px hsl(0 0% 0% / 0.10),
+                0 0 0 1px hsl(38 92% 42% / 0.18);
+  }
+  .kpi-highlight:hover::before { opacity: 1; }
+  .kpi-highlight:hover::after  { opacity: 1; }
+
+  @keyframes kpiPulseGold {
+    0%, 100% { box-shadow: 0 0 0 0 hsl(38 92% 42% / 0.0),
+                           0 10px 30px hsl(0 0% 0% / 0.08); }
+    50%      { box-shadow: 0 0 0 6px hsl(38 92% 42% / 0.10),
+                           0 14px 34px hsl(0 0% 0% / 0.10); }
+  }
+  .kpi-highlight.kpi-pulse { animation: kpiPulseGold 2.8s ease-in-out infinite; }
+
+  /* ─── Reduce motion mode ─────────────────────────────────────────────
+     Toggled via <body class="reduce-motion"> by ThemeAccentContext. Disables
+     pulses, count-up animation and heavy transitions while keeping subtle
+     hover feedback (color/opacity) for affordance. */
+  .reduce-motion .kpi-highlight.kpi-pulse { animation: none; }
+  .reduce-motion .kpi-highlight,
+  .reduce-motion .kpi-highlight::before,
+  .reduce-motion .kpi-highlight::after {
+    transition: opacity 0.15s ease, border-color 0.15s ease;
+  }
+  .reduce-motion .kpi-highlight:hover { transform: none; }
+  .reduce-motion *,
+  .reduce-motion *::before,
+  .reduce-motion *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+  /* Honour OS preference even without explicit toggle */
+  @media (prefers-reduced-motion: reduce) {
+    .kpi-highlight.kpi-pulse { animation: none; }
+  }
+
+  .glow-gold {
+    box-shadow: 0 0 20px hsl(43 96% 56% / 0.15);
+  }
+
+  .gradient-gold {
+    background: linear-gradient(135deg, hsl(43 96% 56%), hsl(35 100% 50%));
+  }
+
+  .text-gradient-gold {
+    background: linear-gradient(135deg, hsl(43 96% 56%), hsl(35 100% 50%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+/* Gold wave animations for landing hero */
+@keyframes goldWave1 {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  50% { transform: translateX(30px) translateY(-20px); }
+}
+@keyframes goldWave2 {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  50% { transform: translateX(-40px) translateY(15px); }
+}
+@keyframes goldWave3 {
+  0%, 100% { transform: translateX(0) translateY(0) scale(1); }
+  50% { transform: translateX(20px) translateY(-10px) scale(1.05); }
+}
+@keyframes wavePath1 {
+  0%, 100% { d: path("M0,400 C240,300 480,500 720,350 C960,200 1200,450 1440,350 L1440,800 L0,800 Z"); }
+  50% { d: path("M0,450 C240,350 480,450 720,300 C960,250 1200,400 1440,400 L1440,800 L0,800 Z"); }
+}
+@keyframes wavePath2 {
+  0%, 100% { d: path("M0,500 C360,400 600,600 900,450 C1100,350 1300,500 1440,400 L1440,800 L0,800 Z"); }
+  50% { d: path("M0,450 C360,500 600,500 900,500 C1100,400 1300,450 1440,450 L1440,800 L0,800 Z"); }
+}
+@keyframes shimmer {
+  0%, 100% { background-position: 0% center; }
+  50% { background-position: 200% center; }
+}
+
+/* Hide scrollbar utility */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ─── Mobile / iOS optimizations ──────────────────────────────────────
+   - 16px font on inputs prevents iOS auto-zoom on focus
+   - Removes the gray tap-highlight flash on iOS Safari
+   - Smooth momentum scrolling on overflow containers
+   - Larger touch targets (min 44x44 per Apple HIG) for buttons/links
+   - Disables text size auto-adjust after orientation change
+   - Avoids accidental long-press callouts on interactive elements        */
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior-y: none; /* prevents iOS rubber-band on body */
+}
+button, a, [role="button"], label, summary {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+.no-scrollbar, [data-scrollable] {
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 640px) {
+  .glass-card { padding: 0.875rem; border-radius: 0.875rem; }
+  input, select, textarea { font-size: 16px !important; } /* Prevent iOS zoom */
+
+  /* Touch-friendly minimum for any interactive element on mobile */
+  button, a[role="button"], [role="button"], a.btn, .btn {
+    min-height: 44px;
+  }
+  /* Slightly tighter KPI pulse on mobile so glow doesn't overflow cards */
+  .kpi-highlight.kpi-pulse { animation-duration: 3.4s; }
+  /* Reduce hover translate on mobile (no real hover) to avoid sticky states */
+  .kpi-highlight:hover { transform: none; }
+}
+
+/* Tablet portrait fine-tuning */
+@media (min-width: 641px) and (max-width: 834px) {
+  .glass-card { padding: 1rem; }
+}
+
+/* ─── Safe-area support (notch / Dynamic Island / home indicator) ─── */
+@supports (padding: env(safe-area-inset-top)) {
+  .safe-area-top    { padding-top: max(env(safe-area-inset-top), 0.5rem); }
+  .safe-area-bottom { padding-bottom: max(env(safe-area-inset-bottom), 0.5rem); }
+  .safe-area-left   { padding-left: env(safe-area-inset-left); }
+  .safe-area-right  { padding-right: env(safe-area-inset-right); }
+  .safe-area-x      { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+  .safe-area-inset  {
+    padding-top: env(safe-area-inset-top);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+  }
+}
+
+/* iOS standalone PWA tweaks (when launched from Home Screen) */
+@media all and (display-mode: standalone) {
+  body { padding-top: env(safe-area-inset-top); }
+}
+
+/* Respect OS-level reduced motion automatically */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.15s !important;
+    scroll-behavior: auto !important;
+  }
+}
