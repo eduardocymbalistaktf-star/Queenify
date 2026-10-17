@@ -1,10 +1,11 @@
 import DashboardLayout from "@/layouts/DashboardLayout";
 import { useState } from "react";
-import { ShoppingCart, Mail, Phone, RefreshCw, CheckCircle2, Clock, XCircle, Search, AlertTriangle, TrendingUp, DollarSign, Filter } from "lucide-react";
+import { ShoppingCart, Mail, RefreshCw, CheckCircle2, Clock, XCircle, Search, AlertTriangle, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { Database } from "@/integrations/supabase/types";
 
 const statusConfig: Record<string, { color: string; label: string; icon: typeof Clock }> = {
   pending: { color: "bg-amber-500/20 text-amber-400", label: "Pendente", icon: Clock },
@@ -19,36 +20,44 @@ const RecuperacaoVendas = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  const { data: carts = [], isLoading } = useQuery({
+  const { data: carts = [], isLoading, isError } = useQuery({
     queryKey: ["abandoned-carts", user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from("abandoned_carts").select("*, products(name, price)").eq("user_id", user!.id).order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("abandoned_carts").select("*, products(name, price)").eq("user_id", user!.id).order("created_at", { ascending: false });
+      if (error) throw error;
       return data || [];
     },
     enabled: !!user
   });
 
-  const filtered = carts.filter((c: any) => {
-    const matchSearch = c.buyer_email.toLowerCase().includes(search.toLowerCase()) || (c.buyer_name || "").toLowerCase().includes(search.toLowerCase());
+  const filtered = carts.filter((c) => {
+    const matchSearch = (c.buyer_email || "").toLowerCase().includes(search.toLowerCase()) || (c.buyer_name || "").toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === "all" || c.recovery_status === statusFilter;
     return matchSearch && matchStatus;
   });
 
   const stats = {
     total: carts.length,
-    pending: carts.filter((c: any) => c.recovery_status === "pending").length,
-    recovered: carts.filter((c: any) => c.recovery_status === "recovered").length,
-    totalValue: carts.filter((c: any) => c.recovery_status === "pending").reduce((acc: number, c: any) => acc + (c.cart_value || 0), 0),
-    recoveredValue: carts.filter((c: any) => c.recovery_status === "recovered").reduce((acc: number, c: any) => acc + (c.cart_value || 0), 0),
-    recoveryRate: carts.length > 0 ? Math.round((carts.filter((c: any) => c.recovery_status === "recovered").length / carts.length) * 100) : 0
+    pending: carts.filter((c) => c.recovery_status === "pending").length,
+    recovered: carts.filter((c) => c.recovery_status === "recovered").length,
+    totalValue: carts.filter((c) => c.recovery_status === "pending").reduce((acc, c) => acc + (c.cart_value || 0), 0),
+    recoveredValue: carts.filter((c) => c.recovery_status === "recovered").reduce((acc, c) => acc + (c.cart_value || 0), 0),
+    recoveryRate: carts.length > 0 ? Math.round((carts.filter((c) => c.recovery_status === "recovered").length / carts.length) * 100) : 0
   };
 
-  const markAs = async (id: string, status: string) => {
-    const updates: any = { recovery_status: status, recovery_attempts: 1 };
+  const markAs = async (id: string, status: keyof typeof statusConfig, currentAttempts = 0) => {
+    const updates: Database["public"]["Tables"]["abandoned_carts"]["Update"] = { recovery_status: status };
     if (status === "recovered") updates.recovered_at = new Date().toISOString();
-    if (status === "contacted") updates.last_attempt_at = new Date().toISOString();
-    await supabase.from("abandoned_carts").update(updates).eq("id", id);
-    queryClient.invalidateQueries({ queryKey: ["abandoned-carts"] });
+    if (status === "contacted") {
+      updates.last_attempt_at = new Date().toISOString();
+      updates.recovery_attempts = currentAttempts + 1;
+    }
+    const { error } = await supabase.from("abandoned_carts").update(updates).eq("id", id).eq("user_id", user!.id);
+    if (error) {
+      toast.error("Não foi possível atualizar o carrinho. Tente novamente.");
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["abandoned-carts", user?.id] });
     toast.success(`Status atualizado para "${statusConfig[status]?.label}"`);
   };
 
@@ -60,9 +69,9 @@ const RecuperacaoVendas = () => {
             <h1 className="text-2xl font-display font-bold text-foreground">Recuperação de Vendas</h1>
             <p className="text-sm text-muted-foreground">Acompanhe e recupere carrinhos abandonados.</p>
           </div>
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-lg">
-            <RefreshCw className="w-3.5 h-3.5 text-primary animate-spin" style={{ animationDuration: "3s" }} />
-            <span className="text-xs text-primary font-medium">SmartPay ativo</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-amber-400/25 bg-amber-400/10">
+            <RefreshCw className="w-3.5 h-3.5 text-amber-300" />
+            <span className="text-xs font-medium text-amber-200">Acompanhamento manual</span>
           </div>
         </div>
 
@@ -87,15 +96,15 @@ const RecuperacaoVendas = () => {
           </div>
         </div>
 
-        {/* SmartPay Box */}
-        <div className="glass-card p-4 mb-6 border-primary/20">
+        {/* Recovery status */}
+        <div className="glass-card p-4 mb-6 border-amber-400/20">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg gradient-gold flex items-center justify-center"><RefreshCw className="w-5 h-5 text-primary-foreground" /></div>
+            <div className="w-10 h-10 rounded-lg bg-amber-400/10 border border-amber-400/20 flex items-center justify-center"><AlertTriangle className="w-5 h-5 text-amber-300" /></div>
             <div className="flex-1">
-              <h3 className="text-sm font-display font-bold text-foreground">SmartPay - Recuperação Automática</h3>
-              <p className="text-xs text-muted-foreground">O sistema tenta automaticamente cobrar cartões recusados em horários diferentes e envia mensagens de recuperação para o cliente.</p>
+              <h3 className="text-sm font-display font-bold text-foreground">Recuperação sem automação ativa</h3>
+              <p className="text-xs text-muted-foreground">Esta tela não envia e-mails nem repete cobranças. Use os status para registrar contatos feitos fora da Queenify; a captura depende de integração de checkout configurada.</p>
             </div>
-            <span className="px-3 py-1 bg-success/20 text-success text-xs font-semibold rounded-full">Ativo</span>
+            <span className="px-3 py-1 rounded-full border border-amber-400/25 bg-amber-400/10 text-amber-200 text-xs font-semibold">Pendente</span>
           </div>
         </div>
 
@@ -115,17 +124,22 @@ const RecuperacaoVendas = () => {
         </div>
 
         {/* List */}
-        {isLoading ? (
+        {isError ? (
+          <div className="glass-card p-12 text-center" role="alert">
+            <AlertTriangle className="w-8 h-8 text-destructive mx-auto mb-3" />
+            <p className="text-sm text-destructive">Não foi possível carregar os carrinhos. Confira a conexão e tente novamente.</p>
+          </div>
+        ) : isLoading ? (
           <div className="glass-card p-12 text-center"><p className="text-muted-foreground">Carregando...</p></div>
         ) : filtered.length === 0 ? (
           <div className="glass-card p-12 text-center">
             <ShoppingCart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-display font-bold text-foreground mb-2">Nenhum carrinho abandonado</h3>
-            <p className="text-sm text-muted-foreground">Carrinhos abandonados serão capturados automaticamente pelo checkout.</p>
+            <p className="text-sm text-muted-foreground">Nenhum registro está disponível. Carrinhos só aparecerão aqui depois que uma integração de checkout ou webhook os gravar no Supabase.</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {filtered.map((cart: any) => {
+            {filtered.map((cart) => {
               const st = statusConfig[cart.recovery_status] || statusConfig.pending;
               const StatusIcon = st.icon;
               return (
@@ -150,8 +164,8 @@ const RecuperacaoVendas = () => {
                     <div className="flex items-center gap-2">
                       {cart.recovery_status === "pending" && (
                         <>
-                          <button onClick={() => markAs(cart.id, "contacted")} className="px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-lg text-xs font-medium hover:bg-blue-500/30">
-                            <Mail className="w-3 h-3 inline mr-1" />Contatar
+                          <button onClick={() => markAs(cart.id, "contacted", cart.recovery_attempts || 0)} className="px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-lg text-xs font-medium hover:bg-blue-500/30">
+                            <Mail className="w-3 h-3 inline mr-1" />Registrar contato
                           </button>
                           <button onClick={() => markAs(cart.id, "lost")} className="px-3 py-1.5 bg-destructive/20 text-destructive rounded-lg text-xs font-medium hover:bg-destructive/30">Marcar Perdido</button>
                         </>

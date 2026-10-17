@@ -1,350 +1,257 @@
 import DashboardLayout from "@/layouts/DashboardLayout";
 import { useState } from "react";
-import { RefreshCw, Mail, Code, Zap, Eye, Copy, CheckCircle2, Shield, Bell, Globe, BarChart3, Webhook } from "lucide-react";
+import {
+  AlertTriangle,
+  BarChart3,
+  CheckCircle2,
+  Code,
+  Copy,
+  Eye,
+  Globe,
+  Mail,
+  RefreshCw,
+  Shield,
+  Webhook,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+type IntegrationTab = "recovery" | "tracking" | "api";
+
 const Automacoes = () => {
   const { user } = useAuth();
-  const [tab, setTab] = useState<"smartpay" | "pixel" | "api">("smartpay");
-  const [pixelEnabled, setPixelEnabled] = useState(true);
-  const [apiKeyCopied, setApiKeyCopied] = useState(false);
+  const [tab, setTab] = useState<IntegrationTab>("recovery");
 
-  // Real SmartPay stats from abandoned_carts
-  const { data: carts = [] } = useQuery({
+  const { data: carts = [], isLoading: cartsLoading, isError: cartsError } = useQuery({
     queryKey: ["smartpay-stats", user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from("abandoned_carts").select("*").eq("user_id", user!.id);
-      return data || [];
+      const { data, error } = await supabase
+        .from("abandoned_carts")
+        .select("id, recovery_status, cart_value, recovery_attempts")
+        .eq("user_id", user!.id);
+      if (error) throw error;
+      return data ?? [];
     },
     enabled: !!user,
   });
 
-  // Real pixel ID from user_pixels
-  const { data: userPixel } = useQuery({
+  const { data: userPixel, isError: pixelError } = useQuery({
     queryKey: ["user-pixel", user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from("user_pixels").select("pixel_id").eq("user_id", user!.id).maybeSingle();
-      if (data) return data.pixel_id;
-      // Auto-create if none exists
-      const { data: created } = await supabase.from("user_pixels").insert({ user_id: user!.id, pixel_id: "" }).select("pixel_id").single();
-      return created?.pixel_id || null;
+      const { data, error } = await supabase
+        .from("user_pixels")
+        .select("pixel_id")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.pixel_id?.trim() || null;
     },
     enabled: !!user,
   });
 
-  // Real Pixel stats from page_views
-  const { data: pageViews = [] } = useQuery({
-    queryKey: ["pixel-stats", user?.id],
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
+  const { data: pageViews = [], isError: pageViewsError } = useQuery({
+    queryKey: ["pixel-stats", user?.id, thirtyDaysAgo.slice(0, 10)],
     queryFn: async () => {
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
-      const { data } = await supabase.from("page_views").select("*").eq("owner_id", user!.id).gte("created_at", thirtyDaysAgo);
-      return data || [];
+      const { data, error } = await supabase
+        .from("page_views")
+        .select("visitor_id")
+        .eq("owner_id", user!.id)
+        .gte("created_at", thirtyDaysAgo);
+      if (error) throw error;
+      return data ?? [];
     },
     enabled: !!user,
   });
 
-  const { data: sales30d = [] } = useQuery({
-    queryKey: ["pixel-conversions", user?.id],
+  const { data: sales30d = [], isError: salesError } = useQuery({
+    queryKey: ["pixel-conversions", user?.id, thirtyDaysAgo.slice(0, 10)],
     queryFn: async () => {
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
-      const { data } = await supabase.from("sales").select("id").eq("user_id", user!.id).gte("sold_at", thirtyDaysAgo);
-      return data || [];
+      const { data, error } = await supabase
+        .from("sales")
+        .select("id")
+        .eq("user_id", user!.id)
+        .gte("sold_at", thirtyDaysAgo);
+      if (error) throw error;
+      return data ?? [];
     },
     enabled: !!user,
   });
 
-  const recoveredCarts = carts.filter((c: any) => c.recovery_status === "recovered");
+  const recoveredCarts = carts.filter((cart) => cart.recovery_status === "recovered");
   const recoveryRate = carts.length > 0 ? Math.round((recoveredCarts.length / carts.length) * 100) : 0;
-  const recoveredValue = recoveredCarts.reduce((s: number, c: any) => s + Number(c.cart_value || 0), 0);
-  const totalAttempts = carts.reduce((s: number, c: any) => s + (c.recovery_attempts || 0), 0);
+  const recoveredValue = recoveredCarts.reduce((sum, cart) => sum + Number(cart.cart_value || 0), 0);
+  const visitorCount = new Set(pageViews.map((view) => view.visitor_id).filter(Boolean)).size;
 
-  const pixelId = userPixel || "Carregando...";
-  const mockApiKey = user?.id ? `qn_live_sk_${user.id.replace(/-/g, "").slice(0, 32)}` : "qn_live_sk_demo";
-
-  const copyApiKey = () => {
-    navigator.clipboard.writeText(mockApiKey);
-    setApiKeyCopied(true);
-    toast.success("Chave API copiada!");
-    setTimeout(() => setApiKeyCopied(false), 2000);
+  const copyToClipboard = async (value: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      toast.success(`${label} copiado.`);
+    } catch {
+      toast.error("Não foi possível copiar. Verifique a permissão da área de transferência.");
+    }
   };
 
   const tabs = [
-    { id: "smartpay" as const, label: "SmartPay", icon: RefreshCw },
-    { id: "pixel" as const, label: "Pixel Queenify", icon: Eye },
-    { id: "api" as const, label: "API Pública", icon: Code },
+    { id: "recovery" as const, label: "Recuperação", icon: RefreshCw },
+    { id: "tracking" as const, label: "Métricas", icon: Eye },
+    { id: "api" as const, label: "API e webhooks", icon: Code },
   ];
-
-  const apiEndpoints = [
-    { method: "GET", path: "/v1/products", desc: "Listar todos os produtos" },
-    { method: "GET", path: "/v1/products/:id", desc: "Obter detalhes de um produto" },
-    { method: "GET", path: "/v1/sales", desc: "Listar vendas" },
-    { method: "GET", path: "/v1/sales/:id", desc: "Obter detalhes de uma venda" },
-    { method: "POST", path: "/v1/checkout/create", desc: "Criar sessão de checkout" },
-    { method: "GET", path: "/v1/affiliates", desc: "Listar afiliados" },
-    { method: "GET", path: "/v1/coupons", desc: "Listar cupons" },
-    { method: "POST", path: "/v1/coupons", desc: "Criar cupom" },
-    { method: "GET", path: "/v1/subscriptions", desc: "Listar assinaturas" },
-    { method: "POST", path: "/v1/refunds", desc: "Processar reembolso" },
-  ];
-
-  const methodColors: Record<string, string> = {
-    GET: "bg-emerald-500/20 text-emerald-400",
-    POST: "bg-blue-500/20 text-blue-400",
-    PUT: "bg-amber-500/20 text-amber-400",
-    DELETE: "bg-destructive/20 text-destructive",
-  };
 
   return (
     <DashboardLayout>
-      <div className="max-w-5xl mx-auto">
+      <div className="mx-auto max-w-5xl">
         <div className="mb-6">
-          <h1 className="text-2xl font-display font-bold text-foreground">Automações & Integrações</h1>
-          <p className="text-sm text-muted-foreground">SmartPay, Pixel de rastreamento e API pública para integrações.</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-primary">Painel de integrações</p>
+          <h1 className="text-2xl font-display font-bold text-foreground">Automações e integrações</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Veja o que já está conectado e o que ainda precisa de configuração.</p>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 bg-secondary rounded-lg p-1 mb-6">
-          {tabs.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} className={`flex items-center gap-2 flex-1 px-4 py-2.5 rounded-md text-sm font-medium transition-colors ${tab === t.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
-              <t.icon className="w-4 h-4" />
-              <span className="hidden sm:inline">{t.label}</span>
+        <div className="mb-6 flex gap-1 rounded-xl border border-border bg-secondary/70 p-1" role="tablist" aria-label="Integrações">
+          {tabs.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={tab === id}
+              onClick={() => setTab(id)}
+              className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${tab === id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              <Icon className="h-4 w-4" />
+              <span>{label}</span>
             </button>
           ))}
         </div>
 
-        {/* SmartPay */}
-        {tab === "smartpay" && (
-          <div className="space-y-4">
-            <div className="glass-card p-5 border-primary/20">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl gradient-gold flex items-center justify-center">
-                  <RefreshCw className="w-6 h-6 text-primary-foreground" />
-                </div>
+        {tab === "recovery" && (
+          <section className="space-y-4" role="tabpanel">
+            <div className="glass-card flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 text-primary">
+                <RefreshCw className="h-6 w-6" />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-lg font-display font-bold text-foreground">Acompanhamento de carrinhos</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Os registros podem ser consultados e atualizados manualmente. A Queenify ainda não envia cobranças ou mensagens de recuperação automaticamente.
+                </p>
+              </div>
+              <span className="w-fit rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1.5 text-xs font-semibold text-amber-300">Operação manual</span>
+            </div>
+
+            {cartsError ? (
+              <div className="glass-card flex items-start gap-3 p-4 text-sm text-destructive" role="alert">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                Não foi possível carregar os carrinhos. Confira sua conexão e tente novamente.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <MetricCard label="Registros" value={cartsLoading ? "…" : carts.length.toLocaleString("pt-BR")} detail="carrinhos salvos" />
+                <MetricCard label="Marcados como recuperados" value={cartsLoading ? "…" : `${recoveredCarts.length} (${recoveryRate}%)`} detail="status informado manualmente" />
+                <MetricCard label="Valor registrado" value={cartsLoading ? "…" : `R$ ${recoveredValue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} detail="soma dos registros recuperados" />
+              </div>
+            )}
+
+            <div className="glass-card flex flex-col gap-3 p-5 sm:flex-row sm:items-center">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Mail className="h-5 w-5" /></div>
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-foreground">Registrar contatos e status</h3>
+                <p className="mt-1 text-xs text-muted-foreground">A tela de recuperação permite marcar cada carrinho como contatado, recuperado ou perdido.</p>
+              </div>
+              <a href={`${import.meta.env.BASE_URL}recuperacao-vendas`} className="rounded-lg border border-border px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-secondary">Abrir carrinhos</a>
+            </div>
+          </section>
+        )}
+
+        {tab === "tracking" && (
+          <section className="space-y-4" role="tabpanel">
+            <div className="glass-card p-5">
+              <div className="flex items-start gap-4">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Eye className="h-5 w-5" /></div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-display font-bold text-foreground">SmartPay - Recuperação Inteligente</h3>
-                  <p className="text-sm text-muted-foreground mt-1">Recuperação automática de pagamentos recusados com inteligência artificial.</p>
+                  <h2 className="text-lg font-display font-bold text-foreground">Métricas registradas na Queenify</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">Estes números vêm das visualizações e vendas já gravadas no Supabase nos últimos 30 dias.</p>
                 </div>
-                <span className="px-4 py-1.5 bg-success/20 text-success text-sm font-bold rounded-full">Ativo</span>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="glass-card p-4">
-                <p className="text-xs text-muted-foreground">Taxa de Recuperação</p>
-                <p className="text-2xl font-display font-bold text-success mt-1">{recoveryRate}%</p>
-                <p className="text-[10px] text-muted-foreground">de {carts.length} carrinhos abandonados</p>
-              </div>
-              <div className="glass-card p-4">
-                <p className="text-xs text-muted-foreground">Valor Recuperado (total)</p>
-                <p className="text-2xl font-display font-bold text-foreground mt-1">R$ {recoveredValue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
-              </div>
-              <div className="glass-card p-4">
-                <p className="text-xs text-muted-foreground">Tentativas Automáticas</p>
-                <p className="text-2xl font-display font-bold text-foreground mt-1">{totalAttempts}</p>
-              </div>
-            </div>
-
-            <div className="glass-card p-5">
-              <h4 className="text-sm font-display font-bold text-foreground mb-4">Como funciona o SmartPay</h4>
-              <div className="space-y-3">
-                {[
-                  { icon: Zap, title: "Detecção automática", desc: "Identifica pagamentos recusados em tempo real (cartão recusado, saldo insuficiente, etc.)" },
-                  { icon: RefreshCw, title: "Recobrança inteligente", desc: "Tenta novamente em horários estratégicos (manhã, tarde, noite) para maximizar aprovação." },
-                  { icon: Mail, title: "Notificação ao cliente", desc: "Envia emails automáticos pedindo atualização dos dados de pagamento." },
-                  { icon: Bell, title: "Alertas para o produtor", desc: "Você recebe notificações sobre recuperações bem-sucedidas e falhas persistentes." },
-                ].map(item => (
-                  <div key={item.title} className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <item.icon className="w-4 h-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{item.title}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
-                    </div>
+              {userPixel && (
+                <div className="mt-5 rounded-xl border border-border bg-secondary/60 p-4">
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <p className="text-xs text-muted-foreground">ID cadastrado no painel</p>
+                    <button type="button" onClick={() => void copyToClipboard(userPixel, "ID")} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                      <Copy className="h-3 w-3" /> Copiar ID
+                    </button>
                   </div>
-                ))}
-              </div>
+                  <code className="block break-all rounded-lg border border-border bg-card px-3 py-2 text-sm font-mono text-foreground">{userPixel}</code>
+                </div>
+              )}
+
+              {!userPixel && !pixelError && <p className="mt-5 text-sm text-muted-foreground">Nenhum ID de pixel foi cadastrado.</p>}
+              {pixelError && <p className="mt-5 text-sm text-destructive" role="alert">Não foi possível consultar o ID cadastrado.</p>}
             </div>
-          </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <MetricCard label="Visualizações" value={pageViewsError ? "—" : pageViews.length.toLocaleString("pt-BR")} detail="registros internos em 30 dias" icon={<BarChart3 className="h-4 w-4 text-primary" />} />
+              <MetricCard label="Visitantes identificados" value={pageViewsError ? "—" : visitorCount.toLocaleString("pt-BR")} detail="IDs únicos nos registros em 30 dias" icon={<Eye className="h-4 w-4 text-primary" />} />
+              <MetricCard label="Vendas registradas" value={salesError ? "—" : sales30d.length.toLocaleString("pt-BR")} detail="registros em 30 dias" icon={<CheckCircle2 className="h-4 w-4 text-primary" />} />
+            </div>
+
+            <div className="glass-card flex items-start gap-3 border-amber-400/20 p-4 text-sm text-muted-foreground">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
+              <p>O script de rastreamento externo ainda não está publicado. O ID cadastrado não representa um pixel externo ativo, então não instale códigos antigos que apontem para <code className="text-foreground">pixel.queenify.com</code>.</p>
+            </div>
+          </section>
         )}
 
-        {/* Pixel */}
-        {tab === "pixel" && (
-          <div className="space-y-4">
-            <div className="glass-card p-5">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-display font-bold text-foreground">Pixel Queenify</h3>
-                  <p className="text-sm text-muted-foreground">Rastreie conversões, visitantes e comportamento dos compradores.</p>
-                </div>
-                <button
-                  onClick={() => { setPixelEnabled(!pixelEnabled); toast.success(pixelEnabled ? "Pixel desativado" : "Pixel ativado"); }}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${pixelEnabled ? "bg-primary" : "bg-secondary"}`}
-                >
-                  <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-transform ${pixelEnabled ? "translate-x-6" : "translate-x-0.5"}`} />
-                </button>
-              </div>
-
-              <div className="p-4 bg-secondary rounded-xl space-y-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs text-muted-foreground">Seu ID do Pixel</p>
-                  <button onClick={() => { navigator.clipboard.writeText(pixelId); toast.success("ID copiado!"); }} className="text-xs text-primary hover:underline flex items-center gap-1">
-                    <Copy className="w-3 h-3" /> Copiar
-                  </button>
-                </div>
-                <code className="block text-sm font-mono text-foreground bg-card px-3 py-2 rounded-lg border border-border">{pixelId}</code>
-              </div>
-            </div>
-
-            <div className="glass-card p-5">
-              <h4 className="text-sm font-display font-bold text-foreground mb-3">Código de instalação</h4>
-              <p className="text-xs text-muted-foreground mb-3">Cole este código no &lt;head&gt; do seu site para rastrear conversões.</p>
-              <div className="relative">
-                <pre className="bg-card border border-border rounded-xl p-4 text-xs font-mono text-foreground overflow-x-auto">
-{`<script>
-  !function(q,e,n){q.QueenifyPixel=n;
-  var s=e.createElement('script');
-  s.async=1;s.src='https://pixel.queenify.com/q.js';
-  e.head.appendChild(s);
-  q[n]=q[n]||function(){(q[n].q=q[n].q||[]).push(arguments)};
-  q[n]('init','${pixelId}');
-  q[n]('track','PageView');
-  }(window,document,'qpx');
-</script>`}
-                </pre>
-                <button
-                  onClick={() => { navigator.clipboard.writeText(`<!-- Queenify Pixel -->\n<script>...</script>`); toast.success("Código copiado!"); }}
-                  className="absolute top-3 right-3 px-2 py-1 bg-primary/20 text-primary rounded text-[10px] font-medium hover:bg-primary/30"
-                >
-                  Copiar
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="glass-card p-4">
-                <div className="flex items-center gap-2"><BarChart3 className="w-4 h-4 text-primary" /><p className="text-xs text-muted-foreground">Eventos rastreados</p></div>
-                <p className="text-2xl font-display font-bold text-foreground mt-1">{pageViews.length.toLocaleString()}</p>
-              </div>
-              <div className="glass-card p-4">
-                <div className="flex items-center gap-2"><Eye className="w-4 h-4 text-blue-400" /><p className="text-xs text-muted-foreground">Visitantes únicos (30d)</p></div>
-                <p className="text-2xl font-display font-bold text-foreground mt-1">{new Set(pageViews.map((v: any) => v.visitor_id)).size.toLocaleString()}</p>
-              </div>
-              <div className="glass-card p-4">
-                <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-success" /><p className="text-xs text-muted-foreground">Conversões (30d)</p></div>
-                <p className="text-2xl font-display font-bold text-foreground mt-1">{sales30d.length}</p>
-              </div>
-            </div>
-
-            <div className="glass-card p-5">
-              <h4 className="text-sm font-display font-bold text-foreground mb-3">Eventos disponíveis</h4>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {["PageView", "ViewContent", "AddToCart", "InitiateCheckout", "Purchase", "Lead", "CompleteRegistration", "Subscribe", "StartTrial"].map(evt => (
-                  <div key={evt} className="flex items-center gap-2 p-2.5 bg-secondary rounded-lg">
-                    <div className="w-2 h-2 rounded-full bg-success" />
-                    <code className="text-xs font-mono text-foreground">{evt}</code>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* API */}
         {tab === "api" && (
-          <div className="space-y-4">
+          <section className="space-y-4" role="tabpanel">
             <div className="glass-card p-5">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Globe className="w-5 h-5 text-primary" />
-                </div>
+              <div className="flex items-start gap-4">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Globe className="h-5 w-5" /></div>
                 <div>
-                  <h3 className="text-lg font-display font-bold text-foreground">API Pública Queenify</h3>
-                  <p className="text-sm text-muted-foreground">Integre a Queenify com qualquer sistema externo.</p>
+                  <h2 className="text-lg font-display font-bold text-foreground">API pública ainda indisponível</h2>
+                  <p className="mt-1 max-w-2xl text-sm text-muted-foreground">Não existe uma API pública ativa para os endpoints exibidos anteriormente. Nenhuma chave de API foi criada. A chave demonstrativa foi removida para evitar que parecesse uma credencial real.</p>
                 </div>
               </div>
 
-              <div className="p-4 bg-secondary rounded-xl space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-primary" />
-                    <p className="text-xs font-medium text-foreground">Chave de API (Live)</p>
+              <div className="mt-5 rounded-xl border border-amber-400/25 bg-amber-400/5 p-4">
+                <div className="flex items-start gap-3">
+                  <Shield className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Não compartilhe chaves de serviço do Supabase no navegador.</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Uma API pública precisa de autenticação própria, permissões por usuário, limites de requisição e validação no servidor antes de gerar credenciais.</p>
                   </div>
-                  <button onClick={copyApiKey} className="text-xs text-primary hover:underline flex items-center gap-1">
-                    {apiKeyCopied ? <CheckCircle2 className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                    {apiKeyCopied ? "Copiado!" : "Copiar"}
-                  </button>
                 </div>
-                <code className="block text-xs font-mono text-foreground bg-card px-3 py-2 rounded-lg border border-border">
-                  {mockApiKey.slice(0, 20)}{"•".repeat(16)}
-                </code>
-                <p className="text-[10px] text-muted-foreground">⚠️ Nunca compartilhe sua chave API. Ela dá acesso total à sua conta.</p>
               </div>
             </div>
 
-            <div className="glass-card p-5">
-              <h4 className="text-sm font-display font-bold text-foreground mb-1">Base URL</h4>
-              <code className="text-xs font-mono text-primary bg-primary/5 px-3 py-1.5 rounded-lg border border-primary/20 inline-block">
-                https://api.queenify.com/v1
-              </code>
-            </div>
-
-            <div className="glass-card overflow-hidden">
-              <div className="p-4 border-b border-border">
-                <h4 className="text-sm font-display font-bold text-foreground">Endpoints Disponíveis</h4>
+            <div className="glass-card flex flex-col gap-3 p-5 sm:flex-row sm:items-center">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Webhook className="h-5 w-5" /></div>
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-foreground">Webhooks</h3>
+                <p className="mt-1 text-xs text-muted-foreground">A tela de webhooks é o caminho disponível para configurar integrações de saída.</p>
               </div>
-              <div className="divide-y divide-border">
-                {apiEndpoints.map((ep, i) => (
-                  <div key={i} className="flex items-center gap-3 px-4 py-3 hover:bg-secondary/30 transition-colors">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${methodColors[ep.method]}`}>{ep.method}</span>
-                    <code className="text-xs font-mono text-foreground flex-1">{ep.path}</code>
-                    <p className="text-xs text-muted-foreground hidden sm:block">{ep.desc}</p>
-                  </div>
-                ))}
-              </div>
+              <a href={`${import.meta.env.BASE_URL}webhooks`} className="rounded-lg border border-border px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-secondary">Abrir webhooks</a>
             </div>
-
-            <div className="glass-card p-5">
-              <h4 className="text-sm font-display font-bold text-foreground mb-3">Exemplo de requisição</h4>
-              <pre className="bg-card border border-border rounded-xl p-4 text-xs font-mono text-foreground overflow-x-auto">
-{`curl -X GET https://api.queenify.com/v1/products \\
-  -H "Authorization: Bearer ${mockApiKey.slice(0, 20)}..." \\
-  -H "Content-Type: application/json"
-
-# Resposta:
-{
-  "data": [
-    {
-      "id": "prod_abc123",
-      "name": "Curso Digital",
-      "price": 197.00,
-      "status": "active"
-    }
-  ],
-  "total": 1,
-  "page": 1
-}`}
-              </pre>
-            </div>
-
-            <div className="glass-card p-4">
-              <div className="flex items-center gap-3">
-                <Webhook className="w-5 h-5 text-primary" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">Precisa de webhooks?</p>
-                  <p className="text-xs text-muted-foreground">Configure notificações em tempo real para eventos da sua conta.</p>
-                </div>
-                <a href={`${import.meta.env.BASE_URL}webhooks`} className="ml-auto text-xs text-primary font-medium hover:underline">Ir para Webhooks →</a>
-              </div>
-            </div>
-          </div>
+          </section>
         )}
       </div>
     </DashboardLayout>
   );
 };
+
+function MetricCard({ label, value, detail, icon }: { label: string; value: string; detail: string; icon?: React.ReactNode }) {
+  return (
+    <div className="glass-card p-4">
+      <div className="flex items-center gap-2">
+        {icon}
+        <p className="text-xs text-muted-foreground">{label}</p>
+      </div>
+      <p className="mt-1 text-xl font-display font-bold text-foreground">{value}</p>
+      <p className="text-[10px] text-muted-foreground">{detail}</p>
+    </div>
+  );
+}
 
 export default Automacoes;

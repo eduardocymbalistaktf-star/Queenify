@@ -71,12 +71,6 @@ const THEME_STYLES: Record<string, { bg: string; fg: string; card: string; borde
   modern: { bg: "#1a1a2e", fg: "#eaeaea", card: "#222244", border: "#333366", muted: "#9999bb" },
 };
 
-const mockTestimonials = [
-  { name: "Mariana S.", photo: null, rating: 5, text: "Produto incrível! Mudou completamente minha forma de trabalhar. Super recomendo!" },
-  { name: "João P.", photo: null, rating: 5, text: "Conteúdo de qualidade excepcional. Valeu cada centavo investido." },
-  { name: "Ana Clara R.", photo: null, rating: 4, text: "Muito bom! As aulas são práticas e diretas ao ponto. Já estou tendo resultados." },
-];
-
 const Checkout = () => {
   const { productId } = useParams<{ productId: string }>();
   const [searchParams] = useSearchParams();
@@ -93,7 +87,6 @@ const Checkout = () => {
   const [orderBumps, setOrderBumps] = useState<OrderBumpItem[]>([]);
   const [selectedBumps, setSelectedBumps] = useState<Set<string>>(new Set());
   const [custom, setCustom] = useState<CheckoutCustom | null>(null);
-  const [countdown, setCountdown] = useState(0);
   const [retryCount, setRetryCount] = useState(0);
   const [retrying, setRetrying] = useState(false);
   const [oneClickAvailable, setOneClickAvailable] = useState(false);
@@ -101,6 +94,8 @@ const Checkout = () => {
   const [oneClickData, setOneClickData] = useState<{ email: string; name: string } | null>(null);
   const [pixResult, setPixResult] = useState<{ qr_code: string; qr_code_base64: string; ticket_url: string } | null>(null);
   const [boletoResult, setBoletoResult] = useState<{ barcode?: string; pdf_url?: string } | null>(null);
+  const [reviews, setReviews] = useState<Array<{ id: string; reviewer_name: string; rating: number; comment: string | null; is_verified_purchase: boolean }>>([]);
+  const [reviewCount, setReviewCount] = useState(0);
 
   useEffect(() => {
     const load = async () => {
@@ -116,6 +111,16 @@ const Checkout = () => {
       if (data) {
         // Track page view for analytics
         trackPageView(`/checkout/${productId}`, data.user_id, data.id);
+        const { data: approvedReviews, count: approvedReviewCount } = await supabase
+          .from("product_reviews")
+          .select("id, reviewer_name, rating, comment, is_verified_purchase", { count: "exact" })
+          .eq("product_id", data.id)
+          .eq("is_approved", true)
+          .order("created_at", { ascending: false })
+          .limit(3);
+        setReviews(approvedReviews ?? []);
+        setReviewCount(approvedReviewCount ?? approvedReviews?.length ?? 0);
+
         // Load checkout customization
         const { data: cs } = await supabase
           .from("checkout_settings")
@@ -124,9 +129,6 @@ const Checkout = () => {
           .maybeSingle();
         if (cs) {
           setCustom(cs as any);
-          if (cs.countdown_enabled && cs.countdown_minutes > 0) {
-            setCountdown(cs.countdown_minutes * 60);
-          }
         }
 
         // Load order bumps
@@ -177,24 +179,6 @@ const Checkout = () => {
     // Pré-carrega o SDK do Mercado Pago para tokenização de cartão
     loadMercadoPago().catch((e) => console.warn("MP SDK preload:", e));
   }, [productId]);
-
-  // Countdown timer
-  useEffect(() => {
-    if (countdown <= 0) return;
-    const timer = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) { clearInterval(timer); return 0; }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [countdown > 0]);
-
-  const formatCountdown = (s: number) => {
-    const m = Math.floor(s / 60);
-    const sec = s % 60;
-    return `${m.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
-  };
 
   const theme = custom ? (THEME_STYLES[custom.theme] || THEME_STYLES.dark) : null;
 
@@ -331,7 +315,7 @@ const Checkout = () => {
   const handleOneClickBuy = () => {
     if (oneClickData) {
       setForm({ email: oneClickData.email, name: oneClickData.name, cpf: "" });
-      toast.success("Dados preenchidos! Confirme o pagamento.");
+      toast.success("Dados preenchidos. Revise as informações e confirme o pagamento.");
     }
   };
 
@@ -418,16 +402,6 @@ const Checkout = () => {
 
   return (
     <div className="min-h-screen" style={theme ? { background: theme.bg, color: theme.fg } : undefined}>
-      {/* Urgency bar */}
-      {custom?.urgency_enabled && (
-        <div className="py-2 text-center text-xs font-bold" style={{ background: `${custom.primary_color}20`, color: custom.primary_color }}>
-          ⚡ {custom.urgency_text}
-          {custom.countdown_enabled && countdown > 0 && (
-            <span className="ml-2 font-mono">⏱ {formatCountdown(countdown)}</span>
-          )}
-        </div>
-      )}
-
       {/* Banner */}
       {custom?.banner_url && (
         <img src={custom.banner_url} alt="" className="w-full h-32 sm:h-48 object-cover" />
@@ -466,18 +440,18 @@ const Checkout = () => {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Form – left side */}
           <div className="lg:col-span-3 space-y-6">
-            {/* 1-Click Buy */}
+            {/* Previously used buyer details */}
             {oneClickAvailable && oneClickData && (
               <div className="glass-card p-4 border-primary/30 border">
                 <div className="flex items-center gap-3">
                   <Zap className="w-5 h-5 text-primary flex-shrink-0" />
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-foreground">Compra rápida</p>
-                    <p className="text-xs text-muted-foreground">Comprar como {oneClickData.name} ({oneClickData.email})</p>
+                    <p className="text-sm font-semibold text-foreground">Dados usados anteriormente</p>
+                    <p className="text-xs text-muted-foreground">{oneClickData.name} · {oneClickData.email}</p>
                   </div>
                   <button onClick={handleOneClickBuy}
                     className="px-4 py-2 gradient-gold rounded-lg text-xs font-semibold text-primary-foreground">
-                    <Zap className="w-3.5 h-3.5 inline mr-1" /> 1-Click Buy
+                    Preencher dados
                   </button>
                 </div>
               </div>
@@ -748,33 +722,31 @@ const Checkout = () => {
                 </div>
               )}
 
-              {/* Testimonials / Social Proof */}
-              {custom?.show_testimonials !== false && (
+              {/* Only real, moderated reviews are shown as social proof. */}
+              {custom?.show_testimonials !== false && reviews.length > 0 && (
                 <div className="space-y-3">
                   <h3 className="text-sm font-display font-bold text-foreground flex items-center gap-1.5">
-                    <Star className="w-4 h-4 text-primary fill-primary" /> Avaliações de clientes
+                    <Star className="w-4 h-4 text-primary fill-primary" /> Avaliações aprovadas ({reviewCount})
                   </h3>
-                  {mockTestimonials.map((t, i) => (
-                    <div key={i} className="p-3 rounded-xl bg-secondary/50 border border-border/50 space-y-1.5">
+                  {reviews.map((review) => (
+                    <div key={review.id} className="p-3 rounded-xl bg-secondary/50 border border-border/50 space-y-1.5">
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">
-                          {t.name.charAt(0)}
+                          {(review.reviewer_name || "A").charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1">
-                          <p className="text-xs font-medium text-foreground">{t.name}</p>
+                          <p className="text-xs font-medium text-foreground">{review.reviewer_name || "Anônimo"}</p>
                           <div className="flex gap-0.5">
-                            {Array.from({ length: 5 }).map((_, s) => (
-                              <Star key={s} className={`w-2.5 h-2.5 ${s < t.rating ? "text-primary fill-primary" : "text-muted-foreground"}`} />
+                            {Array.from({ length: 5 }).map((_, index) => (
+                              <Star key={index} className={`w-2.5 h-2.5 ${index < review.rating ? "text-primary fill-primary" : "text-muted-foreground"}`} />
                             ))}
                           </div>
                         </div>
+                        {review.is_verified_purchase && <span className="text-[10px] text-success">Compra verificada</span>}
                       </div>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed">"{t.text}"</p>
+                      {review.comment && <p className="text-[11px] text-muted-foreground leading-relaxed">“{review.comment}”</p>}
                     </div>
                   ))}
-                  <p className="text-center text-[10px] text-muted-foreground">
-                    ⭐ 4.9/5 baseado em {Math.floor(Math.random() * 200 + 100)} avaliações
-                  </p>
                 </div>
               )}
 

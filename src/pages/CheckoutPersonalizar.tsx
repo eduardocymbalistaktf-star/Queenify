@@ -1,6 +1,6 @@
 import DashboardLayout from "@/layouts/DashboardLayout";
 import { useState, useEffect } from "react";
-import { Paintbrush, Type, Image, Shield, Clock, Eye, Save, ChevronDown } from "lucide-react";
+import { Paintbrush, Type, Image, Shield, Eye, Save, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProducts } from "@/hooks/useSupabaseData";
@@ -20,11 +20,6 @@ interface CheckoutSettings {
   show_testimonials: boolean;
   custom_cta_text: string;
   custom_header_text: string | null;
-  urgency_enabled: boolean;
-  urgency_text: string;
-  countdown_enabled: boolean;
-  countdown_minutes: number;
-  countdown_seconds?: number;
 }
 
 const THEMES = [
@@ -50,11 +45,6 @@ const defaultSettings: Omit<CheckoutSettings, "product_id"> = {
   show_testimonials: false,
   custom_cta_text: "Comprar agora",
   custom_header_text: null,
-  urgency_enabled: false,
-  urgency_text: "Oferta por tempo limitado!",
-  countdown_enabled: false,
-  countdown_minutes: 15,
-  countdown_seconds: 0,
 };
 
 const CheckoutPersonalizar = () => {
@@ -81,7 +71,7 @@ const CheckoutPersonalizar = () => {
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
-          setSettings({ ...data, countdown_seconds: 0 } as any);
+          setSettings({ ...defaultSettings, ...data, product_id: selectedProductId } as CheckoutSettings);
         } else {
           setSettings({ ...defaultSettings, product_id: selectedProductId });
         }
@@ -92,9 +82,21 @@ const CheckoutPersonalizar = () => {
   const handleSave = async () => {
     if (!user || !selectedProductId) return;
     setSaving(true);
-    const { countdown_seconds, ...rest } = settings;
-    const payload = { ...rest, product_id: selectedProductId, user_id: user.id };
-    delete (payload as any).id;
+    const payload = {
+      product_id: selectedProductId,
+      user_id: user.id,
+      theme: settings.theme,
+      primary_color: settings.primary_color,
+      secondary_color: settings.secondary_color,
+      accent_color: settings.accent_color,
+      logo_url: settings.logo_url,
+      banner_url: settings.banner_url,
+      show_guarantee_badge: settings.show_guarantee_badge,
+      show_security_badge: settings.show_security_badge,
+      show_testimonials: settings.show_testimonials,
+      custom_cta_text: settings.custom_cta_text,
+      custom_header_text: settings.custom_header_text,
+    };
 
     const { error } = settings.id
       ? await supabase.from("checkout_settings").update(payload).eq("id", settings.id)
@@ -105,7 +107,7 @@ const CheckoutPersonalizar = () => {
     } else {
       toast.success("Checkout personalizado salvo!");
       const { data } = await supabase.from("checkout_settings").select("*").eq("product_id", selectedProductId).maybeSingle();
-      if (data) setSettings({ ...data, countdown_seconds: 0 } as any);
+      if (data) setSettings({ ...defaultSettings, ...data, product_id: selectedProductId } as CheckoutSettings);
     }
     setSaving(false);
   };
@@ -133,10 +135,6 @@ const CheckoutPersonalizar = () => {
   };
 
   const selectedProduct = products?.find(p => p.id === selectedProductId);
-  const totalSeconds = (settings.countdown_minutes * 60) + (settings.countdown_seconds || 0);
-  const displayMin = Math.floor(totalSeconds / 60);
-  const displaySec = totalSeconds % 60;
-
   return (
     <DashboardLayout>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
@@ -145,7 +143,7 @@ const CheckoutPersonalizar = () => {
             <Paintbrush className="w-6 h-6 text-primary" />
             Personalizar Checkout
           </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground">Customize cores, tema, logo e gatilhos do seu checkout.</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">Personalize as cores, a marca e os elementos de confiança do checkout.</p>
         </div>
         <div className="flex items-center gap-3">
           {selectedProductId && (
@@ -273,37 +271,11 @@ const CheckoutPersonalizar = () => {
                 ))}
               </div>
 
-              <div className="border-t border-border pt-4 space-y-3">
-                <h3 className="text-xs font-bold text-foreground flex items-center gap-2"><Clock className="w-4 h-4 text-primary" /> Gatilhos de Urgência</h3>
-                <label className="flex items-center justify-between p-3 rounded-xl border border-border hover:bg-secondary/50 cursor-pointer">
-                  <span className="text-sm text-foreground">Texto de urgência</span>
-                  <div onClick={() => setSettings(s => ({ ...s, urgency_enabled: !s.urgency_enabled }))} className={`w-10 h-5 rounded-full transition-colors cursor-pointer flex items-center px-0.5 ${settings.urgency_enabled ? "bg-primary" : "bg-muted"}`}>
-                    <div className={`w-4 h-4 rounded-full bg-white shadow transition-transform ${settings.urgency_enabled ? "translate-x-5" : ""}`} />
-                  </div>
-                </label>
-                {settings.urgency_enabled && (
-                  <input type="text" value={settings.urgency_text} onChange={(e) => setSettings(s => ({ ...s, urgency_text: e.target.value }))} className="w-full px-4 py-2.5 rounded-lg bg-secondary border border-border text-sm text-foreground" />
-                )}
-
-                <label className="flex items-center justify-between p-3 rounded-xl border border-border hover:bg-secondary/50 cursor-pointer">
-                  <span className="text-sm text-foreground">Timer de contagem regressiva</span>
-                  <div onClick={() => setSettings(s => ({ ...s, countdown_enabled: !s.countdown_enabled }))} className={`w-10 h-5 rounded-full transition-colors cursor-pointer flex items-center px-0.5 ${settings.countdown_enabled ? "bg-primary" : "bg-muted"}`}>
-                    <div className={`w-4 h-4 rounded-full bg-white shadow transition-transform ${settings.countdown_enabled ? "translate-x-5" : ""}`} />
-                  </div>
-                </label>
-                {settings.countdown_enabled && (
-                  <div className="flex items-center gap-3">
-                    <div>
-                      <label className="text-xs text-muted-foreground mb-1 block">Minutos</label>
-                      <input type="number" min={0} max={120} value={settings.countdown_minutes} onChange={(e) => setSettings(s => ({ ...s, countdown_minutes: parseInt(e.target.value) || 0 }))} className="w-24 px-3 py-2.5 rounded-lg bg-secondary border border-border text-sm text-foreground" />
-                    </div>
-                    <span className="text-foreground font-bold mt-5">:</span>
-                    <div>
-                      <label className="text-xs text-muted-foreground mb-1 block">Segundos</label>
-                      <input type="number" min={0} max={59} value={settings.countdown_seconds || 0} onChange={(e) => setSettings(s => ({ ...s, countdown_seconds: Math.min(59, parseInt(e.target.value) || 0) }))} className="w-24 px-3 py-2.5 rounded-lg bg-secondary border border-border text-sm text-foreground" />
-                    </div>
-                  </div>
-                )}
+              <div className="border-t border-border pt-4">
+                <h3 className="text-xs font-bold text-foreground mb-2 flex items-center gap-2"><Shield className="w-4 h-4 text-primary" /> Prazos e disponibilidade</h3>
+                <p className="rounded-xl border border-border bg-secondary/40 p-3 text-xs leading-relaxed text-muted-foreground">
+                  Contadores que reiniciam a cada visita foram removidos para não exibir prazos ou escassez fictícios. Um prazo de oferta só poderá aparecer quando houver uma data real validada pelo servidor.
+                </p>
               </div>
             </div>
           </div>
@@ -325,11 +297,6 @@ const CheckoutPersonalizar = () => {
                   </div>
                 </div>
                 {settings.banner_url && <img src={settings.banner_url} alt="" className="w-full h-16 object-cover" />}
-                {settings.urgency_enabled && (
-                  <div className="px-3 py-1.5 text-center" style={{ background: `${settings.primary_color}20` }}>
-                    <span className="text-[9px] font-bold" style={{ color: settings.primary_color }}>⚡ {settings.urgency_text}</span>
-                  </div>
-                )}
                 {settings.custom_header_text && (
                   <div className="px-3 pt-3"><p className="text-[10px] font-bold" style={{ color: THEMES.find(t => t.id === settings.theme)?.fg }}>{settings.custom_header_text}</p></div>
                 )}
@@ -338,13 +305,6 @@ const CheckoutPersonalizar = () => {
                     <div className="h-2 w-12 rounded bg-current opacity-20" style={{ color: THEMES.find(t => t.id === settings.theme)?.fg }} />
                     <div className="h-6 rounded-lg" style={{ background: `${THEMES.find(t => t.id === settings.theme)?.fg || "#fff"}10`, border: `1px solid ${THEMES.find(t => t.id === settings.theme)?.fg || "#fff"}15` }} />
                   </div>
-                  {settings.countdown_enabled && (
-                    <div className="text-center py-1">
-                      <span className="text-[10px] font-mono font-bold" style={{ color: settings.accent_color }}>
-                        ⏱ {String(displayMin).padStart(2, "0")}:{String(displaySec).padStart(2, "0")}
-                      </span>
-                    </div>
-                  )}
                   <button className="w-full py-2 rounded-lg text-[10px] font-bold text-white" style={{ background: settings.primary_color }}>{settings.custom_cta_text}</button>
                   {settings.show_security_badge && (
                     <div className="flex items-center justify-center gap-2 pt-1">
