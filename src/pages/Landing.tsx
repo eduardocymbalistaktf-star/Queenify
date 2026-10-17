@@ -1342,7 +1342,7 @@ const Landing = () => {
             <motion.div variants={fadeUp} className="lg:col-span-2">
               <h2 className="text-3xl sm:text-4xl font-display font-bold leading-tight mb-4">Perguntas Frequentes</h2>
               <p className="text-muted-foreground leading-relaxed mb-6">
-                Tire suas dúvidas sobre como a Queenify funciona e descubra tudo que você precisa para começar a vender.
+                Consulte o estado atual da plataforma, dos recursos disponíveis e das integrações em preparação.
               </p>
               <Link to="/ajuda" className="text-sm font-semibold text-primary hover:underline">Central de ajuda →</Link>
             </motion.div>
