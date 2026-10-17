@@ -25,5 +25,11 @@ verify_jwt = false
 [functions.roas-alert-check]
 verify_jwt = false
 
+[functions.support-chat]
+verify_jwt = false
+
+[functions.ads-integration]
+verify_jwt = false
+
 [functions.external-sale-webhook]
 verify_jwt = false

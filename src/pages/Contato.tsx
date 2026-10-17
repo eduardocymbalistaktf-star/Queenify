@@ -1,8 +1,8 @@
 import LegalLayout from "@/components/LegalLayout";
-import { Mail, Clock } from "lucide-react";
+import { Mail } from "lucide-react";
 
 const channels = [
-  { icon: Mail, title: "E-mail de suporte", description: "Para questões detalhadas ou envio de documentos. Tempo de resposta estimado: até 48 horas.", link: "mailto:suporte@queenify.com.br?subject=Ajuda%20Queenify", linkText: "suporte@queenify.com.br", highlight: true },
+  { icon: Mail, title: "E-mail de contato", description: "Para questões detalhadas. Não envie senhas, códigos de autenticação ou dados completos de pagamento.", link: "mailto:suporte@queenify.com.br?subject=Ajuda%20Queenify", linkText: "suporte@queenify.com.br", highlight: true },
 ];
 
 const Contato = () => (
@@ -27,10 +27,7 @@ const Contato = () => (
     </div>
 
     <h2>Disponibilidade</h2>
-    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-      <Clock className="w-4 h-4 text-primary" />
-      <span>QueenIA disponível 24 horas; suporte por e-mail em até 48 horas.</span>
-    </div>
+    <p>Os canais automatizados e os prazos de resposta estão em configuração. O envio de e-mail depende da disponibilidade do endereço informado.</p>
 
     <h2>Para Autoridades e Questões Jurídicas</h2>
     <p>Solicitações oficiais de autoridades públicas devem ser encaminhadas para: <strong>juridico@queenify.com.br</strong></p>

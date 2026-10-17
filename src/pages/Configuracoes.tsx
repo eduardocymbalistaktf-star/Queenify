@@ -624,7 +624,7 @@ const Configuracoes = () => {
             </div>
             <div className="glass-card p-4 mt-4">
               <div className="flex items-center gap-2 mb-1"><CreditCard className="w-4 h-4 text-primary" /><p className="text-sm font-semibold text-foreground">Taxas da plataforma</p></div>
-              <p className="text-xs text-muted-foreground">Taxa por venda: <span className="text-foreground font-medium">PIX 6,99% • Cartão/Boleto 7,99% + R$ 1,49</span></p>
+              <p className="text-xs text-muted-foreground">Taxas de processamento: <span className="text-foreground font-medium">em validação; consulte as condições oficiais antes de vender</span></p>
               <p className="text-xs text-muted-foreground">Prazo de saque: <span className="text-foreground font-medium">2 a 14 dias úteis</span></p>
             </div>
             <button onClick={handleSavePayment} disabled={updateSettings.isPending} className="px-4 py-2 gradient-gold rounded-lg text-sm font-semibold text-primary-foreground mt-2 disabled:opacity-50">{updateSettings.isPending ? "Salvando..." : "Salvar Dados"}</button>

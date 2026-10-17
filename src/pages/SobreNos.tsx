@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Heart, Target, Eye, Users, Sparkles, ShieldCheck, Globe, Award } from "lucide-react";
-import queenifyBee from "@/assets/queenify-bee.png";
+import queenifyBee from "@/assets/queenify-bee-blue.svg";
 import BackButton from "@/components/BackButton";
 
 const fadeUp = { hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } };
@@ -9,24 +9,9 @@ const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.1 } } 
 
 const values = [
   { icon: Heart, title: "Empatia", desc: "Entendemos as dores dos produtores digitais porque já estivemos no seu lugar." },
-  { icon: ShieldCheck, title: "Transparência", desc: "Taxas claras, sem custos ocultos, sem surpresas. Você sabe exatamente o que paga." },
+  { icon: ShieldCheck, title: "Transparência", desc: "Taxas e prazos serão informados nas telas oficiais antes de a plataforma aceitar vendas." },
   { icon: Sparkles, title: "Inovação", desc: "Estamos sempre evoluindo, trazendo tecnologias que simplificam e potencializam suas vendas." },
-  { icon: Users, title: "Comunidade", desc: "Acreditamos que crescer juntos é melhor. Nosso marketplace conecta produtores e afiliados." },
-];
-
-const milestones = [
-  { year: "2025", event: "Ideia e concepção da Queenify" },
-  { year: "2025", event: "Desenvolvimento da plataforma" },
-  { year: "2026", event: "Lançamento oficial" },
-  { year: "2026", event: "Marketplace de afiliados" },
-  { year: "2026", event: "App Mobile" },
-];
-
-const stats = [
-  { value: "6,99%", label: "Taxa única por venda" },
-  { value: "2 dias", label: "Liberação via PIX" },
-  { value: "7 dias", label: "Suporte por semana" },
-  { value: "24h", label: "Aprovação de produtos" },
+  { icon: Users, title: "Comunidade", desc: "Estamos preparando ferramentas para produtores e afiliados trabalharem juntos." },
 ];
 
 const SobreNos = () => (
@@ -93,34 +78,11 @@ const SobreNos = () => (
     </section>
 
     <section className="py-16 px-4 border-t border-border">
-      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="max-w-4xl mx-auto">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {stats.map((s) => (
-            <motion.div key={s.label} variants={fadeUp} className="glass-card p-6 text-center">
-              <p className="text-2xl font-display font-bold text-primary">{s.value}</p>
-              <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
-    </section>
-
-    <section className="py-16 px-4 border-t border-border">
       <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="max-w-2xl mx-auto">
-        <motion.h2 variants={fadeUp} className="text-2xl font-display font-bold text-center mb-10">Nossa Jornada</motion.h2>
-        <div className="space-y-4">
-          {milestones.map((m, i) => (
-            <motion.div key={i} variants={fadeUp} className="flex items-center gap-4">
-              <div className="w-16 text-right">
-                <span className="text-sm font-bold text-primary">{m.year}</span>
-              </div>
-              <div className="w-3 h-3 rounded-full bg-primary flex-shrink-0 ring-4 ring-primary/20" />
-              <div className="glass-card p-4 flex-1">
-                <p className="text-sm text-foreground">{m.event}</p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+        <motion.h2 variants={fadeUp} className="text-2xl font-display font-bold text-center mb-5">Estado do projeto</motion.h2>
+        <motion.p variants={fadeUp} className="glass-card p-6 text-center text-sm text-muted-foreground">
+          A Queenify está em preparação. Recursos, integrações, taxas e disponibilidade serão confirmados antes do lançamento comercial.
+        </motion.p>
       </motion.div>
     </section>
 
@@ -128,7 +90,7 @@ const SobreNos = () => (
       <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
         <Globe className="w-10 h-10 text-primary mx-auto mb-4" />
         <h2 className="text-2xl font-display font-bold mb-3">Faça parte dessa história</h2>
-        <p className="text-muted-foreground mb-6 max-w-md mx-auto text-sm">Junte-se a milhares de produtores que estão transformando conhecimento em negócio.</p>
+        <p className="text-muted-foreground mb-6 max-w-md mx-auto text-sm">Conheça a prévia da plataforma e acompanhe as próximas etapas de disponibilização.</p>
         <Link to="/signup" className="inline-flex px-8 py-3.5 gradient-gold rounded-xl text-base font-bold text-primary-foreground hover:opacity-90 transition-all hover:scale-105 shadow-lg shadow-primary/20">
           Cadastrar agora
         </Link>

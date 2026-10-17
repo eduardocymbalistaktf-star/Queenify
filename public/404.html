@@ -1,16 +1,20 @@
 <!doctype html>
 <html lang="pt-BR">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Carregando Queenify…</title>
-    <script>
-      const parts = window.location.pathname.split("/").filter(Boolean);
-      const base = parts.length ? `/${parts[0]}/` : "/";
-      const route = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-      sessionStorage.setItem("queenify:github-pages-route", route);
-      window.location.replace(base);
-    </script>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex" />
+    <title>Queenify</title>
   </head>
-  <body></body>
+  <body>
+    <script>
+      const base = "/Queenify";
+      const currentPath = window.location.pathname.startsWith(base)
+        ? window.location.pathname.slice(base.length)
+        : window.location.pathname;
+      const query = window.location.search.slice(1);
+      const hash = window.location.hash.slice(1);
+      const destination = `${base}/?p=${encodeURIComponent(currentPath || "/")}&q=${encodeURIComponent(query)}&h=${encodeURIComponent(hash)}`;
+      window.location.replace(destination);
+    </script>
+  </body>
 </html>

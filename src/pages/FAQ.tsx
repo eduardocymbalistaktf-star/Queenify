@@ -2,7 +2,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Search, HelpCircle, ShoppingCart, CreditCard, Users, Shield, Settings, Smartphone, Headphones } from "lucide-react";
-import queenifyBee from "@/assets/queenify-bee.png";
+import queenifyBee from "@/assets/queenify-bee-blue.svg";
 import BackButton from "@/components/BackButton";
 
 const fadeUp = { hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } };
@@ -19,7 +19,7 @@ const categories: FaqCategory[] = [
     name: "Começando",
     icon: HelpCircle,
     questions: [
-      { q: "Preciso pagar para começar a usar a Queenify?", a: "Não. Criar sua conta é 100% gratuito. Você pode cadastrar seus produtos e configurar todo o checkout sem nenhum custo. A Queenify só cobra uma taxa quando uma venda é realizada e aprovada." },
+      { q: "Preciso pagar para começar a usar a Queenify?", a: "A Queenify não anuncia uma mensalidade nesta página. Custos por venda e condições comerciais devem ser confirmados com o suporte antes de divulgar seu produto." },
       { q: "Como crio minha conta?", a: "Clique em 'Cadastrar agora', preencha seus dados (nome, e-mail, senha) e confirme seu e-mail. Em poucos minutos, você terá acesso completo ao dashboard." },
       { q: "Que tipo de produto posso vender?", a: "Qualquer produto digital: cursos online, e-books, mentorias, templates, softwares, áreas de membros, podcasts premium, e mais. Produtos físicos não são suportados no momento." },
       { q: "Preciso ter CNPJ para vender?", a: "Não. Você pode vender como pessoa física (CPF) ou jurídica (CNPJ). Para saques, basta ter uma conta bancária ou chave PIX vinculada ao seu CPF/CNPJ." },
@@ -31,19 +31,19 @@ const categories: FaqCategory[] = [
     questions: [
       { q: "Como personalizo o checkout do meu produto?", a: "No dashboard, acesse 'Meus Produtos', selecione o produto e vá na aba de Checkout. Lá você pode alterar cores, adicionar sua logo, customizar textos e até adicionar order bumps." },
       { q: "O checkout funciona no celular?", a: "Sim! O checkout da Queenify é 100% responsivo e otimizado para dispositivos móveis. Seus clientes podem comprar de qualquer lugar." },
-      { q: "Quais formas de pagamento são aceitas?", a: "PIX (aprovação instantânea), Cartão de Crédito (parcelamento em até 12x), e Boleto Bancário. Todas as formas estão disponíveis automaticamente." },
-      { q: "Como funciona o Vendas 1-Click?", a: "Quando um comprador salva os dados do cartão em qualquer checkout da Queenify, ele pode finalizar compras futuras com um único clique, sem precisar preencher dados novamente." },
+      { q: "Quais formas de pagamento são aceitas?", a: "O checkout está sendo integrado ao Mercado Pago. As formas disponíveis para uma compra são as que aparecem no checkout desse produto; confirme a configuração da conta antes de anunciar PIX, cartão ou boleto." },
+      { q: "Como funciona o Vendas 1-Click?", a: "A finalização de compras com um clique ainda não está disponível. O checkout pode preencher nome e e-mail, mas o cliente precisa concluir a etapa de pagamento." },
     ],
   },
   {
     name: "Pagamentos e Saques",
     icon: CreditCard,
     questions: [
-      { q: "Qual a taxa por venda?", a: "PIX: 6,99% + R$1,49 por venda aprovada. Cartão e Boleto: 7,99% + R$1,49. Não há mensalidades, taxas de adesão ou custos ocultos." },
-      { q: "Em quanto tempo recebo meu dinheiro?", a: "PIX e Boleto: 2 dias úteis. Cartão de Crédito: 2 a 15 dias (com opção de antecipação para 2 dias mediante taxa adicional de 3,49%)." },
-      { q: "Como funciona o saque?", a: "No dashboard, vá em 'Financeiro' > 'Solicitar Saque'. Escolha o valor e confirme. O dinheiro é enviado via PIX para a chave cadastrada." },
-      { q: "Existe valor mínimo para saque?", a: "Sim, o valor mínimo para saque é R$20,00. Não há limite máximo." },
-      { q: "O que é o Escrow?", a: "O Escrow é um sistema de proteção que retém o valor da venda durante o período de garantia do produto. Após expirar a garantia sem pedido de reembolso, o valor é liberado automaticamente." },
+      { q: "Qual a taxa por venda?", a: "As tarifas definitivas dependem das condições comerciais e do meio de pagamento configurado. Confirme os valores diretamente com o suporte antes de precificar ou anunciar um produto." },
+      { q: "Em quanto tempo recebo meu dinheiro?", a: "O prazo depende do provedor e da modalidade da transação. A QueenIA não consegue consultar sua conta ou confirmar um prazo individual; peça a confirmação ao suporte." },
+      { q: "Como funciona o saque?", a: "Abra Financeiro no dashboard para ver as opções habilitadas para sua conta. Se a solicitação de saque não estiver disponível, fale com suporte@queenify.com.br." },
+      { q: "Existe valor mínimo para saque?", a: "O valor mínimo e os limites dependem das regras de saque habilitadas para sua conta. Confirme com o suporte antes de movimentar seu saldo." },
+      { q: "O que é o Escrow?", a: "A retenção e a liberação dos valores dependem do provedor de pagamento e das regras comerciais configuradas. Confirme a política oficial com o suporte antes de prometer um prazo de liberação." },
     ],
   },
   {
@@ -60,8 +60,8 @@ const categories: FaqCategory[] = [
     name: "Segurança",
     icon: Shield,
     questions: [
-      { q: "Meus dados estão seguros?", a: "Sim. Utilizamos criptografia de ponta a ponta, autenticação de dois fatores (2FA), e estamos em conformidade com PCI DSS para processamento de pagamentos." },
-      { q: "Como funciona o reembolso?", a: "Se o comprador solicitar reembolso dentro do prazo de garantia definido por você (7, 15 ou 30 dias), o valor é devolvido automaticamente. Você pode analisar cada caso no painel de vendas." },
+      { q: "Meus dados estão seguros?", a: "A Queenify usa autenticação da Supabase e mantém controles de acesso no banco. Não afirmamos criptografia ponta a ponta nem certificação PCI DSS própria. Nunca compartilhe senha, código de autenticação ou dados completos do cartão no suporte." },
+      { q: "Como funciona o reembolso?", a: "A solicitação e o processamento de reembolso dependem do meio de pagamento e das regras do pedido. Não prometemos reembolso automático; fale com suporte@queenify.com.br para confirmar o procedimento." },
       { q: "O que acontece se meu produto for denunciado?", a: "Nossa equipe analisa cada denúncia individualmente. Se o produto violar as políticas da plataforma (plágio, conteúdo proibido), ele pode ser removido. Você será notificado e terá a chance de se manifestar." },
     ],
   },

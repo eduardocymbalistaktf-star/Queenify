@@ -2,16 +2,16 @@ import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, Navigate } from "react-router-dom";
 import { trackPageView } from "@/hooks/usePageTracking";
 import { useAuth } from "@/contexts/AuthContext";
-import { motion, useScroll, useTransform, AnimatePresence, useInView, useMotionValue, useSpring } from "framer-motion";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import {
   ShieldCheck, Headphones, Zap, MousePointerClick, Cpu,
   CreditCard, Clock, PaintBucket, Handshake, Store, Users,
   Trophy, Crown, Star, Shield, ChevronDown,
-  Sparkles, Smartphone, MessageCircle, Megaphone, Menu, X, Quote,
+  Sparkles, Smartphone, MessageCircle, Megaphone, Menu, X,
   TrendingUp, BarChart3, Globe, Bot, Rocket, ArrowRight,
   CheckCircle2, Play, Target, Layers, RefreshCcw, Gauge,
 } from "lucide-react";
-import queenifyBee from "@/assets/queenify-bee.png";
+import queenifyBee from "@/assets/queenify-bee-blue.svg";
 import dashboardMockup from "@/assets/dashboard-mockup.jpg";
 import mobileMockup from "@/assets/mobile-mockup.jpg";
 
@@ -51,30 +51,6 @@ function useTypingEffect(texts: string[], typingSpeed = 80, deletingSpeed = 40, 
   return display;
 }
 
-/* ─── Counter animation hook ─── */
-function useCounter(end: number, duration = 2000, startOnView = true) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, amount: 0.5 });
-  const motionVal = useMotionValue(0);
-  const spring = useSpring(motionVal, { duration, bounce: 0 });
-  const [display, setDisplay] = useState("0");
-
-  useEffect(() => {
-    if (!startOnView || inView) {
-      motionVal.set(end);
-    }
-  }, [inView, end, motionVal, startOnView]);
-
-  useEffect(() => {
-    const unsub = spring.on("change", (v) => {
-      setDisplay(v.toFixed(end % 1 !== 0 ? 2 : 0).replace(".", ","));
-    });
-    return unsub;
-  }, [spring, end]);
-
-  return { ref, display };
-}
-
 /* ─── Floating particle component ─── */
 const FloatingParticle = ({ delay = 0, x = 0, y = 0, size = 3 }: { delay?: number; x?: number; y?: number; size?: number }) => (
   <motion.div
@@ -106,29 +82,22 @@ const GlowDot = ({ delay = 0, x = 0, y = 0, size = 2 }: { delay?: number; x?: nu
 );
 const whyFeatures = [
   { icon: Layers, title: "Cadastro fácil de produtos", desc: "Cadastre seu produto digital em minutos. Sem burocracia, sem complicação. Cursos, e-books, mentorias e mais." },
-  { icon: TrendingUp, title: "Alta conversão", desc: "Checkouts personalizáveis, order bumps, upsells, vendas 1-click e recuperação automática de carrinho." },
-  { icon: Zap, title: "Saque rápido", desc: "PIX em 2 dias úteis, cartão em até 15 dias. Seu dinheiro no bolso o mais rápido possível." },
+  { icon: TrendingUp, title: "Checkout configurável", desc: "Conheça as opções de personalização disponíveis. Cobranças dependem da ativação do provedor de pagamento." },
+  { icon: Zap, title: "Dados financeiros", desc: "Consulte os registros da conta. Saques e prazos ainda dependem da integração financeira." },
 ];
 
 const platformFeatures = [
-  { icon: PaintBucket, title: "Checkout 100% editável", desc: "Personalize cores, logo, textos, depoimentos e provas sociais. Aumente sua taxa de aprovação em até 30%." },
-  { icon: RefreshCcw, title: "SmartPay™", desc: "Sistema inteligente de recuperação de pagamentos negados. Mais aprovações, menos vendas perdidas." },
-  { icon: BarChart3, title: "Dashboard completo", desc: "Acompanhe vendas, métricas, afiliados e financeiro em tempo real com relatórios detalhados." },
-  { icon: Gauge, title: "Assinaturas & Recorrência", desc: "Gerencie cobranças recorrentes com planos flexíveis e gestão automática de assinantes." },
+  { icon: PaintBucket, title: "Checkout configurável", desc: "Personalize os elementos disponíveis na tela de checkout. As cobranças aguardam a validação do provedor." },
+  { icon: RefreshCcw, title: "Recuperação de pagamentos", desc: "Os fluxos automatizados de recuperação ainda precisam de integração e testes com provedores." },
+  { icon: BarChart3, title: "Painel de dados", desc: "Visualize os registros disponíveis na conta. Atualizações dependem das integrações conectadas." },
+  { icon: Gauge, title: "Assinaturas", desc: "A cobrança recorrente ainda não está liberada para uso comercial." },
 ];
 
 const powerFeatures = [
-  { icon: Target, title: "Pixel & Tracking", desc: "Rastreamento nativo de eventos: PageView, AddToCart, InitiateCheckout, Purchase. Integração com webhooks." },
-  { icon: Bot, title: "Suporte com IA", desc: "Chatbot inteligente que resolve dúvidas instantaneamente + atendimento humano 7 dias por semana, 08h–22h." },
-  { icon: Handshake, title: "Co-produção & Sócios", desc: "Convide co-produtores e sócios com splits automáticos de receita. Transparência total nos pagamentos." },
-  { icon: Users, title: "Marketplace de Afiliados", desc: "Links de rastreamento, painel de desempenho, comissões automáticas via PIX. Tudo em um só lugar." },
-];
-
-const stats = [
-  { value: "6,99%", numericEnd: 6.99, label: "Taxa por venda", sub: "+ R$1,49", isPercent: true },
-  { value: "2 dias", numericEnd: 2, label: "Saque via PIX", sub: "Úteis", suffix: " dias", isPercent: false },
-  { value: "7 dias", numericEnd: 7, label: "Suporte semanal", sub: "08h–22h", suffix: " dias", isPercent: false },
-  { value: "1-Click", numericEnd: 1, label: "Vendas rápidas", sub: "SmartPay™", suffix: "-Click", isPercent: false },
+  { icon: Target, title: "Pixel & Tracking", desc: "Ferramentas de rastreamento para Meta e TikTok em configuração; Google Ads permanece pausado." },
+  { icon: Bot, title: "Suporte com IA", desc: "QueenIA especializada em Queenify. As respostas dependem da publicação da função e da configuração do provedor de IA." },
+  { icon: Handshake, title: "Co-produção & Sócios", desc: "Cadastros e regras de comissão dependem da implementação do fluxo de pagamento e divisão de valores." },
+  { icon: Users, title: "Marketplace de Afiliados", desc: "Explore produtos e solicitações de afiliação. A atribuição e o pagamento de comissões precisam de validação ponta a ponta." },
 ];
 
 const techGrid = [
@@ -146,13 +115,6 @@ const techGrid = [
   { icon: ArrowRight, label: "E muito mais..." },
 ];
 
-const testimonials = [
-  { name: "Mariana Costa", role: "Produtora de cursos", revenue: "R$87.000 em 6 meses", quote: "A Queenify mudou meu negócio. O checkout personalizado aumentou minhas conversões em 40%. O suporte é incrível, sempre respondem rápido.", avatar: "M" },
-  { name: "Rafael Oliveira", role: "Mentor digital", revenue: "R$215.000 em 1 ano", quote: "Migrei de outra plataforma e a diferença é absurda. Saque em 2 dias via PIX, marketplace de afiliados e taxas justas.", avatar: "R" },
-  { name: "Camila Ferreira", role: "Criadora de e-books", revenue: "R$32.000 em 3 meses", quote: "Comecei do zero, sem entender nada de vendas online. A Queenify me deu todas as ferramentas para escalar meu negócio digital.", avatar: "C" },
-  { name: "Lucas Andrade", role: "Afiliado profissional", revenue: "870+ vendas", quote: "O marketplace de afiliados é fantástico. Encontro produtos de qualidade facilmente e as comissões caem na conta rapidinho.", avatar: "L" },
-];
-
 const levels = [
   { name: "Bronze", icon: Shield, range: "R$10.000+", color: "text-muted-foreground" },
   { name: "Silver", icon: Star, range: "R$100.000+", color: "text-[hsl(0,0%,75%)]" },
@@ -161,14 +123,14 @@ const levels = [
 ];
 
 const faqs = [
-  { q: "Preciso pagar para começar a usar a Queenify?", a: "Não. Sua conta é gratuita. Você só paga quando vender: a partir de 6,99% + R$1,49 por venda aprovada (PIX). Cartão e boleto: 7,99% + R$1,49." },
-  { q: "Em quanto tempo recebo minhas vendas?", a: "PIX e boleto em 2 dias úteis. Cartão de crédito de 2 a 15 dias, com opção de antecipação." },
-  { q: "Posso vender qualquer produto digital?", a: "Sim! Cursos, e-books, mentorias, templates, softwares, área de membros. Vendas únicas e assinaturas." },
-  { q: "Como funciona o programa de afiliados?", a: "Links de rastreamento exclusivos, dashboard de desempenho em tempo real e comissões automáticas via PIX." },
-  { q: "O checkout é seguro?", a: "Sim. Criptografia de ponta a ponta e PCI DSS. Personalize cores, temas, logos e adicione provas sociais." },
-  { q: "O que é o Pixel & Tracking?", a: "Sistema nativo de rastreamento de eventos (PageView, AddToCart, InitiateCheckout, Purchase) com Pixel Queenify de 12 dígitos exclusivo e integração via webhooks." },
-  { q: "Existe suporte se eu tiver problemas?", a: "Chatbot com IA para dúvidas rápidas + atendimento humano 7 dias, 08h–22h, pela plataforma ou WhatsApp." },
-  { q: "O que são as automações?", a: "SmartPay (recuperação de pagamentos), Pixel Queenify (rastreamento), API pública e webhooks para integrar com qualquer ferramenta." },
+  { q: "Quais são as taxas?", a: "As taxas ainda estão em validação. Confira as condições oficiais na Queenify antes de cadastrar uma venda; não use valores indicativos como tarifa vigente." },
+  { q: "Quando recebo o dinheiro das vendas?", a: "Saques e prazos ainda não estão habilitados. A disponibilidade dependerá da integração financeira e das condições informadas antes do lançamento." },
+  { q: "Quais produtos posso cadastrar?", a: "A Queenify está preparada para organizar produtos digitais, como cursos e e-books. Verifique na própria conta quais tipos e entregas estão habilitados." },
+  { q: "Como funcionam afiliados e comissões?", a: "As telas de afiliados estão disponíveis para configuração, mas atribuição e pagamento de comissões precisam de validação com o fluxo real de venda." },
+  { q: "Posso cobrar no checkout?", a: "A cobrança depende da ativação e dos testes do provedor de pagamento. Não aceite pedidos reais enquanto a Queenify estiver em prévia." },
+  { q: "O checkout é seguro?", a: "A autenticação usa Supabase e os acessos ao banco têm políticas. A Queenify não declara certificação PCI DSS própria; o processamento depende do provedor configurado." },
+  { q: "Existe suporte se eu tiver problemas?", a: "A QueenIA e os canais de atendimento estão em configuração. Consulte a Central de Ajuda para ver as opções disponíveis." },
+  { q: "O que são as automações?", a: "Algumas telas de automação estão disponíveis para configuração. Cada fluxo precisa ser ativado e testado com o respectivo serviço antes de uso." },
 ];
 
 const navLinks = [
@@ -178,22 +140,6 @@ const navLinks = [
   { label: "Ajuda", href: "/ajuda" },
   { label: "Sobre nós", href: "/sobre" },
 ];
-
-/* ─── Stat Counter Component ─── */
-const StatCounter = ({ stat }: { stat: typeof stats[0] }) => {
-  const { ref, display } = useCounter(stat.numericEnd, 1800);
-  return (
-    <motion.div variants={fadeUp} className="text-center group">
-      <p className="text-3xl sm:text-4xl font-display font-bold text-primary transition-transform group-hover:scale-110 duration-300">
-        <span ref={ref}>
-          {stat.isPercent ? `${display}%` : `${display}${stat.suffix || ""}`}
-        </span>
-      </p>
-      <p className="text-sm font-medium text-foreground mt-1">{stat.label}</p>
-      <p className="text-xs text-muted-foreground">{stat.sub}</p>
-    </motion.div>
-  );
-};
 
 /* ─── Parallax hook for sections ─── */
 function useParallax(offset = 80) {
@@ -496,9 +442,9 @@ const DashboardCloneDesktop = () => (
         }}
       >
         <p className="text-[6.5px] font-bold leading-tight">Impulsione seus produtos</p>
-        <p className="text-[5.5px] opacity-80 mt-[1px] leading-tight">Apareça no topo do marketplace.</p>
+        <p className="text-[5.5px] opacity-80 mt-[1px] leading-tight">Planos indicativos em preparação.</p>
         <div className="mt-1 inline-flex px-1.5 py-[2px] rounded text-[5.5px] font-semibold" style={{ background: "hsl(0 0% 100% / 0.25)" }}>
-          Ativar Boost →
+          Ver planos →
         </div>
       </div>
 
@@ -510,7 +456,7 @@ const DashboardCloneDesktop = () => (
         </div>
         <div>
           <p className="text-[6px] font-medium">Suporte</p>
-          <p className="text-[5px]" style={{ color: "hsl(142 71% 45%)" }}>Online</p>
+          <p className="text-[5px]" style={{ color: "hsl(196 92% 56%)" }}>Em configuração</p>
         </div>
       </div>
     </aside>
@@ -965,13 +911,11 @@ const Landing = () => {
   ], 70, 35, 2200);
 
   // Parallax refs for sections
-  const statsParallax = useParallax(40);
   const whyParallax = useParallax(60);
   const platformParallax = useParallax(50);
   const powerParallax = useParallax(60);
   const techParallax = useParallax(40);
   const levelsParallax = useParallax(50);
-  const testimonialsParallax = useParallax(60);
   const pricingParallax = useParallax(50);
   const faqParallax = useParallax(40);
   const ctaParallax = useParallax(60);
@@ -1085,7 +1029,7 @@ const Landing = () => {
           <div className="flex items-center gap-3">
                 <Link to="/login" className="hidden sm:inline text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Login</Link>
                 <Link to="/signup" className="px-5 py-2.5 text-sm font-semibold gradient-gold rounded-lg text-primary-foreground hover:opacity-90 transition-all hover:scale-[1.03] hover:shadow-lg hover:shadow-primary/20 duration-300">
-                  Cadastrar grátis
+                  Criar conta
                 </Link>
             <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-1.5 rounded-lg text-muted-foreground hover:text-foreground">
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -1100,7 +1044,7 @@ const Landing = () => {
                   <button key={link.label} onClick={() => handleNavClick(link.href)} className="text-sm text-muted-foreground hover:text-foreground py-2 text-left">{link.label}</button>
                 ))}
                     <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="text-sm text-muted-foreground py-2">Login</Link>
-                    <Link to="/signup" onClick={() => setMobileMenuOpen(false)} className="text-sm font-medium text-primary py-2">Cadastrar grátis</Link>
+                    <Link to="/signup" onClick={() => setMobileMenuOpen(false)} className="text-sm font-medium text-primary py-2">Criar conta</Link>
               </nav>
             </motion.div>
           )}
@@ -1157,13 +1101,14 @@ const Landing = () => {
 
               <motion.p initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.7 }}
                 className="text-lg text-muted-foreground max-w-lg mb-8 leading-relaxed">
-                A plataforma definitiva para criadores digitais. Transforme seu conhecimento em um negócio online com checkout, afiliados, tracking e suporte inteligente.
+                Conheça a prévia da Queenify para organizar produtos digitais e acompanhar os recursos em preparação. Cobranças e ferramentas dependem da ativação das integrações.
               </motion.p>
+              <p className="-mt-5 mb-7 text-xs text-muted-foreground">A demonstração visual ao lado usa dados fictícios. Não representa vendas reais.</p>
 
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, duration: 0.5 }}
                 className="flex flex-col sm:flex-row items-start gap-3">
                 <Link to="/signup" className="inline-flex items-center gap-2 px-8 py-4 gradient-gold rounded-xl text-base font-bold text-primary-foreground hover:opacity-90 transition-all hover:scale-[1.03] shadow-lg shadow-primary/20">
-                  Cadastrar grátis <ArrowRight className="w-4 h-4" />
+                  Criar conta <ArrowRight className="w-4 h-4" />
                 </Link>
                 <button onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
                   className="inline-flex items-center gap-2 px-6 py-4 bg-secondary/80 border border-border rounded-xl text-sm font-semibold text-foreground hover:bg-secondary transition-colors">
@@ -1411,24 +1356,22 @@ const Landing = () => {
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={stagger}>
             <motion.div variants={fadeUp}>
-              <span className="text-xs font-bold uppercase tracking-widest text-primary mb-4 block">Transparência total</span>
-              <h2 className="text-3xl sm:text-4xl font-display font-bold mb-4">Você só paga se vender</h2>
-              <p className="text-muted-foreground max-w-lg mx-auto mb-10">Cadastro gratuito, sem mensalidades, sem surpresas. Simples assim.</p>
+              <span className="text-xs font-bold uppercase tracking-widest text-primary mb-4 block">Informações comerciais</span>
+              <h2 className="text-3xl sm:text-4xl font-display font-bold mb-4">Condições em validação</h2>
+              <p className="text-muted-foreground max-w-lg mx-auto mb-10">Taxas e prazos serão apresentados antes de a Queenify aceitar vendas.</p>
             </motion.div>
             <motion.div variants={scaleIn} whileHover={{ scale: 1.02, transition: { duration: 0.3 } }}
               className="glass-card p-8 sm:p-12 inline-block border-primary/20 glow-gold">
-              <div className="text-5xl sm:text-6xl font-display font-bold text-primary mb-2">
-                6,99% <span className="text-3xl text-foreground">+ R$1,49</span>
-              </div>
-              <p className="text-sm text-muted-foreground mb-1">por venda aprovada via PIX</p>
-              <p className="text-xs text-muted-foreground">Cartão e Boleto: 7,99% + R$1,49 • PIX em 2 dias • Antecipação disponível</p>
+              <div className="text-4xl sm:text-5xl font-display font-bold text-primary mb-2">Em validação</div>
+              <p className="text-sm text-muted-foreground mb-1">Taxas, meios de pagamento e prazos</p>
+              <p className="text-xs text-muted-foreground">A Queenify ainda não confirmou condições comerciais para uso em produção.</p>
             </motion.div>
             <motion.div variants={fadeUp} className="mt-8 space-y-3">
               <Link to="/signup" className="inline-flex items-center gap-2 px-8 py-4 gradient-gold rounded-xl text-base font-bold text-primary-foreground hover:opacity-90 transition-all hover:scale-[1.03] shadow-lg shadow-primary/20">
                 Começar agora <ArrowRight className="w-4 h-4" />
               </Link>
               <p className="text-xs text-muted-foreground">
-                <Link to="/taxas" className="text-primary hover:underline">Ver detalhes completos das taxas →</Link>
+                <Link to="/taxas" className="text-primary hover:underline">Ver estado atual das taxas →</Link>
               </p>
             </motion.div>
           </motion.div>
@@ -1498,7 +1441,7 @@ const Landing = () => {
               <h2 className="text-3xl sm:text-4xl font-display font-bold mb-4">Pronto para começar?</h2>
               <p className="text-muted-foreground mb-8 max-w-lg mx-auto">Cadastre-se gratuitamente e comece a vender seus produtos digitais hoje mesmo.</p>
               <Link to="/signup" className="inline-flex items-center gap-2 px-10 py-4 gradient-gold rounded-xl text-base font-bold text-primary-foreground hover:opacity-90 transition-all hover:scale-[1.03] shadow-lg shadow-primary/20">
-                Cadastrar grátis <ArrowRight className="w-4 h-4" />
+                Criar conta <ArrowRight className="w-4 h-4" />
               </Link>
             </motion.div>
           </motion.div>

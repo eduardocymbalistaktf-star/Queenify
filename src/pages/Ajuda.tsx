@@ -3,14 +3,14 @@ import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Headphones, MessageCircle, Mail, BookOpen, Video, ArrowRight, Clock, ShieldCheck, Send, Bot, Search, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import queenifyBee from "@/assets/queenify-bee.png";
+import queenifyBee from "@/assets/queenify-bee-blue.svg";
 import BackButton from "@/components/BackButton";
 
 const fadeUp = { hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } };
 const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.1 } } };
 
 const channels = [
-  { icon: Mail, title: "E-mail de suporte", desc: "Para questões detalhadas ou envio de documentos. A QueenIA também pode ajudar imediatamente.", action: "Enviar e-mail", href: "mailto:suporte@queenify.com.br?subject=Ajuda%20Queenify", highlight: true, time: "Resposta em até 48h" },
+  { icon: Mail, title: "E-mail de contato", desc: "Para questões detalhadas ou envio de documentos. Não envie senhas, códigos ou dados completos de pagamento.", action: "Escrever e-mail", href: "mailto:suporte@queenify.com.br?subject=Ajuda%20Queenify", highlight: true, time: "Prazo de resposta não confirmado" },
 ];
 
 const resources = [
@@ -82,7 +82,7 @@ const SupportChatbot = ({ onClose }: { onClose: () => void }) => {
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: JSON.stringify({
-          messages: newMessages.map(m => ({ role: m.role, content: m.content })),
+          messages: newMessages.slice(-10).map(m => ({ role: m.role, content: m.content })),
         }),
       });
 
@@ -212,6 +212,7 @@ const SupportChatbot = ({ onClose }: { onClose: () => void }) => {
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === "Enter" && sendMessage(input.trim())}
             placeholder={isLoading ? "A QueenIA está respondendo..." : "Digite sua dúvida..."}
+            maxLength={2000}
             disabled={isLoading}
             className="flex-1 bg-secondary border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
           />
@@ -259,8 +260,8 @@ const Ajuda = () => {
             Estamos aqui para ajudar. Encontre respostas, tutoriais e fale diretamente com nosso time de suporte.
           </motion.p>
           <motion.div variants={fadeUp} className="flex items-center justify-center gap-4 text-sm text-muted-foreground flex-wrap">
-            <div className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-primary" /> Resposta por e-mail em até 48h</div>
-            <div className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-primary" /> QueenIA disponível 24h</div>
+            <div className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-primary" /> Atendimento automatizado em configuração</div>
+            <div className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-primary" /> Não compartilhe dados sensíveis no chat</div>
           </motion.div>
         </motion.div>
       </section>
@@ -281,7 +282,7 @@ const Ajuda = () => {
             <Bot className="w-5 h-5" />
             Falar com QueenIA 👑
           </button>
-          <p className="text-center text-xs text-muted-foreground mt-2">QueenIA 24/7 • Atendentes humanos: Seg–Sáb, 09h–17h e 19h–22h • E-mail: até 48h</p>
+          <p className="text-center text-xs text-muted-foreground mt-2">A QueenIA depende da ativação da integração de IA. Se estiver indisponível, tente novamente mais tarde ou use o e-mail de contato.</p>
         </div>
       </section>
 

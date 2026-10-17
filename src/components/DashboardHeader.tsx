@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import queenifyBee from "@/assets/queenify-bee.png";
+import queenifyBee from "@/assets/queenify-bee-blue.svg";
 import { getUserLevel, levels } from "@/components/LevelCard";
 import frameBronze from "@/assets/frame-bronze.png";
 import frameSilver from "@/assets/frame-silver.png";
@@ -218,7 +218,7 @@ const DashboardHeader = ({ onMenuToggle, supportOpen = false, onSupportChange }:
   const sendMessage = async () => {
     const message = supportMessage.trim();
     if (!message || supportLoading || !user) return;
-    const history = [...chatMessages, { from: "user", text: message }].slice(-20);
+    const history = [...chatMessages, { from: "user", text: message }].slice(-10);
     setChatMessages(history);
     setSupportMessage("");
     setSupportLoading(true);
@@ -231,7 +231,7 @@ const DashboardHeader = ({ onMenuToggle, supportOpen = false, onSupportChange }:
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${publishableKey}` },
         body: JSON.stringify({
-          messages: history.map(({ from, text }) => ({ role: from === "bot" ? "assistant" : "user", content: text })),
+          messages: history.slice(-10).map(({ from, text }) => ({ role: from === "bot" ? "assistant" : "user", content: text })),
         }),
       });
       const responseBody = await response.text();
@@ -567,7 +567,7 @@ const DashboardHeader = ({ onMenuToggle, supportOpen = false, onSupportChange }:
             <input
               type="text"
               value={supportMessage}
-              maxLength={4000}
+              maxLength={2000}
               onChange={(e) => setSupportMessage(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
               placeholder="Digite sua mensagem..."

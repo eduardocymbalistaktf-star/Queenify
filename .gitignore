@@ -29,3 +29,6 @@ docs/Relatorio-Geral-Queenify.docx
 *.njsproj
 *.sln
 *.sw?
+
+.tmp/
+docs/Relatorio-Pendencias-Queenify.docx

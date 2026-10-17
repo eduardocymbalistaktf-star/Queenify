@@ -5,7 +5,7 @@ import { logSecurityEvent } from "@/lib/securityLogger";
 import { toast } from "sonner";
 import { Mail, Lock, Eye, EyeOff, User, Calendar } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import queenifyBee from "@/assets/queenify-bee.png";
+import queenifyBee from "@/assets/queenify-bee-blue.svg";
 
 const Signup = () => {
   const navigate = useNavigate();

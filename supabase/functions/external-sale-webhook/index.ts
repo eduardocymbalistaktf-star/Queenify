@@ -4,7 +4,7 @@ import { readLimitedText } from "../_shared/readLimitedBody.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-signature, x-hotmart-hottok",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-signature, x-hotmart-hottok, x-webhook-token",
 };
 
 // HMAC-SHA256 hex
@@ -28,6 +28,24 @@ function safeEqual(a: string, b: string) {
   return diff === 0;
 }
 
+function normalizeSaleStatus(value: unknown): string {
+  const status = typeof value === "string" ? value.toLowerCase() : "";
+  if (/approved|paid|complete/.test(status)) return "completed";
+  if (/refund/.test(status)) return "refunded";
+  if (/charge.?back/.test(status)) return "chargeback";
+  if (/cancel|void/.test(status)) return "cancelled";
+  if (/reject|fail/.test(status)) return "failed";
+  if (/expir/.test(status)) return "expired";
+  return "pending";
+}
+
+function normalizeExternalReference(...values: unknown[]): string | undefined {
+  const value = values.find((candidate) => (typeof candidate === "string" && candidate.trim()) || (typeof candidate === "number" && Number.isFinite(candidate)));
+  if (typeof value !== "string" && typeof value !== "number") return undefined;
+  const reference = String(value).trim();
+  return reference && reference.length <= 255 ? reference : undefined;
+}
+
 // Normalize Hotmart / Kirvano / generic payloads to a unified Sale insert
 function normalizePayload(source: string, body: any): {
   buyer_email: string;
@@ -49,13 +67,13 @@ function normalizePayload(source: string, body: any): {
       const buyer = d.buyer || {};
       const purchase = d.purchase || {};
       const tracking = purchase.tracking || {};
-      const status = (purchase.status || body.event || "").toLowerCase();
+      const status = purchase.status || body.event;
       return {
         buyer_email: buyer.email,
         buyer_name: buyer.name,
         amount: Number(purchase.price?.value || purchase.full_price?.value || 0),
-        status: ["approved", "complete", "completed", "purchase_approved"].some((s) => status.includes(s)) ? "completed" : status,
-        external_reference: purchase.transaction || purchase.order_ref,
+        status: normalizeSaleStatus(status),
+        external_reference: normalizeExternalReference(purchase.transaction, purchase.order_ref, body.id, d.id),
         payment_method: (purchase.payment?.type || "").toLowerCase(),
         utm_source: tracking.source || null,
         utm_medium: tracking.medium || null,
@@ -68,13 +86,13 @@ function normalizePayload(source: string, body: any): {
     if (source === "kirvano") {
       const customer = body.customer || {};
       const utm = body.utm || {};
-      const status = (body.status || body.event || "").toLowerCase();
+      const status = body.status || body.event;
       return {
         buyer_email: customer.email,
         buyer_name: customer.name,
         amount: Number(body.total_price ?? body.value ?? body.amount ?? 0),
-        status: ["approved", "paid", "completed"].some((s) => status.includes(s)) ? "completed" : status,
-        external_reference: body.sale_id || body.id || body.transaction_id,
+        status: normalizeSaleStatus(status),
+        external_reference: normalizeExternalReference(body.sale_id, body.id, body.transaction_id),
         payment_method: (body.payment_method || "").toLowerCase(),
         utm_source: utm.utm_source || null,
         utm_medium: utm.utm_medium || null,
@@ -87,9 +105,9 @@ function normalizePayload(source: string, body: any): {
     return {
       buyer_email: body.buyer_email || body.email,
       buyer_name: body.buyer_name || body.name,
-      amount: Number(body.amount || body.value || 0),
-      status: (body.status || "completed").toLowerCase() === "approved" ? "completed" : (body.status || "completed").toLowerCase(),
-      external_reference: body.external_reference || body.transaction_id || body.id,
+      amount: Number(body.amount ?? body.value ?? 0),
+      status: normalizeSaleStatus(body.status),
+      external_reference: normalizeExternalReference(body.external_reference, body.transaction_id, body.id, body.event_id),
       payment_method: body.payment_method,
       utm_source: body.utm_source || null,
       utm_medium: body.utm_medium || null,
@@ -109,9 +127,10 @@ Deno.serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    const token = req.headers.get("x-webhook-token");
+    const token = req.headers.get("x-webhook-token") || url.searchParams.get("token");
+    const hotmartHottok = req.headers.get("x-hotmart-hottok") || "";
     if (!token) {
-      return new Response(JSON.stringify({ error: "Token obrigatório no header x-webhook-token" }), {
+      return new Response(JSON.stringify({ error: "Token ausente. Use a URL gerada pela Queenify ou o header x-webhook-token." }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -130,48 +149,42 @@ Deno.serve(async (req) => {
         severity: "warning",
         endpoint: "external-sale-webhook",
         reason: "Invalid or inactive webhook token",
-        metadata: { token_prefix: token.slice(0, 6) },
+        metadata: { source: "unknown" },
       });
       return new Response(JSON.stringify({ error: "Token inválido ou inativo" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // ── Rate limiting: 60 req/min por token (janela fixa de 1 minuto) ──
-    const RATE_LIMIT = 60;
-    const windowStart = new Date();
-    windowStart.setSeconds(0, 0);
-    const { data: rlRow } = await supabase
-      .from("webhook_rate_limits")
-      .select("id, request_count")
-      .eq("token_id", tokenRow.id)
-      .eq("window_start", windowStart.toISOString())
-      .maybeSingle();
+    // Hotmart sends its account Hottok as X-HOTMART-HOTTOK; this is a bearer token,
+    // not an HMAC signature. Other providers can use the x-signature HMAC contract.
+    if (tokenRow.source === "hotmart" && (!tokenRow.webhook_secret || !safeEqual(tokenRow.webhook_secret, hotmartHottok))) {
+      await logEdgeSecurityEvent({ type: "auth_failed", severity: "error", endpoint: "external-sale-webhook", reason: "Invalid or missing Hotmart Hottok", userId: tokenRow.user_id });
+      return new Response(JSON.stringify({ error: "Hottok da Hotmart ausente ou inválido." }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
-    if (rlRow && rlRow.request_count >= RATE_LIMIT) {
+    const rateHash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`external-sale:${tokenRow.id}`));
+    const keyHash = Array.from(new Uint8Array(rateHash), (byte) => byte.toString(16).padStart(2, "0")).join("");
+    const { data: allowed, error: rateError } = await supabase.rpc("consume_edge_rate_limit", {
+      p_key_hash: keyHash,
+      p_limit: 60,
+      p_window_seconds: 60,
+    });
+    if (rateError) return new Response(JSON.stringify({ error: "Limite de requisições temporariamente indisponível." }), { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (!allowed) {
       await logEdgeSecurityEvent({
         type: "rate_limit_hit",
         severity: "warning",
         endpoint: "external-sale-webhook",
-        reason: `Rate limit ${RATE_LIMIT}/min exceeded for webhook token`,
+        reason: "Rate limit 60/min exceeded for webhook token",
         userId: tokenRow.user_id,
         metadata: { token_id: tokenRow.id, source: tokenRow.source },
       });
       return new Response(
-        JSON.stringify({ error: `Rate limit excedido: máximo ${RATE_LIMIT} requisições/minuto por token. Tente novamente em alguns segundos.` }),
+        JSON.stringify({ error: "Limite excedido: máximo 60 requisições por minuto. Tente novamente em alguns segundos." }),
         { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "60" } },
       );
     }
-
-    if (rlRow) {
-      await supabase.from("webhook_rate_limits").update({ request_count: rlRow.request_count + 1 }).eq("id", rlRow.id);
-    } else {
-      await supabase.from("webhook_rate_limits").insert({ token_id: tokenRow.id, window_start: windowStart.toISOString(), request_count: 1 });
-    }
-
-    // Best-effort cleanup de janelas antigas (>10min) — não bloqueia o fluxo
-    const cleanupBefore = new Date(Date.now() - 10 * 60 * 1000).toISOString();
-    supabase.from("webhook_rate_limits").delete().eq("token_id", tokenRow.id).lt("window_start", cleanupBefore).then(() => {});
 
     // Read raw body once (needed for HMAC + JSON parsing)
     const contentLength = Number(req.headers.get("content-length") || 0);
@@ -179,10 +192,9 @@ Deno.serve(async (req) => {
     const rawBody = await readLimitedText(req, 64_000);
     if (rawBody === null) return new Response(JSON.stringify({ error: "Payload muito grande" }), { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    // Optional HMAC validation: if a webhook_secret is set on the token,
-    // require a matching x-signature (or x-hotmart-hottok) header.
-    if (tokenRow.webhook_secret) {
-      const provided = (req.headers.get("x-signature") || req.headers.get("x-hotmart-hottok") || "")
+    // Optional HMAC-SHA256 validation for non-Hotmart providers.
+    if (tokenRow.webhook_secret && tokenRow.source !== "hotmart") {
+      const provided = (req.headers.get("x-signature") || "")
         .replace(/^sha256=/i, "")
         .trim()
         .toLowerCase();
@@ -217,8 +229,10 @@ Deno.serve(async (req) => {
     }
 
     const normalized = normalizePayload(tokenRow.source, body);
-    if (!normalized || !normalized.buyer_email || !normalized.amount) {
-      return new Response(JSON.stringify({ error: "Payload inválido — buyer_email e amount obrigatórios", received: body }), {
+    if (!normalized || typeof normalized.buyer_email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized.buyer_email) ||
+      !Number.isFinite(normalized.amount) || normalized.amount <= 0 || normalized.amount > 1_000_000_000 ||
+      typeof normalized.external_reference !== "string" || !normalized.external_reference.trim() || normalized.external_reference.length > 255) {
+      return new Response(JSON.stringify({ error: "Payload inválido: buyer_email, valor positivo e identificador externo são obrigatórios." }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -253,40 +267,60 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { data: sale, error: sErr } = await supabase.from("sales").insert({
+    const saleValues = {
       user_id: tokenRow.user_id,
       product_id: productId,
-      buyer_email: normalized.buyer_email,
+      buyer_email: normalized.buyer_email.trim().toLowerCase(),
       buyer_name: normalized.buyer_name || null,
       amount: normalized.amount,
       status: normalized.status,
       payment_method: normalized.payment_method || "external",
-      external_reference: normalized.external_reference || null,
+      external_reference: normalized.external_reference,
       external_source: tokenRow.source,
       utm_source: normalized.utm_source,
       utm_medium: normalized.utm_medium,
       utm_campaign: normalized.utm_campaign,
       utm_content: normalized.utm_content,
       utm_term: normalized.utm_term,
-    }).select().single();
+    };
 
-    if (sErr) throw sErr;
+    const { data: existingSale, error: existingSaleError } = await supabase.from("sales")
+      .select("id, status").eq("user_id", tokenRow.user_id).eq("external_source", tokenRow.source)
+      .eq("external_reference", normalized.external_reference).maybeSingle();
+    if (existingSaleError) throw new Error("Não foi possível verificar duplicidade da venda externa");
+
+    let sale;
+    let sErr;
+    if (existingSale) {
+      let nextStatus = normalized.status;
+      if (["refunded", "chargeback"].includes(existingSale.status) && !["refunded", "chargeback"].includes(nextStatus)) nextStatus = existingSale.status;
+      if (existingSale.status === "completed" && nextStatus === "pending") nextStatus = "completed";
+      const updated = await supabase.from("sales").update({ ...saleValues, status: nextStatus }).eq("id", existingSale.id).select().single();
+      sale = updated.data;
+      sErr = updated.error;
+    } else {
+      const inserted = await supabase.from("sales").insert(saleValues).select().single();
+      sale = inserted.data;
+      sErr = inserted.error;
+    }
+
+    if (sErr || !sale) throw new Error("Não foi possível registrar a venda externa");
 
     await supabase
       .from("external_webhook_tokens")
       .update({ last_received_at: new Date().toISOString(), total_received: tokenRow.total_received + 1 })
       .eq("id", tokenRow.id);
 
-    if (sale && sale.status === "completed") {
+    if (sale.status === "completed" && existingSale?.status !== "completed") {
       supabase.functions.invoke("track-conversion", { body: { sale_id: sale.id } }).catch(() => {});
     }
 
     return new Response(JSON.stringify({ success: true, sale_id: sale?.id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (e) {
-    console.error("external-sale-webhook error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Erro" }), {
+  } catch {
+    console.error("external-sale-webhook request failed");
+    return new Response(JSON.stringify({ error: "Não foi possível processar o webhook externo." }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

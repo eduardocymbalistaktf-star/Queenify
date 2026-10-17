@@ -25,7 +25,7 @@ async function preflight(fn: string): Promise<Response> {
   return await fetch(`${FUNCTIONS_BASE}/${fn}`, {
     method: "OPTIONS",
     headers: {
-      "Origin": "https://example.com",
+      "Origin": fn === "support-chat" ? "https://eduardocymbalistaktf-star.github.io" : "https://example.com",
       "Access-Control-Request-Method": "POST",
       "Access-Control-Request-Headers": "authorization, content-type, apikey",
     },
@@ -41,7 +41,8 @@ for (const fn of FUNCTIONS) {
     assert([200, 204].includes(res.status), `${fn} preflight retornou ${res.status}`);
 
     const allowOrigin = res.headers.get("access-control-allow-origin");
-    assert(allowOrigin === "*" || allowOrigin === "https://example.com",
+    const expectedOrigin = fn === "support-chat" ? "https://eduardocymbalistaktf-star.github.io" : "https://example.com";
+    assert(allowOrigin === "*" || allowOrigin === expectedOrigin,
       `${fn} sem Access-Control-Allow-Origin (got: ${allowOrigin})`);
 
     const allowHeaders = (res.headers.get("access-control-allow-headers") ?? "").toLowerCase();
@@ -53,7 +54,7 @@ for (const fn of FUNCTIONS) {
 Deno.test("CORS smoke: GET com Origin retorna allow-origin", async () => {
   const res = await fetch(`${FUNCTIONS_BASE}/support-chat`, {
     method: "OPTIONS",
-    headers: { "Origin": "https://app.queenify.com.br", "Access-Control-Request-Method": "POST" },
+    headers: { "Origin": "https://eduardocymbalistaktf-star.github.io", "Access-Control-Request-Method": "POST" },
   });
   await res.body?.cancel();
   const allowOrigin = res.headers.get("access-control-allow-origin");

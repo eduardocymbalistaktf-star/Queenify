@@ -249,7 +249,7 @@ export default function PermissoesTab({ user }: { user: any }) {
           </div>
           <div className="p-3 rounded-xl border border-border space-y-2">
             <p className="text-xs font-medium text-foreground">Taxa da plataforma</p>
-            <p className="text-sm font-semibold text-primary">PIX 6,99% • Cartão/Boleto 7,99% + R$ 1,49</p>
+            <p className="text-sm font-semibold text-primary">Taxas de processamento em validação</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="p-3 rounded-xl border border-border"><p className="text-xs text-muted-foreground mb-1">Saque mínimo</p><p className="text-sm font-semibold text-foreground">R$ 20,00</p></div>

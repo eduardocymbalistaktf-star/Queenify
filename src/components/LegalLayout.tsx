@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import queenifyBee from "@/assets/queenify-bee.png";
+import queenifyBee from "@/assets/queenify-bee-blue.svg";
 import BackButton from "@/components/BackButton";
 
 const LegalLayout = ({ title, children }: { title: string; children: React.ReactNode }) => (

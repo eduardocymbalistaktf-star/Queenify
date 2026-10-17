@@ -2,8 +2,8 @@ import LegalLayout from "@/components/LegalLayout";
 
 const TermosDeUso = () => (
   <LegalLayout title="Termos e Condições Gerais de Uso">
-    <p>Ao abrigo destes Termos e Condições Gerais de Uso, a Plataforma Queenify disponibiliza ao Usuário o acesso a diversas funcionalidades de seu software, que habilitam Produtores, Afiliados e Compradores a transacionarem entre si. Ao utilizar a Plataforma, o Usuário declara ter lido, compreendido e aceito integralmente estes Termos, a Política de Privacidade, a Política de Conteúdo, os Termos do QueeniPay, os Termos de Conta Digital e a Licença de Software (em conjunto, "Documentos Complementares").</p>
-    <p>A Queenify não é parte, interveniente ou garantidora de qualquer relação comercial entre os Usuários, atuando exclusivamente como fornecedora de tecnologia e intermediadora de pagamentos. A continuidade do uso da Plataforma após qualquer alteração constitui aceitação tácita das novas condições.</p>
+    <p>Esta versão acompanha uma prévia da Plataforma Queenify. Recursos e transações dependem da disponibilidade indicada em cada tela e podem estar em configuração. Estes termos e os documentos complementares precisam de revisão jurídica antes do lançamento comercial. A disponibilidade de uma tela não confirma a operação de um serviço de pagamentos.</p>
+    <p>A Queenify oferece software e ferramentas de organização. O papel de cada provedor e as responsabilidades por cobranças, reembolsos e repasses devem ser informados antes da ativação de qualquer transação.</p>
 
     <h2>1. Definições</h2>
     <p>Para fins destes Termos, os seguintes termos grafados com iniciais maiúsculas terão os significados abaixo:</p>
@@ -14,9 +14,9 @@ const TermosDeUso = () => (
       <li><strong>Comprador:</strong> pessoa física ou jurídica que adquire produtos digitais disponibilizados na Plataforma.</li>
       <li><strong>Co-produtor:</strong> pessoa convidada por um Produtor para participar de colaboração na criação ou comercialização de produto, com direito a percentual sobre vendas, sem constituir vínculo societário, empregatício ou de qualquer natureza.</li>
       <li><strong>Infoproduto:</strong> qualquer conteúdo digital produzido e disponibilizado para comercialização na Plataforma, nos mais variados formatos (vídeo, áudio, texto, software, serviço, evento, entre outros).</li>
-      <li><strong>Escrow (Custódia):</strong> sistema de retenção temporária de valores durante o período de garantia do produto, assegurando o direito de reembolso do Comprador e a integridade das transações.</li>
-      <li><strong>Conta Digital Queenify:</strong> recurso integrado à Plataforma que permite ao Produtor gerenciar recebimentos, visualizar saldos e realizar saques. Não constitui conta bancária, conta de pagamento regulamentada ou serviço financeiro.</li>
-      <li><strong>Taxas:</strong> valores cobrados pela Queenify pela disponibilização das funcionalidades da Plataforma e intermediação de pagamentos, conforme detalhado na Seção 5.</li>
+      <li><strong>Escrow (Custódia):</strong> recurso que só se aplica se estiver habilitado e descrito nas condições do provedor de pagamento. A Queenify não confirma custódia ou retenção financeira nesta prévia.</li>
+      <li><strong>Área Financeira:</strong> telas de consulta de registros da plataforma. Elas não comprovam saldo disponível para saque.</li>
+      <li><strong>Taxas:</strong> valores que serão informados antes da ativação comercial. As tarifas ainda estão em validação.</li>
       <li><strong>Transação:</strong> operação em que o Comprador adquire um Infoproduto mediante pagamento processado pela Plataforma.</li>
       <li><strong>Valor Bruto:</strong> valor total da transação antes da dedução de Taxas, comissões e quaisquer outros descontos.</li>
       <li><strong>Recebíveis:</strong> direitos creditórios presentes ou futuros relativos a obrigações de pagamento decorrentes de Transações realizadas na Plataforma.</li>
@@ -29,32 +29,22 @@ const TermosDeUso = () => (
     <h3>2.2 Informações Cadastrais</h3>
     <p>O Usuário obriga-se a fornecer informações verdadeiras, completas e atualizadas no momento do cadastro e durante toda a utilização da Plataforma. A Queenify pode recusar, suspender ou cancelar cadastros com informações falsas, incompletas ou inconsistentes, a qualquer tempo, sem aviso prévio.</p>
     <h3>2.3 Verificação de Identidade (KYC)</h3>
-    <p>Para realizar saques e acessar determinadas funcionalidades, o Produtor deve completar o processo de verificação de identidade, que inclui:</p>
-    <ul>
-      <li>Envio de documento oficial com foto (RG, CNH ou passaporte)</li>
-      <li>Selfie de verificação para confirmação biométrica</li>
-      <li>Comprovante de endereço atualizado (quando solicitado)</li>
-      <li>Comprovação de titularidade da chave PIX cadastrada</li>
-    </ul>
-    <p>A Queenify pode solicitar documentos adicionais a qualquer momento para fins de prevenção a fraudes, cumprimento de obrigações regulatórias e procedimentos de PLD/FT (Prevenção à Lavagem de Dinheiro e ao Financiamento do Terrorismo).</p>
+    <p>Um processo de verificação de identidade para saques ainda não está habilitado nesta prévia. Não envie documentos de identificação até que a Queenify publique uma finalidade, um fornecedor, um aviso de privacidade e um canal seguro para esse procedimento.</p>
     <h3>2.4 Responsabilidade pelos Dados de Acesso</h3>
     <p>O Usuário é o único responsável pela segurança de suas credenciais de acesso (login e senha) e por todas as atividades realizadas com sua conta. Dados de acesso são pessoais e intransferíveis. Nenhum representante da Queenify está autorizado a solicitar a senha do Usuário. Em caso de acesso não autorizado, o Usuário deve notificar a Queenify imediatamente.</p>
     <h3>2.5 Suspensão, Cancelamento e Recusa de Cadastro</h3>
     <p>A Queenify reserva-se o direito de suspender, cancelar ou recusar o cadastro de qualquer Usuário nas seguintes hipóteses:</p>
     <ul>
-      <li>Impossibilidade de conclusão dos procedimentos de verificação de identidade (KYC) e PLD/FT</li>
-      <li>Existência de condenação transitada em julgado por crimes hediondos, organização criminosa, tráfico, crimes cibernéticos ou lavagem de dinheiro</li>
+      <li>Impossibilidade de verificação das informações necessárias para o recurso solicitado</li>
       <li>Violação dos Termos de Uso, Política de Conteúdo ou quaisquer Documentos Complementares</li>
       <li>Suspeita de fraude, lavagem de dinheiro ou atividade ilícita</li>
-      <li>Índice elevado de reembolsos ou chargebacks</li>
-      <li>Inatividade da conta por período superior a 12 (doze) meses</li>
-      <li>Determinação judicial ou administrativa de autoridade competente</li>
-      <li>Desinteresse comercial da Queenify na manutenção da relação</li>
+      <li>Uso que viole estes Termos, a Política de Conteúdo ou a legislação aplicável</li>
+      <li>Solicitação de autoridade competente, quando aplicável</li>
     </ul>
 
     <h2>3. Da Plataforma Queenify</h2>
     <h3>3.1 Natureza dos Serviços</h3>
-    <p>A Queenify é uma empresa de tecnologia que desenvolve e mantém uma plataforma integrada para comercialização de produtos digitais. A Plataforma oferece funcionalidades de checkout, processamento de pagamentos, gestão de afiliados, área de membros, marketplace, anúncios integrados (Queenify Ads), automações, suporte com inteligência artificial e demais recursos tecnológicos.</p>
+    <p>A Queenify é uma plataforma de software em prévia. A disponibilidade de checkout, pagamentos, afiliados, área de membros, marketplace, anúncios, automações e suporte automatizado depende da configuração indicada em cada tela. Nenhuma dessas telas confirma, por si só, uma transação financeira ativa.</p>
     <h3>3.2 Relação entre Usuários e a Queenify</h3>
     <p>Ao utilizar a Plataforma, o Usuário é contratante dos serviços da Queenify e <strong>não se torna empregado, colaborador, representante, agente, sócio ou parceiro da Queenify</strong>. O Usuário não pode se apresentar como se tivesse vínculos desses tipos com a Queenify.</p>
     <h3>3.3 Não-Responsabilização por Conteúdo e Resultados</h3>
@@ -76,7 +66,7 @@ const TermosDeUso = () => (
       <li>Manter-se em conformidade com todas as leis aplicáveis, incluindo legislação de proteção ao consumidor, propriedade intelectual e proteção de dados</li>
     </ul>
     <h3>4.2 Responsabilidade Integral do Produtor</h3>
-    <p>O Produtor é responsável exclusivo e integral por todo o conteúdo de seus Infoprodutos, incluindo informações, características, qualidade, descrição, adequação ao objetivo proposto, composição, preço, garantia e prazos de entrega. O Produtor se responsabiliza por qualquer Perda que a Queenify venha a sofrer em razão de ações, processos ou reclamações relacionados ao Infoproduto, autorizando desde já a retenção e débito de valores em sua Conta Digital Queenify para fins de ressarcimento.</p>
+    <p>O Produtor é responsável pelas informações e pela entrega do Infoproduto que publicar. Procedimentos de retenção, débito ou compensação financeira não estão habilitados nesta prévia e só poderão ser aplicados conforme condições válidas, apresentadas antes da ativação comercial e revisadas juridicamente.</p>
     <h3>4.3 Proibição de Promessas de Resultado</h3>
     <p>É expressamente proibido ao Produtor ou Afiliado fazer promessas de resultados financeiros garantidos, enriquecimento rápido ou benefícios à saúde não comprovados cientificamente, em consonância com o Código de Defesa do Consumidor e as diretrizes da SENACON.</p>
     <h3>4.4 Responsabilidade Fiscal</h3>
@@ -94,34 +84,27 @@ const TermosDeUso = () => (
       <li>Cumprir todas as legislações aplicáveis à publicidade e proteção ao consumidor</li>
     </ul>
     <h3>5.3 Comissões e Atribuição</h3>
-    <p>O valor e as regras de divisão das comissões são definidos exclusivamente pelo Produtor, podendo ser alterados a seu critério. A atribuição de vendas é feita com base nos registros da Plataforma (last click). O Produtor é responsável pelo pagamento de comissões, sendo a Queenify apenas intermediária no processamento.</p>
+    <p>O valor e as regras de comissão devem ser apresentados na oferta e confirmados antes da divulgação. O rastreamento e a atribuição de vendas dependem de registros válidos e precisam ser testados com o provedor de pagamento. Os pagamentos de comissão não estão confirmados nesta prévia.</p>
 
     <h2>6. Condutas perante o Comprador</h2>
     <h3>6.1 Direito de Arrependimento</h3>
     <p>O Comprador tem direito ao reembolso integral no prazo de 7 (sete) dias a partir da data de pagamento, conforme o art. 49 do Código de Defesa do Consumidor. O Produtor pode definir prazo de garantia superior (15 ou 30 dias). Durante o período de garantia, o Comprador pode solicitar reembolso sem necessidade de justificativa.</p>
     <h3>6.2 Cancelamento e Reembolso</h3>
-    <p>O Comprador deve solicitar cancelamento diretamente ao Produtor ou através da Plataforma. O reembolso será processado pelo mesmo meio de pagamento utilizado na compra em até 5 (cinco) dias úteis. A Queenify pode, a seu critério, processar reembolsos diretamente quando o Produtor não responder em tempo hábil, debitando o valor da Conta Digital do Produtor.</p>
+    <p>O canal, a análise e o processamento de reembolso dependem do pedido e do provedor de pagamento. A plataforma não confirma um prazo de processamento nesta prévia. Os direitos legais do consumidor devem ser observados; procure o vendedor e o provedor indicados no comprovante da compra.</p>
 
     <h2>7. Taxas, Gestão de Pagamentos e Cancelamentos</h2>
     <h3>7.1 Taxa da Plataforma</h3>
-    <p>A Queenify cobra as seguintes taxas por Transação aprovada: <strong>PIX: 6,99% + R$ 1,49</strong>; <strong>Cartão de Crédito (à vista e parcelado): 7,99% + R$ 1,49</strong>; <strong>Boleto Bancário: 7,99% + R$ 1,49</strong>. Não há mensalidades, taxas de adesão ou custos fixos. A taxa é descontada automaticamente do Valor Bruto antes da liberação ao Produtor.</p>
+    <p>As tarifas e eventuais cobranças fixas estão em validação. A Queenify deve apresentar ao usuário a tabela vigente, o responsável pela cobrança e o valor total antes de liberar vendas. Não considere valores exibidos em materiais antigos como tarifas vigentes.</p>
     <h3>7.2 Composição da Taxa</h3>
-    <p>A taxa engloba: processamento de pagamentos e antifraude, infraestrutura tecnológica e hospedagem, área de membros integrada, sistema de afiliados e marketplace, suporte ao Produtor e ao Comprador.</p>
+    <p>Não há composição de tarifa confirmada para esta prévia. A descrição dos serviços incluídos será publicada junto às condições comerciais definitivas.</p>
     <h3>7.3 Taxas Adicionais</h3>
     <ul>
-      <li><strong>Antecipação de recebíveis:</strong> 3,49% adicional sobre o valor antecipado</li>
-      <li><strong>Saque expresso (quando disponível):</strong> R$ 3,90 por operação</li>
+      <li>Antecipação, saques expressos e quaisquer tarifas adicionais não estão confirmados.</li>
     </ul>
     <h3>7.4 Prazos de Liberação</h3>
-    <p>Os valores são liberados ao Produtor após o término do período de garantia do produto, conforme:</p>
-    <ul>
-      <li><strong>PIX:</strong> 2 dias úteis</li>
-      <li><strong>Boleto Bancário:</strong> 2 dias úteis após compensação</li>
-      <li><strong>Cartão de Crédito (sem antecipação):</strong> 2 a 15 dias úteis conforme parcelamento</li>
-      <li><strong>Cartão de Crédito (com antecipação):</strong> 2 dias úteis + taxa de antecipação</li>
-    </ul>
+    <p>Não há prazo de saque ou liberação confirmado nesta prévia. O prazo deverá seguir as condições do provedor e será exibido antes da ativação de vendas.</p>
     <h3>7.5 Chargebacks e Saldo Negativo</h3>
-    <p>Em caso de chargeback, o valor será debitado da Conta Digital do Produtor. Caso o Produtor não possua saldo suficiente, o valor ficará registrado como saldo negativo, que será descontado automaticamente das próximas vendas. Caso o saldo negativo permaneça por mais de <strong>4 (quatro) meses</strong> sem pagamento, a Queenify poderá encaminhar o débito para órgãos de proteção ao crédito (Serasa/SPC), conforme legislação vigente. Produtores com taxa de chargeback acima de 2% do volume total podem ter suas contas suspensas.</p>
+    <p>O tratamento de chargebacks, saldos negativos e disputas ainda depende da integração e dos termos do provedor. Nenhum débito, compensação futura ou prazo de suspensão é confirmado por esta prévia.</p>
 
     <h2>8. Licença de Uso de Software</h2>
     <p>A licença de uso da Plataforma Queenify é de caráter não exclusivo, não customizável, intransferível, oneroso e temporário. O software é disponibilizado em nuvem (cloud computing), sendo vedado download, cópia, engenharia reversa, descompilação ou qualquer forma de reprodução. A Queenify pode modificar, atualizar, substituir ou remover funcionalidades a qualquer momento, sem aviso prévio.</p>
@@ -156,10 +139,10 @@ const TermosDeUso = () => (
     </ol>
 
     <h2>12. Prevenção à Lavagem de Dinheiro e Financiamento do Terrorismo</h2>
-    <p>Em cumprimento à Lei nº 9.613/1998 e regulamentações do COAF, a Queenify implementa procedimentos de PLD/FT incluindo: identificação e verificação de clientes (KYC), monitoramento contínuo de transações atípicas, comunicação de operações suspeitas às autoridades competentes e manutenção de registros de transações por prazo mínimo de 5 (cinco) anos.</p>
+    <p>Os procedimentos de verificação de identidade, monitoramento de transações e obrigações regulatórias dependem do modelo de negócio e dos provedores que serão utilizados. A Queenify ainda precisa documentar e validar esses procedimentos antes de processar pagamentos em produção.</p>
 
     <h2>13. Compliance e Jurisdições Restritas</h2>
-    <p>A Queenify não opera e não transaciona com Usuários localizados em países ou territórios sujeitos a sanções internacionais impostas pelo OFAC (Office of Foreign Assets Control), pela Lista de Sanções do Conselho de Segurança das Nações Unidas ou pela Lista de Sanções do Reino Unido. A Queenify reserva-se o direito de recusar cadastros ou bloquear transações de Usuários localizados em jurisdições restritas.</p>
+    <p>As restrições geográficas e a triagem de sanções precisam ser definidas com os provedores e revisadas juridicamente antes do lançamento de recursos financeiros. Esta prévia não confirma que a Queenify realize essas verificações.</p>
 
     <h2>14. Modificações dos Termos</h2>
     <p>A Queenify pode alterar estes Termos a qualquer momento. As alterações serão publicadas na Plataforma e notificadas aos Usuários com antecedência mínima de 15 (quinze) dias. O uso continuado da Plataforma após o início da vigência da nova versão constitui aceitação dos novos termos. Caso discorde, o Usuário poderá encerrar sua conta imediatamente.</p>

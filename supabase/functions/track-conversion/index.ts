@@ -11,7 +11,7 @@ async function sha256(s: string): Promise<string> {
 }
 
 async function sendFacebook(pixel: any, sale: any) {
-  const url = `https://graph.facebook.com/v21.0/${pixel.pixel_id}/events?access_token=${pixel.access_token}`;
+  const url = `https://graph.facebook.com/v21.0/${pixel.pixel_id}/events`;
   const userData: Record<string, unknown> = {};
   if (sale.buyer_email) userData.em = [await sha256(sale.buyer_email)];
   if (sale.fbclid) userData.fbc = `fb.1.${Date.now()}.${sale.fbclid}`;
@@ -34,7 +34,7 @@ async function sendFacebook(pixel: any, sale: any) {
     ...(pixel.test_event_code ? { test_event_code: pixel.test_event_code } : {}),
   };
 
-  const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+  const res = await fetch(url, { method: "POST", headers: { Authorization: `Bearer ${pixel.access_token}`, "Content-Type": "application/json" }, body: JSON.stringify(payload) });
   const json = await res.json();
   return { ok: res.ok, response: json };
 }
@@ -46,16 +46,20 @@ async function sendTiktok(pixel: any, sale: any) {
   if (sale.ttclid) userData.ttclid = sale.ttclid;
 
   const payload = {
-    pixel_code: pixel.pixel_id,
-    event: "CompletePayment",
-    event_id: sale.id,
-    timestamp: new Date(sale.sold_at || Date.now()).toISOString(),
-    context: { user: userData, page: { url: sale.landing_url || undefined } },
-    properties: {
-      currency: "BRL",
-      value: Number(sale.amount),
-      contents: [{ content_id: sale.product_id, quantity: 1, price: Number(sale.amount) }],
-    },
+    event_source: "web",
+    event_source_id: pixel.pixel_id,
+    data: [{
+      event: "Purchase",
+      event_time: Math.floor(new Date(sale.sold_at || Date.now()).getTime() / 1000),
+      event_id: sale.id,
+      user: userData,
+      page: { url: sale.landing_url || undefined },
+      properties: {
+        currency: "BRL",
+        value: Number(sale.amount),
+        contents: [{ content_id: sale.product_id, quantity: 1, price: Number(sale.amount) }],
+      },
+    }],
   };
 
   const res = await fetch(url, {
@@ -68,55 +72,10 @@ async function sendTiktok(pixel: any, sale: any) {
 }
 
 async function sendGoogle(pixel: any, sale: any) {
-  // Google Ads Click Conversion Upload via REST API
-  // Requires: pixel_id = Customer ID (digits only), conversion_label = Conversion Action ID, access_token = Developer Token
-  // Note: Sem OAuth user token, usamos apenas o Developer Token. Para conta MCC linkada, isso funciona com login-customer-id.
-  if (!sale.gclid) {
-    return { ok: false, response: { error: "gclid ausente — Google Ads server-side requer o gclid capturado no clique do anúncio." } };
-  }
-
-  const customerId = String(pixel.pixel_id).replace(/\D/g, "");
-  const conversionActionId = String(pixel.conversion_label).replace(/\D/g, "");
-  const developerToken = pixel.access_token;
-
-  const url = `https://googleads.googleapis.com/v17/customers/${customerId}:uploadClickConversions`;
-
-  const conversionDateTime = new Date(sale.sold_at || Date.now())
-    .toISOString()
-    .replace("T", " ")
-    .replace(/\.\d{3}Z$/, "+00:00");
-
-  const payload = {
-    conversions: [{
-      gclid: sale.gclid,
-      conversionAction: `customers/${customerId}/conversionActions/${conversionActionId}`,
-      conversionDateTime,
-      conversionValue: Number(sale.amount),
-      currencyCode: "BRL",
-      orderId: sale.id,
-      ...(sale.buyer_email ? {
-        userIdentifiers: [{ hashedEmail: await sha256(sale.buyer_email) }],
-      } : {}),
-    }],
-    partialFailure: true,
+  return {
+    ok: false,
+    response: { error: "O envio server-side do Google Ads foi pausado. A implementação atual usa a API antiga e não possui o fluxo OAuth e a API de conversões exigidos atualmente." },
   };
-
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "developer-token": developerToken,
-        "login-customer-id": customerId,
-      },
-      body: JSON.stringify(payload),
-    });
-    const json = await res.json();
-    const hasErrors = json.partialFailureError || json.error;
-    return { ok: res.ok && !hasErrors, response: json };
-  } catch (e) {
-    return { ok: false, response: { error: e instanceof Error ? e.message : String(e) } };
-  }
 }
 
 Deno.serve(async (req) => {

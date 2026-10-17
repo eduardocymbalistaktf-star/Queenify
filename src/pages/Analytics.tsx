@@ -498,12 +498,12 @@ const Analytics = () => {
             <Flame className="w-8 h-8 text-primary mx-auto mb-2 opacity-50" />
             <p className="text-sm font-medium text-foreground mb-1">Impressões do Destaque</p>
             <p className="text-xs text-muted-foreground mb-3">
-              As estatísticas de impressões do destaque estão disponíveis para quem possui o <strong>Boost de 30 ou 90 dias</strong>.
+              O Boost ainda não está disponível para compra e não há medição de impressões atribuídas a destaque.
             </p>
             <p className="text-xs text-muted-foreground">
-              Com o Boost ativo, você verá aqui: impressões totais, cliques no produto, taxa de conversão do destaque e posição média no marketplace.
+              A Queenify mostrará essas métricas quando a compra, a ativação e o rastreamento do destaque estiverem implementados.
             </p>
-            <a href={`${import.meta.env.BASE_URL}boost`} className="inline-block mt-3 text-xs text-primary font-semibold hover:underline">Ativar Boost →</a>
+            <a href={`${import.meta.env.BASE_URL}boost`} className="inline-block mt-3 text-xs text-primary font-semibold hover:underline">Ver planos indicativos →</a>
           </div>
         </div>
       </div>

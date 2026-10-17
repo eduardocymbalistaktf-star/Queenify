@@ -78,26 +78,21 @@ const TermosAfiliados = () => (
           <li>O percentual mínimo de comissão é de <strong>30% (trinta por cento)</strong> do valor líquido da venda;</li>
           <li>O percentual máximo é de <strong>85% (oitenta e cinco por cento)</strong> do valor líquido;</li>
           <li>O Produtor pode alterar o percentual de comissão a qualquer momento, sendo a nova taxa aplicável apenas a vendas futuras;</li>
-          <li>"Valor líquido" significa o preço de venda menos as taxas da plataforma (a partir de 6,99% + R$1,49 conforme método de pagamento).</li>
+          <li>"Valor líquido" e eventuais descontos devem ser detalhados nas condições comerciais antes da venda; as taxas da plataforma ainda estão em validação.</li>
         </ul>
 
         <h3>3.2. Atribuição de Vendas</h3>
         <ul>
-          <li>A venda é atribuída ao Afiliado cujo link de rastreamento foi o <strong>último clique</strong> antes da compra (modelo Last-Click);</li>
-          <li>O cookie de rastreamento tem validade de <strong>180 (cento e oitenta) dias</strong> a partir do primeiro clique;</li>
-          <li>Vendas realizadas por meios não rastreáveis (acesso direto, buscas orgânicas) não geram comissão;</li>
-          <li>Em caso de múltiplos afiliados, prevalece o último clique dentro do período válido do cookie;</li>
-          <li>Vendas provenientes de order bumps e upsells vinculados ao produto principal geram comissão na mesma proporção.</li>
+          <li>A atribuição depende dos registros de rastreamento disponíveis e do provedor de pagamento;</li>
+          <li>A Queenify ainda não confirmou prazo de cookie, regra de last-click ou tratamento de vendas sem rastreamento;</li>
+          <li>Order bumps, upsells e demais ofertas precisam de validação no fluxo de pagamento antes de receberem comissão.</li>
         </ul>
 
         <h3>3.3. Pagamento de Comissões</h3>
         <ul>
-          <li>Comissões aprovadas são disponibilizadas para saque conforme o prazo padrão da plataforma: <strong>PIX em 2 dias úteis</strong>, cartão de crédito de 2 a 15 dias;</li>
-          <li>O pagamento está sujeito ao período de garantia do produto — a comissão só é liberada após o término do prazo de reembolso;</li>
-          <li>Métodos de saque disponíveis: PIX (CPF, CNPJ, e-mail, telefone ou chave aleatória);</li>
-          <li>Saque mínimo: <strong>R$10,00 (dez reais)</strong>;</li>
-          <li>Comissões de vendas reembolsadas, estornadas ou com chargeback são automaticamente debitadas do saldo do Afiliado;</li>
-          <li>A Queenify emite relatórios detalhados de comissões no painel do Afiliado.</li>
+          <li>Os painéis podem exibir valores registrados, mas o pagamento de comissão ainda não está habilitado para uso comercial;</li>
+          <li>Prazo, método, mínimo de saque e regras de estorno não estão confirmados;</li>
+          <li>A apuração e os relatórios precisam ser verificados com vendas reais de teste antes do lançamento.</li>
         </ul>
 
         <h2>4. Obrigações do Afiliado</h2>

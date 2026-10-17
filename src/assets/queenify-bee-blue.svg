@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="wing" x1="17" y1="23" x2="80" y2="84" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#9BEAFF"/>
+      <stop offset="1" stop-color="#2EB7F3"/>
+    </linearGradient>
+    <linearGradient id="body" x1="30" y1="52" x2="70" y2="90" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D7F7FF"/>
+      <stop offset="1" stop-color="#69D2FA"/>
+    </linearGradient>
+  </defs>
+  <path d="M42 34C40 22 29 15 20 18c-9 3-11 14-4 22 6 7 16 8 25 4M58 34c2-12 13-19 22-16 9 3 11 14 4 22-6 7-16 8-25 4" fill="url(#wing)" stroke="#168AC8" stroke-width="3"/>
+  <path d="m37 26 3-12 10 7 10-7 3 12" fill="#35B8F2" stroke="#168AC8" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M29 49c0-12 9-21 21-21s21 9 21 21v20c0 13-9 22-21 22S29 82 29 69V49Z" fill="url(#body)" stroke="#168AC8" stroke-width="3"/>
+  <path d="M31 58h38M31 71h38" stroke="#168AC8" stroke-width="6" stroke-linecap="round"/>
+  <path d="M43 46v7m14-7v7" stroke="#123B59" stroke-width="4" stroke-linecap="round"/>
+  <path d="M46 62c2 2 6 2 8 0" stroke="#123B59" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M50 91v5m0-5-8 4m8-4 8 4" stroke="#168AC8" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M35 37c-3-8-8-11-12-11m42 11c3-8 8-11 12-11" stroke="#168AC8" stroke-width="2.5" stroke-linecap="round"/>
+</svg>

@@ -8,7 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
-import queenifyBee from "@/assets/queenify-bee.png";
+import queenifyBee from "@/assets/queenify-bee-blue.svg";
 
 type MenuItem = {
   icon: any;
@@ -195,15 +195,15 @@ const DashboardSidebar = ({ onNavigate, onOpenSupport }: DashboardSidebarProps) 
         })}
       </nav>
 
-      <div className="mx-3 mb-4 p-4 rounded-xl gradient-gold cursor-pointer" onClick={() => handleNavigate("/boost")}>
+      <button type="button" className="mx-3 mb-4 w-[calc(100%-1.5rem)] rounded-xl gradient-gold p-4 text-left" onClick={() => handleNavigate("/boost")}>
         <p className="font-display font-semibold text-primary-foreground text-sm">Impulsione seus produtos</p>
-        <p className="text-primary-foreground/70 text-xs mt-1">Apareça no topo do marketplace.</p>
+        <p className="text-primary-foreground/70 text-xs mt-1">Veja os planos indicativos do Boost.</p>
         <span className="mt-3 inline-flex px-4 py-1.5 bg-primary-foreground/20 backdrop-blur rounded-lg text-primary-foreground text-xs font-medium hover:bg-primary-foreground/30 transition-colors items-center gap-1">
-          Ativar Boost <span>→</span>
+          Ver planos <span>→</span>
         </span>
-      </div>
+      </button>
 
-      <div className="px-4 pb-2 flex items-center gap-3 cursor-pointer" onClick={onOpenSupport}>
+      <button type="button" className="flex w-full items-center gap-3 px-4 pb-2 text-left" onClick={onOpenSupport}>
         <div className="relative">
           <Headphones className="w-5 h-5 text-sidebar-foreground" />
           <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-success rounded-full" />
@@ -212,7 +212,7 @@ const DashboardSidebar = ({ onNavigate, onOpenSupport }: DashboardSidebarProps) 
           <p className="text-sm text-sidebar-accent-foreground font-medium">Suporte</p>
         <p className="text-xs text-sidebar-foreground/65">Central de ajuda</p>
         </div>
-      </div>
+      </button>
       <div className="px-4 pb-4">
         <button
           onClick={() => navigate("/termos")}

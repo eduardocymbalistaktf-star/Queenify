@@ -1,26 +1,10 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { readLimitedText } from "../_shared/readLimitedBody.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
-
-// In-memory rate limiter (per isolate — resets on cold start)
-const rateLimits = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT_WINDOW_MS = 60_000;
-const RATE_LIMIT_MAX = 10;
-
-function checkRateLimit(userId: string): boolean {
-  const now = Date.now();
-  const entry = rateLimits.get(userId);
-  if (!entry || now > entry.resetAt) {
-    rateLimits.set(userId, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
-    return true;
-  }
-  if (entry.count >= RATE_LIMIT_MAX) return false;
-  entry.count++;
-  return true;
-}
 
 function jsonRes(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -30,10 +14,37 @@ function jsonRes(body: unknown, status = 200) {
 }
 
 function htmlRes(html: string, status = 200) {
-  return new Response(html, {
+  const nonceBytes = crypto.getRandomValues(new Uint8Array(18));
+  const nonce = btoa(String.fromCharCode(...nonceBytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+  const safeHtml = html.replaceAll("__SCRIPT_NONCE__", nonce);
+  return new Response(safeHtml, {
     status,
-    headers: { "Content-Type": "text/html; charset=utf-8" },
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+      "X-Content-Type-Options": "nosniff",
+      "X-Frame-Options": "DENY",
+      "Cache-Control": "no-store",
+      "Content-Security-Policy": `default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; base-uri 'none'; frame-ancestors 'none'`,
+    },
   });
+}
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!);
+}
+
+async function sha256Hex(value: string) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function oauthResultHtml(title: string, detail: string, status: number, platform?: string, origin?: string) {
+  const safeTitle = escapeHtml(title);
+  const safeDetail = escapeHtml(detail);
+  const payload = platform && origin
+    ? `window.opener?.postMessage({type:"oauth_success",platform:${JSON.stringify(platform)}},${JSON.stringify(origin)});`
+    : "";
+  return htmlRes(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Queenify</title><style>body{font-family:system-ui;display:grid;place-items:center;min-height:100vh;margin:0;background:#0b1018;color:#e8f1f7}.card{max-width:28rem;padding:2rem;border:1px solid #344250;border-radius:1rem;background:#141d27;text-align:center}p{color:#aab7c4;line-height:1.5}</style></head><body><main class="card"><h1>${safeTitle}</h1><p>${safeDetail}</p></main><script nonce="__SCRIPT_NONCE__">${payload}setTimeout(()=>window.close(),1800)</script></body></html>`, status);
 }
 
 Deno.serve(async (req) => {
@@ -46,22 +57,24 @@ Deno.serve(async (req) => {
     try {
       const platform = url.searchParams.get("platform");
       const code = url.searchParams.get("code");
-      const state = url.searchParams.get("state"); // user_id
+      const state = url.searchParams.get("state");
       const errorParam = url.searchParams.get("error");
-
-      if (errorParam) {
-        return htmlRes(`<html><body><h2>Autorização cancelada</h2><p>${errorParam}</p><script>window.close();</script></body></html>`);
-      }
-
-      if (!code || !state || !platform) {
-        return htmlRes(`<html><body><h2>Parâmetros inválidos</h2><script>window.close();</script></body></html>`, 400);
-      }
+      if (platform !== "facebook" && platform !== "google") return oauthResultHtml("Plataforma inválida", "Feche esta janela e tente novamente pela Queenify.", 400);
+      if (!state || !/^[A-Za-z0-9_-]{40,60}$/.test(state)) return oauthResultHtml("Autorização inválida", "Feche esta janela e inicie a conexão novamente pela Queenify.", 400);
 
       const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
       const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
       const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-      const redirectUri = `${supabaseUrl}/functions/v1/ads-integration?action=oauth_callback&platform=${platform}`;
+      const stateHash = await sha256Hex(state);
+      const { data: stateRecord, error: stateError } = await supabase.from("ads_oauth_states")
+        .delete().eq("state_hash", stateHash).eq("platform", platform).gt("expires_at", new Date().toISOString())
+        .select("user_id, frontend_origin").maybeSingle();
+      if (stateError || !stateRecord) return oauthResultHtml("Autorização expirada", "Feche esta janela e inicie a conexão novamente pela Queenify.", 400);
+      if (errorParam) return oauthResultHtml("Autorização cancelada", "A conexão foi cancelada no provedor. Você pode fechar esta janela.", 400);
+      if (!code || code.length > 4096) return oauthResultHtml("Resposta inválida", "Feche esta janela e tente conectar novamente.", 400);
+
+      const redirectUri = `${supabaseUrl}/functions/v1/ads-integration?action=oauth_callback&platform=${encodeURIComponent(platform)}`;
 
       let accessToken = "";
       let accountName = "";
@@ -69,18 +82,14 @@ Deno.serve(async (req) => {
       if (platform === "facebook") {
         const appId = Deno.env.get("FACEBOOK_APP_ID");
         const appSecret = Deno.env.get("FACEBOOK_APP_SECRET");
-        if (!appId || !appSecret) {
-          return htmlRes(`<html><body><h2>Erro de configuração</h2><p>FACEBOOK_APP_ID ou FACEBOOK_APP_SECRET não configurados.</p></body></html>`, 500);
-        }
+        if (!appId || !appSecret) return oauthResultHtml("Integração não configurada", "As credenciais do Facebook ainda não foram configuradas.", 503);
 
         // Exchange code for access token
         const tokenUrl = `https://graph.facebook.com/v21.0/oauth/access_token?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&client_secret=${appSecret}&code=${code}`;
         const tokenRes = await fetch(tokenUrl);
         const tokenData = await tokenRes.json();
 
-        if (tokenData.error) {
-          return htmlRes(`<html><body><h2>Erro ao obter token</h2><p>${tokenData.error.message}</p><script>setTimeout(()=>window.close(),3000);</script></body></html>`);
-        }
+        if (tokenData.error || typeof tokenData.access_token !== "string") return oauthResultHtml("Falha ao autorizar", "O Facebook não concluiu a conexão. Tente novamente.", 502);
 
         const shortLivedToken = tokenData.access_token;
 
@@ -92,15 +101,13 @@ Deno.serve(async (req) => {
         accessToken = longData.access_token || shortLivedToken;
 
         // Get account name
-        const meRes = await fetch(`https://graph.facebook.com/v21.0/me?access_token=${accessToken}`);
+        const meRes = await fetch("https://graph.facebook.com/v21.0/me", { headers: { Authorization: `Bearer ${accessToken}` } });
         const meData = await meRes.json();
         accountName = meData.name || "Facebook Ads";
       } else if (platform === "google") {
         const clientId = Deno.env.get("GOOGLE_ADS_CLIENT_ID");
         const clientSecret = Deno.env.get("GOOGLE_ADS_CLIENT_SECRET");
-        if (!clientId || !clientSecret) {
-          return htmlRes(`<html><body><h2>Erro de configuração</h2><p>Google Ads credentials não configurados.</p></body></html>`, 500);
-        }
+        if (!clientId || !clientSecret) return oauthResultHtml("Integração não configurada", "As credenciais do Google Ads ainda não foram configuradas.", 503);
 
         const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
           method: "POST",
@@ -115,51 +122,27 @@ Deno.serve(async (req) => {
         });
         const tokenData = await tokenRes.json();
 
-        if (tokenData.error) {
-          return htmlRes(`<html><body><h2>Erro ao obter token</h2><p>${tokenData.error_description || tokenData.error}</p><script>setTimeout(()=>window.close(),3000);</script></body></html>`);
-        }
+        if (tokenData.error || typeof tokenData.access_token !== "string") return oauthResultHtml("Falha ao autorizar", "O Google não concluiu a conexão. Tente novamente.", 502);
 
         accessToken = tokenData.access_token;
         accountName = "Google Ads Account";
       }
 
-      if (!accessToken) {
-        return htmlRes(`<html><body><h2>Plataforma não suportada</h2><script>window.close();</script></body></html>`, 400);
-      }
+      if (!accessToken) return oauthResultHtml("Falha na autorização", "O provedor não retornou uma credencial válida.", 502);
 
       // Save token to ad_integrations
-      await supabase.from("ad_integrations").upsert({
-        user_id: state,
+      const { error: upsertError } = await supabase.from("ad_integrations").upsert({
+        user_id: stateRecord.user_id,
         platform,
         access_token: accessToken,
         is_connected: true,
       }, { onConflict: "user_id,platform" });
+      if (upsertError) return oauthResultHtml("Não foi possível salvar", "A conta foi autorizada, mas não foi possível registrar a integração. Tente novamente.", 500);
 
-      return htmlRes(`
-        <html>
-        <head><style>body{font-family:system-ui;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#0a0a0a;color:#fff;}
-        .card{text-align:center;padding:2rem;border-radius:12px;background:#1a1a1a;border:1px solid #333;}
-        .success{color:#4ade80;font-size:2rem;margin-bottom:1rem;}
-        </style></head>
-        <body>
-          <div class="card">
-            <div class="success">✅</div>
-            <h2>Conta conectada com sucesso!</h2>
-            <p><strong>${accountName}</strong> vinculada ao Queenify.</p>
-            <p style="color:#888;margin-top:1rem;">Esta janela será fechada automaticamente...</p>
-          </div>
-          <script>
-            if (window.opener) {
-              window.opener.postMessage({ type: "oauth_success", platform: "${platform}" }, "*");
-            }
-            setTimeout(() => window.close(), 2000);
-          </script>
-        </body>
-        </html>
-      `);
-    } catch (err) {
-      console.error("OAuth callback error:", err);
-      return htmlRes(`<html><body><h2>Erro interno</h2><p>${err instanceof Error ? err.message : "Erro desconhecido"}</p><script>setTimeout(()=>window.close(),3000);</script></body></html>`, 500);
+      return oauthResultHtml("Conta conectada", `${accountName || "Sua conta"} foi vinculada à Queenify. Esta janela será fechada automaticamente.`, 200, platform, stateRecord.frontend_origin);
+    } catch {
+      console.error("OAuth callback failed");
+      return oauthResultHtml("Falha na conexão", "Ocorreu um erro ao concluir a autorização. Tente novamente pela Queenify.", 500);
     }
   }
 
@@ -177,12 +160,28 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return jsonRes({ error: "Sessão inválida" }, 401);
 
-    // Rate limiting
-    if (!checkRateLimit(user.id)) {
+    // Persistent per-user limiter (survives function cold starts).
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!serviceRoleKey) return jsonRes({ error: "Integrações temporariamente indisponíveis." }, 503);
+    const admin = createClient(supabaseUrl, serviceRoleKey);
+    const { data: allowed, error: rateLimitError } = await admin.rpc("consume_edge_rate_limit", {
+      p_key_hash: await sha256Hex(`ads-integration:${user.id}`),
+      p_limit: 30,
+      p_window_seconds: 60,
+    });
+    if (rateLimitError) return jsonRes({ error: "Integrações temporariamente indisponíveis." }, 503);
+    if (!allowed) {
       return jsonRes({ error: "Muitas requisições. Aguarde 1 minuto e tente novamente." }, 429);
     }
 
-    const body = await req.json();
+    const contentLength = Number(req.headers.get("content-length") || 0);
+    if (contentLength > 16_000) return jsonRes({ error: "Solicitação muito grande." }, 413);
+    let body: Record<string, unknown>;
+    const rawBody = await readLimitedText(req, 16_000);
+    if (rawBody === null) return jsonRes({ error: "Solicitação muito grande." }, 413);
+    try { body = JSON.parse(rawBody); }
+    catch { return jsonRes({ error: "Corpo JSON inválido." }, 400); }
+    if (!body || typeof body !== "object" || Array.isArray(body)) return jsonRes({ error: "Corpo da solicitação inválido." }, 400);
     const { action, platform, access_token, account_id } = body;
 
     // ─── CONNECT ───
@@ -268,23 +267,48 @@ Deno.serve(async (req) => {
 
     // ─── OAUTH INIT ───
     if (action === "oauth_init") {
+      if (platform !== "facebook" && platform !== "google") return jsonRes({ error: "Plataforma não suportada para OAuth" }, 400);
+      const origin = req.headers.get("origin");
+      const allowedOrigins = (Deno.env.get("QUEENIFY_ALLOWED_ORIGINS") || "https://eduardocymbalistaktf-star.github.io,http://localhost:8080,http://127.0.0.1:8080")
+        .split(",").map((value) => value.trim()).filter(Boolean);
+      if (!origin || !allowedOrigins.includes(origin)) return jsonRes({ error: "Origem da Queenify não permitida." }, 403);
+
+      const serviceClient = admin;
+      await serviceClient.from("ads_oauth_states").delete().lt("expires_at", new Date().toISOString());
+      const stateBytes = crypto.getRandomValues(new Uint8Array(32));
+      const oauthState = btoa(String.fromCharCode(...stateBytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+      const { error: stateInsertError } = await serviceClient.from("ads_oauth_states").insert({
+        user_id: user.id,
+        platform,
+        state_hash: await sha256Hex(oauthState),
+        frontend_origin: origin,
+      });
+      if (stateInsertError) {
+        console.error("Could not create OAuth state");
+        return jsonRes({ error: "Não foi possível iniciar a conexão. Tente novamente." }, 503);
+      }
+
       if (platform === "facebook") {
         const appId = Deno.env.get("FACEBOOK_APP_ID");
         if (!appId) return jsonRes({ error: "Facebook App ID não configurado. Adicione o secret FACEBOOK_APP_ID." }, 400);
         const redirectUri = `${supabaseUrl}/functions/v1/ads-integration?action=oauth_callback&platform=facebook`;
-        const scopes = "ads_read,ads_management";
-        const authUrl = `https://www.facebook.com/v21.0/dialog/oauth?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scopes}&response_type=code&state=${user.id}`;
-        return jsonRes({ auth_url: authUrl });
-      }
-      if (platform === "google") {
+        const params = new URLSearchParams({ client_id: appId, redirect_uri: redirectUri, scope: "ads_read,ads_management", response_type: "code", state: oauthState });
+        return jsonRes({ auth_url: `https://www.facebook.com/v21.0/dialog/oauth?${params.toString()}` });
+      } else {
         const clientId = Deno.env.get("GOOGLE_ADS_CLIENT_ID");
         if (!clientId) return jsonRes({ error: "Google Ads Client ID não configurado. Adicione o secret GOOGLE_ADS_CLIENT_ID." }, 400);
         const redirectUri = `${supabaseUrl}/functions/v1/ads-integration?action=oauth_callback&platform=google`;
-        const scopes = "https://www.googleapis.com/auth/adwords";
-        const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}&response_type=code&access_type=offline&prompt=consent&state=${user.id}`;
-        return jsonRes({ auth_url: authUrl });
+        const params = new URLSearchParams({
+          client_id: clientId,
+          redirect_uri: redirectUri,
+          scope: "https://www.googleapis.com/auth/adwords",
+          response_type: "code",
+          access_type: "offline",
+          prompt: "consent",
+          state: oauthState,
+        });
+        return jsonRes({ auth_url: `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}` });
       }
-      return jsonRes({ error: "Plataforma não suportada para OAuth" }, 400);
     }
 
     // ─── CHECK CONNECTION STATUS ───
@@ -296,7 +320,8 @@ Deno.serve(async (req) => {
     }
 
     return jsonRes({ error: "Ação inválida" }, 400);
-  } catch (err) {
-    return jsonRes({ error: err instanceof Error ? err.message : "Erro interno" }, 500);
+  } catch {
+    console.error("ads-integration request failed");
+    return jsonRes({ error: "Não foi possível concluir a solicitação de integração." }, 500);
   }
 });

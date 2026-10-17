@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { BarChart3, DollarSign, Target, Link2, Plus, Copy, Trash2, Activity, CheckCircle2, XCircle, RefreshCw, Webhook, AlertTriangle, Send, Calendar, Bot, Sparkles, Loader2, MessageSquarePlus } from "lucide-react";
+import { BarChart3, DollarSign, Target, Link2, Plus, Copy, Trash2, Activity, CheckCircle2, XCircle, RefreshCw, Webhook, AlertTriangle, Send, Calendar, Bot, Sparkles, Loader2, MessageSquarePlus, CircleAlert } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line, Legend, AreaChart, Area } from "recharts";
 import { Download } from "lucide-react";
 import { format, subDays, startOfDay } from "date-fns";
@@ -479,18 +479,15 @@ function PixelsTab({ userId }: { userId?: string }) {
         onSave={(d) => upsertMut.mutate({ user_id: userId, platform: "facebook", ...d })}
       />
 
-      <PixelCard
-        platform="google"
-        title="Google Ads (Server-Side)"
-        description="Click Conversions API. Você precisa de: Customer ID (sem traços), Conversion Action ID e Developer Token aprovado pelo Google."
-        existing={pixels.find((p: any) => p.platform === "google")}
-        fields={[
-          { key: "pixel_id", label: "Customer ID (sem traços)", placeholder: "1234567890" },
-          { key: "conversion_label", label: "Conversion Action ID", placeholder: "987654321" },
-          { key: "access_token", label: "Developer Token", placeholder: "xxxxxxx", type: "password" },
-        ]}
-        onSave={(d) => upsertMut.mutate({ user_id: userId, platform: "google", ...d })}
-      />
+      <Card className="border-amber-500/30 p-4">
+        <div className="flex items-start gap-3">
+          <CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+          <div>
+            <p className="text-sm font-semibold">Google Ads server-side — indisponível</p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">A implementação antiga não autenticava as chamadas com OAuth. O envio foi pausado até migrar para o fluxo de conversões atual. Não salve credenciais nesta tela.</p>
+          </div>
+        </div>
+      </Card>
 
 
       <PixelCard
@@ -958,7 +955,7 @@ function WebhooksTab({ userId }: { userId?: string }) {
     <div className="space-y-4">
       <Card className="p-4 bg-muted/20">
         <p className="text-sm">
-          <strong>Receba vendas de plataformas externas.</strong> Crie um token, copie a URL e cole no painel da Hotmart/Kirvano como webhook de "Compra aprovada". As vendas entram automaticamente no Trackeamento (com UTMs) e disparam seus pixels server-side.
+          <strong>Receba vendas de plataformas externas.</strong> Use a URL gerada para encaminhar eventos. Para Hotmart, configure também o Hottok recebido no header <code>X-HOTMART-HOTTOK</code>. A importação requer um identificador de transação único para evitar duplicidade.
         </p>
       </Card>
 
@@ -1046,7 +1043,7 @@ function HmacSecretField({ token, onSave }: { token: any; onSave: (s: string | n
     <div className="border-t pt-3">
       <div className="flex items-center justify-between mb-1">
         <Label className="text-xs flex items-center gap-1.5">
-          Segredo HMAC <span className="text-muted-foreground">(opcional, recomendado)</span>
+          {token.source === "hotmart" ? "Hottok da Hotmart (obrigatório)" : <>Segredo HMAC <span className="text-muted-foreground">(opcional)</span></>}
           {hasSecret && <Badge className="bg-success/15 text-success text-[10px] px-1.5 py-0">protegido</Badge>}
         </Label>
         <button type="button" className="text-xs text-muted-foreground hover:text-foreground" onClick={() => setShow((s) => !s)}>
@@ -1058,14 +1055,16 @@ function HmacSecretField({ token, onSave }: { token: any; onSave: (s: string | n
           type={show ? "text" : "password"}
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          placeholder="Cole aqui o mesmo segredo configurado na Hotmart/Kirvano"
+          placeholder={token.source === "hotmart" ? "Cole o Hottok da aba Autenticação da Hotmart" : "Segredo HMAC configurado no sistema de origem"}
           className="text-xs h-8"
         />
         <Button size="sm" variant="outline" onClick={() => onSave(value || null)}>Salvar</Button>
         {hasSecret && <Button size="sm" variant="ghost" onClick={() => { setValue(""); onSave(null); }}>Remover</Button>}
       </div>
       <p className="text-[11px] text-muted-foreground mt-1.5">
-        Quando preenchido, todo POST precisa vir com o header <code className="bg-muted px-1 rounded">x-signature</code> contendo o HMAC-SHA256 do corpo (assinatura digital). POSTs sem assinatura válida são rejeitados.
+        {token.source === "hotmart"
+          ? <>A Hotmart envia esse valor no header <code className="bg-muted px-1 rounded">X-HOTMART-HOTTOK</code>. A Queenify o valida em cada evento.</>
+          : <>Quando configurado, o POST precisa trazer <code className="bg-muted px-1 rounded">x-signature</code> com HMAC-SHA256 do corpo da requisição.</>}
       </p>
     </div>
   );
