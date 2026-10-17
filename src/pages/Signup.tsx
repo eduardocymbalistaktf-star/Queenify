@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { logSecurityEvent } from "@/lib/securityLogger";
-import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import { Mail, Lock, Eye, EyeOff, User, Calendar } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -70,10 +69,13 @@ const Signup = () => {
 
   const handleGoogle = async () => {
     setLoading(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: `${window.location.origin}${import.meta.env.BASE_URL}`,
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}`,
+      },
     });
-    if (result.error) {
+    if (error) {
       toast.error("Erro ao entrar com Google");
       setLoading(false);
     }

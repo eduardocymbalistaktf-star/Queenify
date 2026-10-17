@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import { Mail, Lock, Eye, EyeOff, Shield } from "lucide-react";
 import queenifyBee from "@/assets/queenify-bee.png";
@@ -128,16 +127,17 @@ const Login = () => {
 
   const handleGoogle = async () => {
     setLoading(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: `${window.location.origin}${import.meta.env.BASE_URL}`,
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}`,
+      },
     });
-    if (result.error) {
+    if (error) {
       toast.error("Erro ao entrar com Google");
       setLoading(false);
       return;
     }
-    if (result.redirected) return;
-    navigate("/dashboard");
   };
 
   if (mfaRequired) {
