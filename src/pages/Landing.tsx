@@ -24,34 +24,6 @@ const slideInLeft = { hidden: { opacity: 0, x: -80 }, visible: { opacity: 1, x: 
 const slideInRight = { hidden: { opacity: 0, x: 80 }, visible: { opacity: 1, x: 0, transition: { duration: 0.9, ease: [0.16, 1, 0.3, 1] as const } } };
 const rotateIn = { hidden: { opacity: 0, rotate: -5, scale: 0.9 }, visible: { opacity: 1, rotate: 0, scale: 1, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] as const } } };
 
-/* ─── Typing animation hook ─── */
-function useTypingEffect(texts: string[], typingSpeed = 80, deletingSpeed = 40, pauseMs = 2000) {
-  const [display, setDisplay] = useState("");
-  const [textIndex, setTextIndex] = useState(0);
-  const [charIndex, setCharIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  useEffect(() => {
-    const current = texts[textIndex];
-    let timeout: ReturnType<typeof setTimeout>;
-
-    if (!isDeleting && charIndex < current.length) {
-      timeout = setTimeout(() => { setCharIndex(c => c + 1); setDisplay(current.slice(0, charIndex + 1)); }, typingSpeed);
-    } else if (!isDeleting && charIndex === current.length) {
-      timeout = setTimeout(() => setIsDeleting(true), pauseMs);
-    } else if (isDeleting && charIndex > 0) {
-      timeout = setTimeout(() => { setCharIndex(c => c - 1); setDisplay(current.slice(0, charIndex - 1)); }, deletingSpeed);
-    } else if (isDeleting && charIndex === 0) {
-      setIsDeleting(false);
-      setTextIndex((textIndex + 1) % texts.length);
-    }
-
-    return () => clearTimeout(timeout);
-  }, [charIndex, isDeleting, textIndex, texts, typingSpeed, deletingSpeed, pauseMs]);
-
-  return display;
-}
-
 /* ─── Floating particle component ─── */
 const FloatingParticle = ({ delay = 0, x = 0, y = 0, size = 3 }: { delay?: number; x?: number; y?: number; size?: number }) => (
   <motion.div
@@ -173,7 +145,7 @@ const realisticSales = [
 const CinematicShowcase = () => {
   return (
     <div
-      className="hidden lg:flex items-center justify-center relative w-full h-[600px]"
+      className="hidden xl:flex items-center justify-center relative w-full h-[600px]"
       style={{ perspective: 1800 }}
     >
       {/* Soft gold halo */}
@@ -916,11 +888,6 @@ const Landing = () => {
   const heroScale = useTransform(heroScroll, [0, 1], [1, 0.95]);
   const mockupY = useTransform(heroScroll, [0, 1], [0, 80]);
   const navigate = useNavigate();
-  const typedText = useTypingEffect([
-    "Conheça a prévia Queenify.",
-    "Organize seus produtos digitais.",
-    "Acompanhe os registros da conta.",
-  ], 70, 35, 2200);
   const safePrice = Math.min(Math.max(Number(simulatorPrice) || 0, 0), 1_000_000);
   const safeOrders = Math.min(Math.max(Number(simulatorOrders) || 0, 0), 1_000_000);
   const estimatedGross = safePrice * safeOrders;
@@ -1032,7 +999,7 @@ const Landing = () => {
             <img src={queenifyBee} alt="Queenify" className="w-8 h-8 transition-transform group-hover:rotate-12 duration-300" />
             <span className="font-display text-xl font-bold text-foreground">Queenify</span>
           </Link>
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden xl:flex items-center gap-6">
             {navLinks.map((link) => (
               <button key={link.label} onClick={() => handleNavClick(link.href)}
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors relative group/nav">
@@ -1046,14 +1013,14 @@ const Landing = () => {
                 <Link to="/signup" className="px-5 py-2.5 text-sm font-semibold gradient-gold rounded-lg text-primary-foreground hover:opacity-90 transition-all hover:scale-[1.03] hover:shadow-lg hover:shadow-primary/20 duration-300">
                   Criar conta
                 </Link>
-            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-1.5 rounded-lg text-muted-foreground hover:text-foreground">
+            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="xl:hidden p-1.5 rounded-lg text-muted-foreground hover:text-foreground" aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}>
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
         <AnimatePresence>
           {mobileMenuOpen && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="md:hidden overflow-hidden border-t border-border">
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="xl:hidden overflow-hidden border-t border-border">
               <nav className="flex flex-col gap-1 px-4 py-3">
                 {navLinks.map((link) => (
                   <button key={link.label} onClick={() => handleNavClick(link.href)} className="text-sm text-muted-foreground hover:text-foreground py-2 text-left">{link.label}</button>
@@ -1095,7 +1062,7 @@ const Landing = () => {
         </div>
 
         <motion.div style={{ y: heroY, opacity: heroOpacity, scale: heroScale }} className="max-w-7xl mx-auto w-full relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-12 items-center">
             {/* Left - Text */}
             <div>
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
@@ -1105,12 +1072,10 @@ const Landing = () => {
               </motion.div>
 
               <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.7 }}
-                className="text-4xl sm:text-5xl lg:text-6xl font-display font-bold leading-[1.1] mb-6">
+                className="text-4xl sm:text-5xl lg:text-6xl font-display font-bold leading-[1.1] mb-6 max-w-3xl">
                 Organize seu negócio digital.{" "}
                 <span className="bg-gradient-to-r from-primary via-[hsl(43,96%,70%)] to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-[shimmer_3s_ease-in-out_infinite]">
-                  {typedText}
-                  <motion.span animate={{ opacity: [1, 0] }} transition={{ duration: 0.6, repeat: Infinity, repeatType: "reverse" }}
-                    className="inline-block w-[3px] h-[0.9em] bg-primary ml-0.5 align-middle rounded-sm" />
+                  Conheça a prévia Queenify.
                 </span>
               </motion.h1>
 
