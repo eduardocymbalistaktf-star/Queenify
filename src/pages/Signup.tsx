@@ -5,7 +5,7 @@ import { logSecurityEvent } from "@/lib/securityLogger";
 import { toast } from "sonner";
 import { Mail, Lock, Eye, EyeOff, User, Calendar } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import queenifyBee from "@/assets/queenify-bee-blue.png";
+import BrandLogo from "@/components/BrandLogo";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -87,7 +87,7 @@ const Signup = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <img src={queenifyBee} alt="Queenify" className="h-10 w-auto" />
+            <BrandLogo size="medium" />
             <span className="font-display text-2xl font-bold text-foreground">Queenify</span>
           </div>
           <p className="text-muted-foreground text-sm">Crie sua conta e comece a vender</p>

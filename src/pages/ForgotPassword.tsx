@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Mail } from "lucide-react";
-import queenifyBee from "@/assets/queenify-bee-blue.png";
+import BrandLogo from "@/components/BrandLogo";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -29,7 +29,7 @@ const ForgotPassword = () => {
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="w-full max-w-md text-center">
           <div className="flex items-center justify-center gap-3 mb-6">
-            <img src={queenifyBee} alt="Queenify" className="h-10 w-auto" />
+            <BrandLogo size="medium" />
             <span className="font-display text-2xl font-bold text-foreground">Queenify</span>
           </div>
           <div className="glass-card p-8">
@@ -54,7 +54,7 @@ const ForgotPassword = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <img src={queenifyBee} alt="Queenify" className="h-10 w-auto" />
+            <BrandLogo size="medium" />
             <span className="font-display text-2xl font-bold text-foreground">Queenify</span>
           </div>
           <p className="text-muted-foreground text-sm">Recupere o acesso à sua conta</p>

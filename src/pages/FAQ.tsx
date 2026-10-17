@@ -2,7 +2,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Search, HelpCircle, ShoppingCart, CreditCard, Users, Shield, Settings, Smartphone, Headphones } from "lucide-react";
-import queenifyBee from "@/assets/queenify-bee-blue.png";
+import BrandLogo from "@/components/BrandLogo";
 import BackButton from "@/components/BackButton";
 
 const fadeUp = { hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } };
@@ -101,7 +101,7 @@ const FAQ = () => {
       <header className="border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5">
-            <img src={queenifyBee} alt="Queenify" className="w-8 h-8" />
+            <BrandLogo size="small" />
             <span className="font-display text-xl font-bold">Queenify</span>
           </Link>
           <BackButton fallbackPath="/" />

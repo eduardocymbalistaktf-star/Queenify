@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import queenifyBee from "@/assets/queenify-bee-blue.png";
+import BrandLogo from "@/components/BrandLogo";
 import { getUserLevel, levels } from "@/components/LevelCard";
 import frameBronze from "@/assets/frame-bronze.png";
 import frameSilver from "@/assets/frame-silver.png";
@@ -542,7 +542,7 @@ const DashboardHeader = ({ onMenuToggle, supportOpen = false, onSupportChange }:
       {showSupport && (
         <div className={`fixed bottom-4 ${isMobile ? 'left-3 right-3' : 'right-4 w-80'} bg-card border border-border rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden`} style={{ height: isMobile ? 380 : 420 }}>
           <div className="p-3 border-b border-sidebar-border bg-sidebar flex items-center gap-2">
-            <img src={queenifyBee} alt="" className="w-6 h-6" />
+            <BrandLogo size="small" alt="" />
             <div>
               <p className="text-sm font-semibold text-sidebar-foreground">QueenIA · Suporte</p>
               <p className="text-[10px] text-sidebar-foreground/65">Conectada à central de ajuda</p>

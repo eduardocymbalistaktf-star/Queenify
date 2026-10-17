@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Headphones, MessageCircle, Mail, BookOpen, Video, ArrowRight, Clock, ShieldCheck, Send, Bot, Search, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import queenifyBee from "@/assets/queenify-bee-blue.png";
+import BrandLogo from "@/components/BrandLogo";
 import BackButton from "@/components/BackButton";
 
 const fadeUp = { hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } };
@@ -241,7 +241,7 @@ const Ajuda = () => {
       <header className="border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5">
-            <img src={queenifyBee} alt="Queenify" className="w-8 h-8" />
+            <BrandLogo size="small" />
             <span className="font-display text-xl font-bold">Queenify</span>
           </Link>
           <BackButton fallbackPath="/" />

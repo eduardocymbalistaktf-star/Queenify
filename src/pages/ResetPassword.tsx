@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Lock, Eye, EyeOff } from "lucide-react";
-import queenifyBee from "@/assets/queenify-bee-blue.png";
+import BrandLogo from "@/components/BrandLogo";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -61,7 +61,7 @@ const ResetPassword = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <img src={queenifyBee} alt="Queenify" className="h-10 w-auto" />
+            <BrandLogo size="medium" />
             <span className="font-display text-2xl font-bold text-foreground">Queenify</span>
           </div>
           <p className="text-muted-foreground text-sm">Defina sua nova senha</p>

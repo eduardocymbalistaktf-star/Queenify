@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Heart, Target, Eye, Users, Sparkles, ShieldCheck, Globe, Award } from "lucide-react";
-import queenifyBee from "@/assets/queenify-bee-blue.png";
+import BrandLogo from "@/components/BrandLogo";
 import BackButton from "@/components/BackButton";
 
 const fadeUp = { hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } };
@@ -19,7 +19,7 @@ const SobreNos = () => (
     <header className="border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5">
-          <img src={queenifyBee} alt="Queenify" className="w-8 h-8" />
+          <BrandLogo size="small" />
           <span className="font-display text-xl font-bold">Queenify</span>
         </Link>
         <BackButton fallbackPath="/" />
@@ -29,7 +29,9 @@ const SobreNos = () => (
     <section className="py-20 px-4 text-center relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_-10%,hsl(43_96%_56%/0.12),transparent)]" />
       <motion.div initial="hidden" animate="visible" variants={stagger} className="max-w-3xl mx-auto relative z-10">
-        <motion.img variants={fadeUp} src={queenifyBee} alt="Queenify" className="w-20 h-20 mx-auto mb-6" />
+        <motion.div variants={fadeUp} className="mx-auto mb-6 w-fit">
+          <BrandLogo size="large" />
+        </motion.div>
         <motion.h1 variants={fadeUp} className="text-3xl sm:text-5xl font-display font-bold mb-4">
           Sobre a <span className="text-primary">Queenify</span>
         </motion.h1>

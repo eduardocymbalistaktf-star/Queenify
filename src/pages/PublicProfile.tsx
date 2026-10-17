@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Instagram, Youtube, ExternalLink, Package } from "lucide-react";
-import queenifyBee from "@/assets/queenify-bee-blue.png";
+import BrandLogo from "@/components/BrandLogo";
 
 interface Profile {
   display_name: string | null;
@@ -67,7 +67,7 @@ const PublicProfile = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center">
-          <img src={queenifyBee} alt="" className="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <BrandLogo size="medium" alt="" className="mx-auto mb-4 opacity-70" />
           <h1 className="text-xl font-display font-bold text-foreground mb-2">Perfil não encontrado</h1>
           <p className="text-sm text-muted-foreground mb-4">Este produtor não existe ou foi removido.</p>
           <Link to="/login" className="text-sm text-primary hover:text-primary/80 font-medium">← Ir para o login</Link>
@@ -84,7 +84,7 @@ const PublicProfile = () => {
       <header className="border-b border-border">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <img src={queenifyBee} alt="" className="w-7 h-7" />
+            <BrandLogo size="small" alt="" />
             <span className="font-display text-lg font-bold text-foreground">Queenify</span>
           </Link>
         </div>
@@ -177,7 +177,7 @@ const PublicProfile = () => {
       {/* Footer */}
       <footer className="border-t border-border mt-12">
         <div className="max-w-4xl mx-auto px-4 py-6 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-          <img src={queenifyBee} alt="" className="w-4 h-4 opacity-50" />
+          <BrandLogo size="small" alt="" className="opacity-60" />
           Powered by Queenify
         </div>
       </footer>

@@ -5,6 +5,7 @@ import { trackPageView } from "@/hooks/usePageTracking";
 import { useUtmCapture, getStoredUtms } from "@/hooks/useUtmCapture";
 import { CreditCard, QrCode, FileText, ShieldCheck, Lock, ChevronLeft, Check, Plus, Package, Star, RefreshCw, Zap } from "lucide-react";
 import queenifyBee from "@/assets/queenify-bee-blue.png";
+import BrandLogo from "@/components/BrandLogo";
 import { toast } from "sonner";
 import { createCardToken, loadMercadoPago } from "@/lib/mercadopago";
 
@@ -415,7 +416,7 @@ const Checkout = () => {
               <img src={custom.logo_url} alt="" className="h-7 object-contain" />
             ) : (
               <>
-                <img src={queenifyBee} alt="Queenify" className="w-7 h-7" />
+                <BrandLogo size="small" />
                 <span className="font-display text-lg font-bold" style={theme ? { color: theme.fg } : undefined}>Queenify</span>
               </>
             )}

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, CreditCard, ShieldCheck } from "lucide-react";
-import queenifyBee from "@/assets/queenify-bee-blue.png";
+import BrandLogo from "@/components/BrandLogo";
 import BackButton from "@/components/BackButton";
 
 const Taxas = () => (
@@ -8,7 +8,7 @@ const Taxas = () => (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
         <Link to="/" className="flex items-center gap-2.5" aria-label="Queenify — início">
-          <img src={queenifyBee} alt="" className="h-8 w-8" />
+          <BrandLogo size="small" alt="" />
           <span className="font-display text-xl font-bold">Queenify</span>
         </Link>
         <BackButton fallbackPath="/" />

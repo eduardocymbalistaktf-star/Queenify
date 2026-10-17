@@ -13,6 +13,7 @@ import {
   ShieldCheck, CircleDashed, CircleAlert, WalletCards,
 } from "lucide-react";
 import queenifyBee from "@/assets/queenify-bee-blue.png";
+import BrandLogo from "@/components/BrandLogo";
 import dashboardMockup from "@/assets/dashboard-mockup.jpg";
 import mobileMockup from "@/assets/mobile-mockup.jpg";
 
@@ -996,7 +997,7 @@ const Landing = () => {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 group">
-            <img src={queenifyBee} alt="Queenify" className="w-8 h-8 transition-transform group-hover:rotate-12 duration-300" />
+            <BrandLogo size="medium" className="transition-transform group-hover:rotate-6 duration-300" />
             <span className="font-display text-xl font-bold text-foreground">Queenify</span>
           </Link>
           <nav className="hidden xl:flex items-center gap-6">
@@ -1490,8 +1491,7 @@ const Landing = () => {
         <div className="max-w-3xl mx-auto text-center relative z-10">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={stagger}>
             <motion.div variants={fadeUp}>
-              <img src={queenifyBee} alt="" className="w-28 h-28 mx-auto mb-6 object-contain"
-                style={{ background: "transparent", mixBlendMode: "normal" }} />
+              <BrandLogo size="hero" alt="" className="mx-auto mb-6" />
               <h2 className="text-3xl sm:text-4xl font-display font-bold mb-4">Pronto para começar?</h2>
               <p className="text-muted-foreground mb-8 max-w-lg mx-auto">Crie uma conta para conhecer a Queenify e acompanhar a liberação dos recursos. As vendas aguardam a ativação das integrações financeiras.</p>
               <Link to="/signup" className="inline-flex items-center gap-2 px-10 py-4 gradient-gold rounded-xl text-base font-bold text-primary-foreground hover:opacity-90 transition-all hover:scale-[1.03] shadow-lg shadow-primary/20">
@@ -1575,7 +1575,7 @@ const Landing = () => {
       <div className="bg-background border-t border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <img src={queenifyBee} alt="" className="w-5 h-5 opacity-70" />
+            <BrandLogo size="small" alt="" />
             <span className="text-xs font-display font-semibold text-foreground/80">Queenify</span>
           </div>
           <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} Queenify. Todos os direitos reservados.</p>

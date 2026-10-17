@@ -8,7 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
-import queenifyBee from "@/assets/queenify-bee-blue.png";
+import BrandLogo from "@/components/BrandLogo";
 
 type MenuItem = {
   icon: any;
@@ -119,7 +119,7 @@ const DashboardSidebar = ({ onNavigate, onOpenSupport }: DashboardSidebarProps) 
   return (
     <aside className="dashboard-sidebar w-64 h-full max-h-screen bg-sidebar border-r border-sidebar-border flex flex-col overflow-hidden">
       <div className="p-6 flex items-center gap-3">
-        <img src={queenifyBee} alt="Queenify" className="h-8 w-auto" />
+        <BrandLogo size="medium" />
         <span className="font-display text-xl font-bold text-sidebar-foreground">Queenify</span>
       </div>
 
