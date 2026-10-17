@@ -1,11 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { Palette, Sun, Moon, Sparkles, Check } from "lucide-react";
+import { Palette, Layers, Moon, Sparkles, Check } from "lucide-react";
 import { useThemeAccent } from "@/contexts/ThemeAccentContext";
 
-/** Compact theme controller for the dashboard header.
- *  Centralizes accent mode (anchor / gold-emphasis) and reduce-motion toggle,
- *  persisting via the context (localStorage). The .section-light scope is not
- *  affected by the body-level class — it always re-scopes its own tokens. */
+/** Compact theme controller for the graphite and titanium dashboard modes. */
 const DashboardThemeMenu = () => {
   const { accent, setAccent, reduceMotion, setReduceMotion } = useThemeAccent();
   const [open, setOpen] = useState(false);
@@ -35,7 +32,7 @@ const DashboardThemeMenu = () => {
       {open && (
         <div className="absolute right-0 mt-2 w-64 rounded-xl border border-border bg-popover shadow-2xl z-50 p-2 animate-in fade-in zoom-in-95">
           <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-2 pt-1 pb-2">
-            Tema do dashboard
+            Aparência da Queenify
           </p>
 
           <button
@@ -45,19 +42,19 @@ const DashboardThemeMenu = () => {
             }`}
           >
             <Moon className="w-4 h-4" />
-            <span className="flex-1 text-left">Areia e grafite</span>
+            <span className="flex-1 text-left">Grafite</span>
             {accent === "anchor" && <Check className="w-3.5 h-3.5 text-primary" />}
           </button>
 
           <button
-            onClick={() => setAccent("gold-emphasis")}
+            onClick={() => setAccent("metal-emphasis")}
             className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm transition-colors ${
-              accent === "gold-emphasis" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+              accent === "metal-emphasis" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
             }`}
           >
-            <Sun className="w-4 h-4" />
-            <span className="flex-1 text-left">Destaque dourado</span>
-            {accent === "gold-emphasis" && <Check className="w-3.5 h-3.5 text-primary" />}
+            <Layers className="w-4 h-4" />
+            <span className="flex-1 text-left">Titânio</span>
+            {accent === "metal-emphasis" && <Check className="w-3.5 h-3.5 text-primary" />}
           </button>
 
           <div className="h-px bg-border my-2" />
@@ -85,7 +82,7 @@ const DashboardThemeMenu = () => {
           </label>
 
           <p className="text-[10px] text-muted-foreground px-2.5 pt-1 pb-1 leading-relaxed">
-            Desativa pulse dourado, count-up e transições longas.
+            Reduz pulsos e transições para priorizar conforto visual.
           </p>
         </div>
       )}

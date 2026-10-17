@@ -591,6 +591,69 @@ export type Database = {
         }
         Relationships: []
       }
+      member_area_settings: {
+        Row: {
+          settings: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          settings?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          settings?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      email_campaigns: {
+        Row: {
+          blocks: Json
+          created_at: string
+          id: string
+          name: string
+          preheader: string
+          product_id: string | null
+          sender_email: string
+          sender_name: string
+          status: string
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          blocks?: Json
+          created_at?: string
+          id?: string
+          name: string
+          preheader?: string
+          product_id?: string | null
+          sender_email?: string
+          sender_name?: string
+          status?: string
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          blocks?: Json
+          created_at?: string
+          id?: string
+          name?: string
+          preheader?: string
+          product_id?: string | null
+          sender_email?: string
+          sender_name?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       order_bumps: {
         Row: {
           bump_product_id: string

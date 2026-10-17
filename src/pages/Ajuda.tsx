@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Headphones, MessageCircle, Mail, BookOpen, Video, FileText, ArrowRight, Search, Clock, ShieldCheck, Send, Bot, User, X } from "lucide-react";
+import { Headphones, MessageCircle, Mail, BookOpen, Video, ArrowRight, Clock, ShieldCheck, Send, Bot, Search, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import queenifyBee from "@/assets/queenify-bee.png";
 import BackButton from "@/components/BackButton";
@@ -10,15 +10,12 @@ const fadeUp = { hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0, tra
 const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.1 } } };
 
 const channels = [
-  { icon: MessageCircle, title: "WhatsApp", desc: "Respostas rápidas em tempo real. Nosso canal mais ágil.", action: "Abrir WhatsApp", href: "#", highlight: true, time: "Resposta média: 5 min" },
-  { icon: Headphones, title: "Chat na Plataforma", desc: "Fale com nosso time diretamente pelo dashboard.", action: "Iniciar chat", href: "#", time: "Resposta média: 15 min" },
-  { icon: Mail, title: "E-mail", desc: "Para questões detalhadas ou envio de documentos.", action: "Enviar e-mail", href: "mailto:suporte@queenify.com.br", time: "Resposta em até 48h" },
+  { icon: Mail, title: "E-mail de suporte", desc: "Para questões detalhadas ou envio de documentos. A QueenIA também pode ajudar imediatamente.", action: "Enviar e-mail", href: "mailto:suporte@queenify.com.br?subject=Ajuda%20Queenify", highlight: true, time: "Resposta em até 48h" },
 ];
 
 const resources = [
-  { icon: BookOpen, title: "Base de Conhecimento", desc: "Artigos detalhados sobre todas as funcionalidades da plataforma.", link: "/faq" },
-  { icon: Video, title: "Tutoriais em Vídeo", desc: "Passo a passo visual para configurar checkout, afiliados e mais.", link: "#" },
-  { icon: FileText, title: "Documentação da API", desc: "Integre a Queenify com suas ferramentas usando nossa API.", link: "#" },
+  { icon: BookOpen, title: "Perguntas frequentes", desc: "Respostas sobre conta, vendas, pagamentos, afiliados e segurança.", link: "/faq" },
+  { icon: Video, title: "Guias da plataforma", desc: "Acesse os guias disponíveis para configurar sua conta e seus produtos.", link: "/tutoriais" },
 ];
 
 const topics = [
@@ -37,22 +34,11 @@ interface ChatMsg {
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/support-chat`;
 
-const isHumanSupportAvailable = (): boolean => {
-  const now = new Date();
-  const day = now.getDay(); // 0=Dom, 6=Sáb
-  if (day === 0) return false; // Domingo: sem atendente
-  const hour = now.getHours();
-  const min = now.getMinutes();
-  const timeDecimal = hour + min / 60;
-  // Seg-Sáb: 09:00-17:00 e 19:00-22:00
-  return (timeDecimal >= 9 && timeDecimal < 17) || (timeDecimal >= 19 && timeDecimal < 22);
-};
-
-const getHumanSupportMessage = (): string => {
-  if (isHumanSupportAvailable()) {
-    return "Nosso time de suporte humano está disponível agora! Posso transferir você.";
-  }
-  return "No momento, nosso suporte humano está fora do horário de atendimento (Seg-Sáb, 09h–17h e 19h–22h). Enquanto isso, eu posso ajudar com suas dúvidas! 😊";
+const openSupportEmail = (messages: ChatMsg[]) => {
+  const transcript = messages.map(message => `${message.role === "user" ? "Você" : "QueenIA"}: ${message.content}`).join("\n\n");
+  const subject = encodeURIComponent("Ajuda com a Queenify");
+  const body = encodeURIComponent(`Olá, preciso de ajuda com a Queenify.\n\n${transcript}`);
+  window.location.href = `mailto:suporte@queenify.com.br?subject=${subject}&body=${body}`;
 };
 
 const quickQuestions = [
@@ -71,7 +57,6 @@ const SupportChatbot = ({ onClose }: { onClose: () => void }) => {
   const [input, setInput] = useState("");
   const [showQuickQuestions, setShowQuickQuestions] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [escalated, setEscalated] = useState(false);
   const [failCount, setFailCount] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -80,7 +65,7 @@ const SupportChatbot = ({ onClose }: { onClose: () => void }) => {
   }, [messages]);
 
   const sendMessage = async (userMsg: string) => {
-    if (!userMsg.trim() || isLoading || escalated) return;
+    if (!userMsg.trim() || isLoading) return;
     setShowQuickQuestions(false);
     setInput("");
     const newMessages: ChatMsg[] = [...messages, { role: "user", content: userMsg }];
@@ -151,11 +136,7 @@ const SupportChatbot = ({ onClose }: { onClose: () => void }) => {
       const newFails = failCount + 1;
       setFailCount(newFails);
       if (newFails >= 2) {
-        const humanMsg = isHumanSupportAvailable()
-          ? "Não consegui resolver sua dúvida. Vou encaminhar você para nosso time de suporte humano. Um atendente entrará em contato em breve! 🙋‍♀️"
-          : "Não consegui resolver sua dúvida. Nosso suporte humano funciona de segunda a sábado, das 09h às 17h e das 19h às 22h. Por favor, tente novamente nesse horário ou deixe sua mensagem que entraremos em contato! 📩";
-        setMessages(prev => [...prev, { role: "assistant", content: humanMsg }]);
-        setEscalated(true);
+        setMessages(prev => [...prev, { role: "assistant", content: "Não consegui conectar com a QueenIA. Envie sua dúvida para [suporte@queenify.com.br](mailto:suporte@queenify.com.br) e nossa equipe responderá em até 48 horas." }]);
       } else {
         setMessages(prev => [...prev, { role: "assistant", content: "Desculpe, tive um problema ao processar sua pergunta. Pode tentar novamente?" }]);
       }
@@ -164,14 +145,7 @@ const SupportChatbot = ({ onClose }: { onClose: () => void }) => {
     }
   };
 
-  const handleEscalate = () => {
-    if (isHumanSupportAvailable()) {
-      setMessages(prev => [...prev, { role: "assistant", content: "Encaminhando para suporte humano. Um atendente entrará em contato em breve! 🙋‍♀️" }]);
-    } else {
-      setMessages(prev => [...prev, { role: "assistant", content: "Nosso suporte humano está disponível de segunda a sábado, das 09h às 17h e das 19h às 22h. Deixe sua mensagem e retornaremos assim que possível! 📩" }]);
-    }
-    setEscalated(true);
-  };
+  const handleEscalate = () => openSupportEmail(messages);
 
   return (
     <div className="fixed bottom-4 right-4 w-[380px] max-w-[calc(100vw-2rem)] h-[500px] max-h-[calc(100vh-2rem)] bg-card border border-border rounded-2xl shadow-2xl flex flex-col z-[100] overflow-hidden">
@@ -181,14 +155,12 @@ const SupportChatbot = ({ onClose }: { onClose: () => void }) => {
         </div>
         <div className="flex-1">
           <p className="text-sm font-display font-bold text-foreground">QueenIA 👑</p>
-          <p className="text-[10px] text-muted-foreground">{escalated ? "Encaminhado para atendente" : "IA da Queenify • 24/7"}</p>
+          <p className="text-[10px] text-muted-foreground">IA da Queenify • e-mail de suporte</p>
         </div>
-        {!escalated && (
-          <button onClick={handleEscalate} className="text-[10px] text-muted-foreground hover:text-primary transition-colors">
-            Falar com humano
-          </button>
-        )}
-        <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>
+        <button onClick={handleEscalate} className="text-[10px] text-muted-foreground hover:text-primary transition-colors">
+          Enviar por e-mail
+        </button>
+        <button onClick={onClose} aria-label="Fechar chat" className="text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>
       </div>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -231,14 +203,6 @@ const SupportChatbot = ({ onClose }: { onClose: () => void }) => {
             </div>
           </div>
         )}
-        {escalated && (
-          <div className="text-center py-3">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-success/10 text-success rounded-full text-xs font-medium">
-              <User className="w-3.5 h-3.5" />
-              Conectando com atendente humano...
-            </div>
-          </div>
-        )}
       </div>
 
       <div className="p-3 border-t border-border">
@@ -247,13 +211,13 @@ const SupportChatbot = ({ onClose }: { onClose: () => void }) => {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === "Enter" && sendMessage(input.trim())}
-            placeholder={escalated ? "Aguardando atendente..." : "Digite sua dúvida..."}
-            disabled={escalated || isLoading}
+            placeholder={isLoading ? "A QueenIA está respondendo..." : "Digite sua dúvida..."}
+            disabled={isLoading}
             className="flex-1 bg-secondary border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
           />
           <button
             onClick={() => sendMessage(input.trim())}
-            disabled={escalated || !input.trim() || isLoading}
+            disabled={!input.trim() || isLoading}
             className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-30"
           >
             <Send className="w-4 h-4" />
@@ -266,6 +230,10 @@ const SupportChatbot = ({ onClose }: { onClose: () => void }) => {
 
 const Ajuda = () => {
   const [chatOpen, setChatOpen] = useState(false);
+  const [helpSearch, setHelpSearch] = useState("");
+  const filteredTopics = topics.filter(topic =>
+    `${topic.title} ${topic.desc}`.toLocaleLowerCase("pt-BR").includes(helpSearch.trim().toLocaleLowerCase("pt-BR")),
+  );
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -291,8 +259,8 @@ const Ajuda = () => {
             Estamos aqui para ajudar. Encontre respostas, tutoriais e fale diretamente com nosso time de suporte.
           </motion.p>
           <motion.div variants={fadeUp} className="flex items-center justify-center gap-4 text-sm text-muted-foreground flex-wrap">
-            <div className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-primary" /> Seg–Sáb: 09h–17h / 19h–22h</div>
-            <div className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-primary" /> Bot IA 24h</div>
+            <div className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-primary" /> Resposta por e-mail em até 48h</div>
+            <div className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-primary" /> QueenIA disponível 24h</div>
           </motion.div>
         </motion.div>
       </section>
@@ -300,7 +268,7 @@ const Ajuda = () => {
       <section className="px-4 pb-12">
         <div className="max-w-md mx-auto relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input type="text" placeholder="Buscar ajuda..." className="w-full pl-11 pr-4 py-3 rounded-xl bg-secondary border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30" />
+          <input type="search" value={helpSearch} onChange={event => setHelpSearch(event.target.value)} placeholder="Buscar tópico de ajuda..." aria-label="Buscar tópico de ajuda" className="w-full pl-11 pr-4 py-3 rounded-xl bg-secondary border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30" />
         </div>
       </section>
 
@@ -320,7 +288,7 @@ const Ajuda = () => {
       <section className="py-12 px-4 border-t border-border">
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="max-w-5xl mx-auto">
           <motion.h2 variants={fadeUp} className="text-2xl font-display font-bold text-center mb-8">Canais de Suporte</motion.h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 max-w-md mx-auto">
             {channels.map((ch) => (
               <motion.a key={ch.title} href={ch.href} variants={fadeUp} className={`glass-card p-6 text-center group hover:border-primary/30 transition-all block ${ch.highlight ? "border-primary/40 ring-1 ring-primary/20" : ""}`}>
                 <ch.icon className={`w-8 h-8 mx-auto mb-3 ${ch.highlight ? "text-primary" : "text-muted-foreground"}`} />
@@ -341,13 +309,16 @@ const Ajuda = () => {
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="max-w-4xl mx-auto">
           <motion.h2 variants={fadeUp} className="text-2xl font-display font-bold text-center mb-8">Tópicos Populares</motion.h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {topics.map((t) => (
-              <motion.div key={t.title} variants={fadeUp} className="glass-card p-5 hover:border-primary/30 transition-colors cursor-pointer">
-                <h3 className="text-sm font-display font-bold text-foreground mb-1">{t.title}</h3>
-                <p className="text-xs text-muted-foreground">{t.desc}</p>
+            {filteredTopics.map((t) => (
+              <motion.div key={t.title} variants={fadeUp}>
+                <Link to={`/faq?search=${encodeURIComponent(t.title)}`} className="glass-card p-5 flex items-center justify-between gap-3 hover:border-primary/40 transition-colors group">
+                  <span><span className="block text-sm font-display font-bold text-foreground mb-1">{t.title}</span><span className="block text-xs text-muted-foreground">{t.desc}</span></span>
+                  <ArrowRight className="w-4 h-4 shrink-0 text-primary transition-transform group-hover:translate-x-1" />
+                </Link>
               </motion.div>
             ))}
           </div>
+          {filteredTopics.length === 0 && <p className="text-center text-sm text-muted-foreground">Nenhum tópico encontrado para “{helpSearch}”. Tente outra busca.</p>}
         </motion.div>
       </section>
 

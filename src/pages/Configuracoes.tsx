@@ -26,13 +26,13 @@ const Toggle = ({ enabled, onChange }: { enabled: boolean; onChange: () => void 
 );
 
 const themeOptions = [
-  { id: "dark", label: "Escuro", bg: "bg-[hsl(0,0%,4%)]", border: "border-[hsl(0,0%,14%)]" },
-  { id: "light", label: "Claro", bg: "bg-white", border: "border-gray-200" },
-  { id: "gray", label: "Cinza", bg: "bg-[hsl(0,0%,18%)]", border: "border-[hsl(0,0%,25%)]" },
+  { id: "dark", label: "Grafite", bg: "bg-[hsl(222,20%,7%)]", border: "border-[hsl(218,15%,24%)]" },
+  { id: "light", label: "Aço", bg: "bg-[hsl(220,18%,13%)]", border: "border-[hsl(212,18%,36%)]" },
+  { id: "gray", label: "Titânio", bg: "bg-[hsl(216,17%,17%)]", border: "border-[hsl(210,20%,45%)]" },
 ];
 
 const colorPalette = [
-  { id: "gold", label: "Dourado", color: "hsl(43, 96%, 56%)", value: "43 96% 56%" },
+  { id: "silver", label: "Titânio", color: "hsl(210, 22%, 78%)", value: "210 22% 78%" },
   { id: "purple", label: "Roxo", color: "hsl(270, 70%, 60%)", value: "270 70% 60%" },
   { id: "blue", label: "Azul", color: "hsl(220, 90%, 56%)", value: "220 90% 56%" },
   { id: "green", label: "Verde", color: "hsl(142, 71%, 45%)", value: "142 71% 45%" },
@@ -43,59 +43,18 @@ const colorPalette = [
 ];
 
 const applyThemeToDOM = (themeId: string) => {
-  if (themeId === "light") {
-    document.documentElement.style.setProperty("--background", "0 0% 98%");
-    document.documentElement.style.setProperty("--foreground", "0 0% 10%");
-    document.documentElement.style.setProperty("--card", "0 0% 100%");
-    document.documentElement.style.setProperty("--card-foreground", "0 0% 10%");
-    document.documentElement.style.setProperty("--secondary", "0 0% 92%");
-    document.documentElement.style.setProperty("--muted", "0 0% 92%");
-    document.documentElement.style.setProperty("--muted-foreground", "0 0% 45%");
-    document.documentElement.style.setProperty("--border", "0 0% 85%");
-    document.documentElement.style.setProperty("--input", "0 0% 85%");
-    document.documentElement.style.setProperty("--popover", "0 0% 100%");
-    document.documentElement.style.setProperty("--sidebar-background", "0 0% 96%");
-    document.documentElement.style.setProperty("--sidebar-foreground", "0 0% 35%");
-    document.documentElement.style.setProperty("--sidebar-accent", "0 0% 90%");
-    document.documentElement.style.setProperty("--sidebar-accent-foreground", "0 0% 10%");
-    document.documentElement.style.setProperty("--sidebar-border", "0 0% 85%");
-  } else if (themeId === "gray") {
-    document.documentElement.style.setProperty("--background", "0 0% 14%");
-    document.documentElement.style.setProperty("--foreground", "0 0% 92%");
-    document.documentElement.style.setProperty("--card", "0 0% 18%");
-    document.documentElement.style.setProperty("--card-foreground", "0 0% 92%");
-    document.documentElement.style.setProperty("--secondary", "0 0% 22%");
-    document.documentElement.style.setProperty("--muted", "0 0% 22%");
-    document.documentElement.style.setProperty("--muted-foreground", "0 0% 55%");
-    document.documentElement.style.setProperty("--border", "0 0% 25%");
-    document.documentElement.style.setProperty("--input", "0 0% 25%");
-    document.documentElement.style.setProperty("--popover", "0 0% 18%");
-    document.documentElement.style.setProperty("--sidebar-background", "0 0% 16%");
-    document.documentElement.style.setProperty("--sidebar-foreground", "0 0% 70%");
-    document.documentElement.style.setProperty("--sidebar-accent", "0 0% 22%");
-    document.documentElement.style.setProperty("--sidebar-accent-foreground", "0 0% 92%");
-    document.documentElement.style.setProperty("--sidebar-border", "0 0% 25%");
-  } else {
-    document.documentElement.style.setProperty("--background", "0 0% 4%");
-    document.documentElement.style.setProperty("--foreground", "0 0% 95%");
-    document.documentElement.style.setProperty("--card", "0 0% 7%");
-    document.documentElement.style.setProperty("--card-foreground", "0 0% 95%");
-    document.documentElement.style.setProperty("--secondary", "0 0% 12%");
-    document.documentElement.style.setProperty("--muted", "0 0% 12%");
-    document.documentElement.style.setProperty("--muted-foreground", "0 0% 55%");
-    document.documentElement.style.setProperty("--border", "0 0% 14%");
-    document.documentElement.style.setProperty("--input", "0 0% 14%");
-    document.documentElement.style.setProperty("--popover", "0 0% 7%");
-    document.documentElement.style.setProperty("--sidebar-background", "0 0% 6%");
-    document.documentElement.style.setProperty("--sidebar-foreground", "0 0% 75%");
-    document.documentElement.style.setProperty("--sidebar-accent", "0 0% 12%");
-    document.documentElement.style.setProperty("--sidebar-accent-foreground", "0 0% 95%");
-    document.documentElement.style.setProperty("--sidebar-border", "0 0% 14%");
-  }
+  const themes: Record<string, Record<string, string>> = {
+    dark: { "--background": "222 20% 7%", "--card": "222 18% 11%", "--secondary": "220 16% 16%", "--muted": "220 16% 16%", "--border": "218 15% 24%", "--input": "218 15% 24%", "--popover": "222 19% 10%", "--sidebar-background": "225 24% 6%", "--sidebar-accent": "222 20% 12%", "--sidebar-border": "220 16% 17%" },
+    light: { "--background": "220 18% 10%", "--card": "220 17% 14%", "--secondary": "218 16% 19%", "--muted": "218 16% 19%", "--border": "215 17% 31%", "--input": "215 17% 31%", "--popover": "220 17% 13%", "--sidebar-background": "222 21% 8%", "--sidebar-accent": "220 18% 14%", "--sidebar-border": "216 17% 23%" },
+    gray: { "--background": "218 18% 12%", "--card": "216 17% 17%", "--secondary": "215 16% 22%", "--muted": "215 16% 22%", "--border": "210 18% 38%", "--input": "210 18% 38%", "--popover": "216 17% 15%", "--sidebar-background": "220 22% 9%", "--sidebar-accent": "216 18% 16%", "--sidebar-border": "212 17% 29%" },
+  };
+  const chosenTheme = themes[themeId] || themes.dark;
+  const sharedText = { "--foreground": "213 25% 93%", "--card-foreground": "213 25% 93%", "--muted-foreground": "216 12% 68%", "--secondary-foreground": "213 20% 90%", "--sidebar-foreground": "213 20% 85%", "--sidebar-accent-foreground": "0 0% 100%" };
+  Object.entries({ ...chosenTheme, ...sharedText }).forEach(([key, value]) => document.documentElement.style.setProperty(key, value));
 };
 
 const applyColorToDOM = (colorId: string) => {
-  const color = colorPalette.find(c => c.id === colorId);
+  const color = colorPalette.find(c => c.id === colorId) || (colorId === "gold" ? colorPalette[0] : undefined);
   if (color) {
     document.documentElement.style.setProperty("--primary", color.value);
     document.documentElement.style.setProperty("--accent", color.value);
@@ -167,7 +126,7 @@ const Configuracoes = () => {
 
   // Appearance
   const [selectedTheme, setSelectedTheme] = useState("dark");
-  const [selectedColor, setSelectedColor] = useState("gold");
+  const [selectedColor, setSelectedColor] = useState("silver");
 
   // Documents
   const [docCpf, setDocCpf] = useState("");
@@ -201,7 +160,11 @@ const Configuracoes = () => {
       const dbTheme = (settings as any).theme;
       const dbColor = (settings as any).accent_color;
       if (dbTheme) { setSelectedTheme(dbTheme); applyThemeToDOM(dbTheme); }
-      if (dbColor) { setSelectedColor(dbColor); applyColorToDOM(dbColor); }
+      if (dbColor) {
+        const preferredColor = dbColor === "gold" ? "silver" : dbColor;
+        setSelectedColor(preferredColor);
+        applyColorToDOM(preferredColor);
+      }
       setDocRgUrl((settings as any).doc_rg_url || null);
       setDocSelfieUrl((settings as any).doc_selfie_url || null);
       setDocAddressUrl((settings as any).doc_address_url || null);
@@ -328,16 +291,22 @@ const Configuracoes = () => {
   const applyColor = async (colorId: string) => {
     setSelectedColor(colorId);
     applyColorToDOM(colorId);
-    localStorage.setItem("queenify-theme-color", colorId);
-    if (user) await supabase.from("user_settings").update({ accent_color: colorId } as any).eq("user_id", user.id);
+    if (user) {
+      const { error } = await supabase.from("user_settings").update({ accent_color: colorId } as any).eq("user_id", user.id);
+      if (error) { toast.error("A cor foi aplicada nesta sessão, mas não pôde ser salva na conta."); return; }
+    }
+    try { localStorage.setItem("queenify-theme-color", colorId); } catch { /* storage can be unavailable in private browsing */ }
     toast.success("Cor aplicada!");
   };
 
   const applyTheme = async (themeId: string) => {
     setSelectedTheme(themeId);
     applyThemeToDOM(themeId);
-    localStorage.setItem("queenify-theme", themeId);
-    if (user) await supabase.from("user_settings").update({ theme: themeId } as any).eq("user_id", user.id);
+    if (user) {
+      const { error } = await supabase.from("user_settings").update({ theme: themeId } as any).eq("user_id", user.id);
+      if (error) { toast.error("O tema foi aplicado nesta sessão, mas não pôde ser salvo na conta."); return; }
+    }
+    try { localStorage.setItem("queenify-theme", themeId); } catch { /* storage can be unavailable in private browsing */ }
     toast.success("Tema aplicado!");
   };
 

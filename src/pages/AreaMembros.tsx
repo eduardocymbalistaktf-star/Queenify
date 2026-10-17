@@ -1,5 +1,5 @@
 import DashboardLayout from "@/layouts/DashboardLayout";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { BookOpen, Plus, Edit2, Trash2, Eye, EyeOff, Layers, PlayCircle, Clock, Users, GripVertical, ChevronDown, ChevronRight, Video, FileText, Palette, Image, Trophy, Award, MessageSquare, Lock, Unlock, HelpCircle, BarChart3, Settings, Sparkles, Download, Calendar, Star, Heart, Zap, Shield, Gift, Target, X, Save } from "lucide-react";
 import { toast } from "sonner";
@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import type { Json } from "@/integrations/supabase/types";
 
 const Modal = ({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode }) => {
   if (!open) return null;
@@ -100,6 +101,16 @@ const AreaMembros = () => {
     enabled: !!user
   });
 
+  const { data: memberSettings } = useQuery({
+    queryKey: ["member-area-settings", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("member_area_settings").select("settings").eq("user_id", user!.id).maybeSingle();
+      if (error) throw error;
+      return data?.settings ?? null;
+    },
+    enabled: !!user,
+  });
+
   const toggleCourse = (id: string) => setExpandedCourses(prev => prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]);
   const toggleModule = (id: string) => setExpandedModules(prev => prev.includes(id) ? prev.filter(m => m !== id) : [...prev, id]);
 
@@ -122,7 +133,8 @@ const AreaMembros = () => {
   const handleCreateModule = async () => {
     if (!moduleForm.title.trim() || !selectedCourse) return;
     const order = modules.filter((m: any) => m.course_id === selectedCourse.id).length + 1;
-    await supabase.from("course_modules").insert({ course_id: selectedCourse.id, title: moduleForm.title, display_order: order });
+    const { error } = await supabase.from("course_modules").insert({ course_id: selectedCourse.id, title: moduleForm.title, display_order: order });
+    if (error) { toast.error("Não foi possível adicionar o módulo."); return; }
     toast.success("Módulo adicionado!");
     setShowModule(false);
     setModuleForm({ title: "" });
@@ -132,11 +144,12 @@ const AreaMembros = () => {
   const handleCreateLesson = async () => {
     if (!lessonForm.title.trim() || !selectedModule) return;
     const order = lessons.filter((l: any) => l.module_id === selectedModule.id).length + 1;
-    await supabase.from("course_lessons").insert({
+    const { error } = await supabase.from("course_lessons").insert({
       module_id: selectedModule.id, title: lessonForm.title, description: lessonForm.description,
       video_url: lessonForm.video_url, duration_minutes: lessonForm.duration_minutes,
       is_free_preview: lessonForm.is_free_preview, display_order: order
     });
+    if (error) { toast.error("Não foi possível adicionar a aula."); return; }
     toast.success("Aula adicionada!");
     setShowLesson(false);
     setLessonForm({ title: "", description: "", video_url: "", duration_minutes: 0, is_free_preview: false });
@@ -144,7 +157,8 @@ const AreaMembros = () => {
   };
 
   const togglePublish = async (courseId: string, published: boolean) => {
-    await supabase.from("courses").update({ is_published: !published }).eq("id", courseId);
+    const { error } = await supabase.from("courses").update({ is_published: !published }).eq("id", courseId);
+    if (error) { toast.error("Não foi possível atualizar a publicação do curso."); return; }
     invalidateAll();
     toast.success(published ? "Curso despublicado" : "Curso publicado!");
   };
@@ -154,25 +168,31 @@ const AreaMembros = () => {
     const courseModules = modules.filter((m: any) => m.course_id === id);
     const modIds = courseModules.map((m: any) => m.id);
     if (modIds.length) {
-      await supabase.from("course_lessons").delete().in("module_id", modIds);
-      await supabase.from("course_modules").delete().eq("course_id", id);
+      const { error: lessonsError } = await supabase.from("course_lessons").delete().in("module_id", modIds);
+      if (lessonsError) { toast.error("Não foi possível excluir as aulas do curso."); return; }
+      const { error: modulesError } = await supabase.from("course_modules").delete().eq("course_id", id);
+      if (modulesError) { toast.error("Não foi possível excluir os módulos do curso."); return; }
     }
-    await supabase.from("courses").delete().eq("id", id);
+    const { error } = await supabase.from("courses").delete().eq("id", id);
+    if (error) { toast.error("Não foi possível excluir o curso."); return; }
     invalidateAll();
     toast.success("Curso excluído");
   };
 
   const deleteModule = async (id: string) => {
     if (!confirm("Excluir este módulo e todas as suas aulas?")) return;
-    await supabase.from("course_lessons").delete().eq("module_id", id);
-    await supabase.from("course_modules").delete().eq("id", id);
+    const { error: lessonsError } = await supabase.from("course_lessons").delete().eq("module_id", id);
+    if (lessonsError) { toast.error("Não foi possível excluir as aulas do módulo."); return; }
+    const { error } = await supabase.from("course_modules").delete().eq("id", id);
+    if (error) { toast.error("Não foi possível excluir o módulo."); return; }
     invalidateAll();
     toast.success("Módulo excluído");
   };
 
   const deleteLesson = async (id: string) => {
     if (!confirm("Excluir esta aula?")) return;
-    await supabase.from("course_lessons").delete().eq("id", id);
+    const { error } = await supabase.from("course_lessons").delete().eq("id", id);
+    if (error) { toast.error("Não foi possível excluir a aula."); return; }
     invalidateAll();
     toast.success("Aula excluída");
   };
@@ -186,7 +206,8 @@ const AreaMembros = () => {
   const handleEditCourse = async () => {
     if (!editingCourse || !editCourseForm.name.trim()) return;
     setSaving(true);
-    await supabase.from("courses").update({ name: editCourseForm.name, description: editCourseForm.description, product_id: editCourseForm.product_id || null }).eq("id", editingCourse.id);
+    const { error } = await supabase.from("courses").update({ name: editCourseForm.name, description: editCourseForm.description, product_id: editCourseForm.product_id || null }).eq("id", editingCourse.id);
+    if (error) { setSaving(false); toast.error("Não foi possível atualizar o curso."); return; }
     setEditingCourse(null);
     setSaving(false);
     invalidateAll();
@@ -201,7 +222,8 @@ const AreaMembros = () => {
   const handleEditModule = async () => {
     if (!editingModule || !editModuleForm.title.trim()) return;
     setSaving(true);
-    await supabase.from("course_modules").update({ title: editModuleForm.title }).eq("id", editingModule.id);
+    const { error } = await supabase.from("course_modules").update({ title: editModuleForm.title }).eq("id", editingModule.id);
+    if (error) { setSaving(false); toast.error("Não foi possível atualizar o módulo."); return; }
     setEditingModule(null);
     setSaving(false);
     invalidateAll();
@@ -220,11 +242,12 @@ const AreaMembros = () => {
   const handleEditLesson = async () => {
     if (!editingLesson || !editLessonForm.title.trim()) return;
     setSaving(true);
-    await supabase.from("course_lessons").update({
+    const { error } = await supabase.from("course_lessons").update({
       title: editLessonForm.title, description: editLessonForm.description,
       video_url: editLessonForm.video_url, duration_minutes: editLessonForm.duration_minutes,
       is_free_preview: editLessonForm.is_free_preview
     }).eq("id", editingLesson.id);
+    if (error) { setSaving(false); toast.error("Não foi possível atualizar a aula."); return; }
     setEditingLesson(null);
     setSaving(false);
     invalidateAll();
@@ -239,7 +262,7 @@ const AreaMembros = () => {
   };
 
   const themeColors = [
-    { id: "gold", label: "Dourado", color: "hsl(43, 74%, 49%)" },
+    { id: "silver", label: "Titânio", color: "hsl(210, 22%, 78%)" },
     { id: "purple", label: "Roxo", color: "hsl(280, 70%, 50%)" },
     { id: "blue", label: "Azul", color: "hsl(220, 80%, 55%)" },
     { id: "green", label: "Verde", color: "hsl(150, 60%, 45%)" },
@@ -248,7 +271,7 @@ const AreaMembros = () => {
   ];
 
   const [memberTheme, setMemberTheme] = useState("dark");
-  const [memberAccent, setMemberAccent] = useState("gold");
+  const [memberAccent, setMemberAccent] = useState("silver");
   const [memberBanner, setMemberBanner] = useState("");
   const [memberWelcome, setMemberWelcome] = useState("Bem-vindo à área de membros!");
 
@@ -290,6 +313,50 @@ const AreaMembros = () => {
   const [inactivityDays, setInactivityDays] = useState(7);
   const [watermarkEnabled, setWatermarkEnabled] = useState(false);
   const [antiPiracyEnabled, setAntiPiracyEnabled] = useState(true);
+
+  useEffect(() => {
+    if (!memberSettings || typeof memberSettings !== "object" || Array.isArray(memberSettings)) return;
+    const settings = memberSettings as Record<string, Record<string, unknown>>;
+    const apply = (section: string, setters: Record<string, (value: any) => void>) => {
+      const values = settings[section];
+      if (!values) return;
+      Object.entries(setters).forEach(([key, setter]) => {
+        const value = values[key];
+        if (value !== undefined) setter(value);
+      });
+    };
+    apply("personalization", { theme: setMemberTheme, accent: setMemberAccent, banner: setMemberBanner, welcome: setMemberWelcome });
+    apply("gamification", { enabled: setGamificationEnabled, xpPerLesson: setXpPerLesson, xpPerQuiz: setXpPerQuiz, leaderboard: setShowLeaderboard, badges: setBadgesEnabled });
+    apply("certificates", { enabled: setCertEnabled, template: setCertTemplate, instructorName: setCertInstructorName, customText: setCertCustomText, logoUrl: setCertLogoUrl, signatureUrl: setCertSignatureUrl });
+    apply("drip", { enabled: setDripEnabled, type: setDripType, interval: setDripInterval });
+    apply("community", { enabled: setCommunityEnabled, type: setCommunityType, moderation: setCommunityModeration });
+    apply("quizzes", { passRate: setQuizPassRate, retries: setQuizRetries, showAnswers: setQuizShowAnswers });
+    apply("advanced", { downloadableMaterials: setDownloadableMaterials, progressTracking: setProgressTracking, completionRequired: setCompletionRequired, notifyInactivity: setNotifyInactivity, inactivityDays: setInactivityDays, watermarkEnabled: setWatermarkEnabled, antiPiracyEnabled: setAntiPiracyEnabled });
+  }, [memberSettings]);
+
+  const saveSettings = async (section: string, sectionSettings: Json) => {
+    if (!user) {
+      toast.error("Entre na sua conta para salvar as configurações.");
+      return;
+    }
+    setSaving(true);
+    const existing = memberSettings && typeof memberSettings === "object" && !Array.isArray(memberSettings)
+      ? memberSettings as Record<string, Json>
+      : {};
+    const { error } = await supabase.from("member_area_settings").upsert({
+      user_id: user.id,
+      settings: { ...existing, [section]: sectionSettings },
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "user_id" });
+    setSaving(false);
+    if (error) {
+      console.error("Could not save member area settings", error);
+      toast.error("Não foi possível salvar. Confira a conexão e tente novamente.");
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["member-area-settings", user.id] });
+    toast.success("Configurações salvas na sua conta.");
+  };
 
   const ToggleSwitch = ({ checked, onChange, disabled }: { checked: boolean; onChange: (v: boolean) => void; disabled?: boolean }) => (
     <button
@@ -525,7 +592,7 @@ const AreaMembros = () => {
                 </div>
               </div>
             </div>
-            <button onClick={() => toast.success("Personalização salva!")} className="mt-4 px-6 py-2.5 gradient-gold rounded-lg text-sm font-semibold text-primary-foreground">Salvar Personalização</button>
+            <button onClick={() => void saveSettings("personalization", { theme: memberTheme, accent: memberAccent, banner: memberBanner, welcome: memberWelcome })} disabled={saving} className="mt-4 px-6 py-2.5 gradient-gold rounded-lg text-sm font-semibold text-primary-foreground disabled:opacity-50"><Save className="w-4 h-4 inline mr-2" />{saving ? "Salvando..." : "Salvar Personalização"}</button>
           </TabsContent>
 
           {/* === GAMIFICAÇÃO TAB === */}
@@ -595,7 +662,7 @@ const AreaMembros = () => {
                   </div>
                 )}
               </div>
-              <button onClick={() => toast.success("Gamificação salva!")} className="px-6 py-2.5 gradient-gold rounded-lg text-sm font-semibold text-primary-foreground">Salvar Configurações</button>
+              <button onClick={() => void saveSettings("gamification", { enabled: gamificationEnabled, xpPerLesson, xpPerQuiz, leaderboard: showLeaderboard, badges: badgesEnabled })} disabled={saving} className="px-6 py-2.5 gradient-gold rounded-lg text-sm font-semibold text-primary-foreground disabled:opacity-50"><Save className="w-4 h-4 inline mr-2" />{saving ? "Salvando..." : "Salvar Configurações"}</button>
             </div>
           </TabsContent>
 
@@ -674,7 +741,7 @@ const AreaMembros = () => {
                   </div>
                 )}
               </div>
-              <button onClick={() => toast.success("Certificados salvos!")} className="px-6 py-2.5 gradient-gold rounded-lg text-sm font-semibold text-primary-foreground">Salvar Configurações</button>
+              <button onClick={() => void saveSettings("certificates", { enabled: certEnabled, template: certTemplate, instructorName: certInstructorName, customText: certCustomText, logoUrl: certLogoUrl, signatureUrl: certSignatureUrl })} disabled={saving} className="px-6 py-2.5 gradient-gold rounded-lg text-sm font-semibold text-primary-foreground disabled:opacity-50"><Save className="w-4 h-4 inline mr-2" />{saving ? "Salvando..." : "Salvar Configurações"}</button>
             </div>
           </TabsContent>
 
@@ -727,7 +794,7 @@ const AreaMembros = () => {
                   </div>
                 )}
               </div>
-              <button onClick={() => toast.success("Drip content salvo!")} className="px-6 py-2.5 gradient-gold rounded-lg text-sm font-semibold text-primary-foreground">Salvar Configurações</button>
+              <button onClick={() => void saveSettings("drip", { enabled: dripEnabled, type: dripType, interval: dripInterval })} disabled={saving} className="px-6 py-2.5 gradient-gold rounded-lg text-sm font-semibold text-primary-foreground disabled:opacity-50"><Save className="w-4 h-4 inline mr-2" />{saving ? "Salvando..." : "Salvar Configurações"}</button>
             </div>
           </TabsContent>
 
@@ -784,7 +851,7 @@ const AreaMembros = () => {
                   </div>
                 )}
               </div>
-              <button onClick={() => toast.success("Comunidade salva!")} className="px-6 py-2.5 gradient-gold rounded-lg text-sm font-semibold text-primary-foreground">Salvar Configurações</button>
+              <button onClick={() => void saveSettings("community", { enabled: communityEnabled, type: communityType, moderation: communityModeration })} disabled={saving} className="px-6 py-2.5 gradient-gold rounded-lg text-sm font-semibold text-primary-foreground disabled:opacity-50"><Save className="w-4 h-4 inline mr-2" />{saving ? "Salvando..." : "Salvar Configurações"}</button>
             </div>
           </TabsContent>
 
@@ -833,7 +900,7 @@ const AreaMembros = () => {
                   </p>
                 </div>
               </div>
-              <button onClick={() => toast.success("Quizzes salvos!")} className="px-6 py-2.5 gradient-gold rounded-lg text-sm font-semibold text-primary-foreground">Salvar Configurações</button>
+              <button onClick={() => void saveSettings("quizzes", { passRate: quizPassRate, retries: quizRetries, showAnswers: quizShowAnswers })} disabled={saving} className="px-6 py-2.5 gradient-gold rounded-lg text-sm font-semibold text-primary-foreground disabled:opacity-50"><Save className="w-4 h-4 inline mr-2" />{saving ? "Salvando..." : "Salvar Configurações"}</button>
             </div>
           </TabsContent>
 
@@ -877,7 +944,7 @@ const AreaMembros = () => {
                   </div>
                 </div>
               </div>
-              <button onClick={() => toast.success("Configurações avançadas salvas!")} className="px-6 py-2.5 gradient-gold rounded-lg text-sm font-semibold text-primary-foreground">Salvar Configurações</button>
+              <button onClick={() => void saveSettings("advanced", { downloadableMaterials, progressTracking, completionRequired, notifyInactivity, inactivityDays, watermarkEnabled, antiPiracyEnabled })} disabled={saving} className="px-6 py-2.5 gradient-gold rounded-lg text-sm font-semibold text-primary-foreground disabled:opacity-50"><Save className="w-4 h-4 inline mr-2" />{saving ? "Salvando..." : "Salvar Configurações"}</button>
             </div>
           </TabsContent>
         </Tabs>

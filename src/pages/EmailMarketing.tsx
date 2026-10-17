@@ -1,29 +1,28 @@
 import DashboardLayout from "@/layouts/DashboardLayout";
 import { useState, useMemo } from "react";
-import { Mail, Plus, Send, FileText, Users, BarChart3, Clock, Edit2, Trash2, Eye, Copy, Search, Sparkles, Image, Type, AlignLeft, Palette, CheckCircle2, XCircle, ArrowRight, GripVertical, X, Bold, Italic, Link2, List, Heading1, Heading2, MousePointerClick, Calendar, Save, ChevronDown, Package, Zap, Filter } from "lucide-react";
+import { Mail, Plus, Send, FileText, Users, BarChart3, Edit2, Trash2, Eye, Copy, Search, Sparkles, Image, Type, AlignLeft, Palette, CheckCircle2, XCircle, ArrowRight, GripVertical, X, Bold, Italic, Link2, List, Heading1, Heading2, MousePointerClick, Save, ChevronDown, Package, Zap, Filter } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProducts, useSales } from "@/hooks/useSupabaseData";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import SegmentationPanel from "@/components/email/SegmentationPanel";
 import AutomationSequences from "@/components/email/AutomationSequences";
 
 type Tab = "campanhas" | "templates" | "listas" | "automacoes" | "metricas";
-type CampaignStatus = "rascunho" | "agendada" | "enviada" | "enviando";
+type CampaignStatus = "rascunho";
 
 interface Campaign {
   id: string;
   name: string;
   subject: string;
   status: CampaignStatus;
-  recipients: number;
-  openRate: number;
-  clickRate: number;
-  sentAt: string | null;
-  scheduledAt: string | null;
-  template: string;
   productId: string;
+  preheader: string;
+  senderName: string;
+  senderEmail: string;
+  blocks: EmailBlock[];
+  updatedAt: string;
 }
 
 interface EmailBlock {
@@ -32,6 +31,8 @@ interface EmailBlock {
   content: string;
   settings: Record<string, string>;
 }
+
+type CampaignDraft = Omit<Campaign, "id" | "updatedAt" | "status">;
 
 interface EmailTemplate {
   id: string;
@@ -44,16 +45,16 @@ interface EmailTemplate {
 
 const defaultTemplateBlocks: Record<string, EmailBlock[]> = {
   "Promoção Flash": [
-    { id: "1", type: "imagem", content: "", settings: { url: "https://placehold.co/600x200/D4A843/fff?text=PROMO%C3%87%C3%83O", alt: "Banner promoção" } },
+    { id: "1", type: "imagem", content: "", settings: { url: "", alt: "Banner promoção" } },
     { id: "2", type: "titulo", content: "🔥 Oferta imperdível!", settings: { align: "center", size: "28" } },
     { id: "3", type: "texto", content: "Aproveite nossa promoção exclusiva com até 70% de desconto. Esta oferta é por tempo limitado!", settings: { align: "center" } },
-    { id: "4", type: "botao", content: "APROVEITAR AGORA", settings: { url: "#", color: "#D4A843", align: "center" } },
+    { id: "4", type: "botao", content: "APROVEITAR AGORA", settings: { url: "", color: "#58C8F5", align: "center" } },
   ],
   "Lançamento de Produto": [
     { id: "1", type: "titulo", content: "🚀 Novidade chegando!", settings: { align: "center", size: "32" } },
-    { id: "2", type: "imagem", content: "", settings: { url: "https://placehold.co/600x300/1a1a2e/D4A843?text=NOVO+PRODUTO", alt: "Novo produto" } },
+    { id: "2", type: "imagem", content: "", settings: { url: "", alt: "Novo produto" } },
     { id: "3", type: "texto", content: "Temos o prazer de apresentar nosso mais novo produto. Desenvolvido com carinho para transformar seus resultados.", settings: {} },
-    { id: "4", type: "botao", content: "CONHECER AGORA", settings: { url: "#", color: "#D4A843", align: "center" } },
+    { id: "4", type: "botao", content: "CONHECER AGORA", settings: { url: "", color: "#58C8F5", align: "center" } },
   ],
   "Newsletter Semanal": [
     { id: "1", type: "titulo", content: "📰 Newsletter da Semana", settings: { align: "left", size: "24" } },
@@ -61,50 +62,50 @@ const defaultTemplateBlocks: Record<string, EmailBlock[]> = {
     { id: "3", type: "texto", content: "Confira as principais novidades e conteúdos desta semana.", settings: {} },
     { id: "4", type: "titulo", content: "Destaques", settings: { align: "left", size: "20" } },
     { id: "5", type: "texto", content: "• Artigo: Como aumentar suas vendas em 30 dias\n• Dica: O melhor horário para enviar emails\n• Novidade: Nova funcionalidade liberada", settings: {} },
-    { id: "6", type: "social", content: "", settings: { instagram: "#", youtube: "#", tiktok: "#" } },
+    { id: "6", type: "social", content: "", settings: {} },
   ],
   "Boas-vindas": [
     { id: "1", type: "titulo", content: "Bem-vindo(a) à família! 🎉", settings: { align: "center", size: "28" } },
     { id: "2", type: "texto", content: "Estamos muito felizes em ter você conosco. A partir de agora você terá acesso a conteúdos exclusivos e ofertas especiais.", settings: { align: "center" } },
-    { id: "3", type: "botao", content: "ACESSAR AGORA", settings: { url: "#", color: "#D4A843", align: "center" } },
+    { id: "3", type: "botao", content: "ACESSAR AGORA", settings: { url: "", color: "#58C8F5", align: "center" } },
   ],
   "Carrinho Abandonado": [
     { id: "1", type: "titulo", content: "Você esqueceu algo... 🛒", settings: { align: "center", size: "26" } },
     { id: "2", type: "texto", content: "Notamos que você deixou um item no seu carrinho. Que tal finalizar sua compra?", settings: { align: "center" } },
-    { id: "3", type: "botao", content: "FINALIZAR COMPRA COM 10% OFF", settings: { url: "#", color: "#22c55e", align: "center" } },
+    { id: "3", type: "botao", content: "FINALIZAR COMPRA COM 10% OFF", settings: { url: "", color: "#22c55e", align: "center" } },
   ],
   "Depoimento Social": [
     { id: "1", type: "titulo", content: "Veja o que dizem nossos clientes ⭐", settings: { align: "center", size: "24" } },
     { id: "2", type: "texto", content: '"Produto incrível! Mudou completamente minha vida profissional." — Mariana S.\n\n"O melhor investimento que já fiz." — João P.', settings: {} },
-    { id: "3", type: "botao", content: "QUERO EXPERIMENTAR", settings: { url: "#", color: "#D4A843", align: "center" } },
+    { id: "3", type: "botao", content: "QUERO EXPERIMENTAR", settings: { url: "", color: "#58C8F5", align: "center" } },
   ],
   "Pix Pendente": [
     { id: "1", type: "titulo", content: "⏳ Seu pagamento está pendente", settings: { align: "center", size: "26" } },
     { id: "2", type: "texto", content: "Notamos que seu pagamento via PIX ainda não foi confirmado. Finalize agora para garantir seu acesso imediato ao produto.", settings: { align: "center" } },
-    { id: "3", type: "botao", content: "PAGAR AGORA VIA PIX", settings: { url: "#", color: "#8b5cf6", align: "center" } },
+    { id: "3", type: "botao", content: "PAGAR AGORA VIA PIX", settings: { url: "", color: "#8b5cf6", align: "center" } },
     { id: "4", type: "texto", content: "Se já realizou o pagamento, desconsidere este email. A confirmação pode levar alguns minutos.", settings: { align: "center" } },
   ],
   "Boleto Vencendo": [
     { id: "1", type: "titulo", content: "📋 Seu boleto vence hoje!", settings: { align: "center", size: "26" } },
     { id: "2", type: "texto", content: "Não perca o prazo! Seu boleto vence hoje. Efetue o pagamento para garantir acesso ao produto.", settings: { align: "center" } },
-    { id: "3", type: "botao", content: "VER BOLETO", settings: { url: "#", color: "#f59e0b", align: "center" } },
+    { id: "3", type: "botao", content: "VER BOLETO", settings: { url: "", color: "#f59e0b", align: "center" } },
   ],
   "Upsell Pós-Compra": [
     { id: "1", type: "titulo", content: "🎁 Oferta exclusiva para você!", settings: { align: "center", size: "28" } },
     { id: "2", type: "texto", content: "Parabéns pela sua compra! Como agradecimento, preparamos uma oferta especial com 30% de desconto em um produto complementar.", settings: { align: "center" } },
-    { id: "3", type: "botao", content: "VER OFERTA EXCLUSIVA", settings: { url: "#", color: "#D4A843", align: "center" } },
+    { id: "3", type: "botao", content: "VER OFERTA EXCLUSIVA", settings: { url: "", color: "#58C8F5", align: "center" } },
     { id: "4", type: "texto", content: "⚡ Oferta válida por 48 horas", settings: { align: "center" } },
   ],
   "Aniversário": [
     { id: "1", type: "titulo", content: "🎂 Parabéns! Presente especial para você", settings: { align: "center", size: "28" } },
     { id: "2", type: "texto", content: "Neste dia especial, preparamos um cupom exclusivo de 20% OFF em qualquer produto da nossa loja.", settings: { align: "center" } },
-    { id: "3", type: "botao", content: "RESGATAR MEU PRESENTE", settings: { url: "#", color: "#ec4899", align: "center" } },
+    { id: "3", type: "botao", content: "RESGATAR MEU PRESENTE", settings: { url: "", color: "#ec4899", align: "center" } },
   ],
   "Black Friday": [
-    { id: "1", type: "imagem", content: "", settings: { url: "https://placehold.co/600x200/0a0a0a/D4A843?text=BLACK+FRIDAY", alt: "Black Friday" } },
+    { id: "1", type: "imagem", content: "", settings: { url: "", alt: "Black Friday" } },
     { id: "2", type: "titulo", content: "🖤 BLACK FRIDAY — Até 70% OFF", settings: { align: "center", size: "32" } },
     { id: "3", type: "texto", content: "A maior promoção do ano chegou! Aproveite descontos exclusivos por tempo limitado.", settings: { align: "center" } },
-    { id: "4", type: "botao", content: "COMPRAR AGORA", settings: { url: "#", color: "#D4A843", align: "center" } },
+    { id: "4", type: "botao", content: "COMPRAR AGORA", settings: { url: "", color: "#58C8F5", align: "center" } },
   ],
 };
 
@@ -124,9 +125,6 @@ const mockTemplates: EmailTemplate[] = [
 
 const statusConfig: Record<CampaignStatus, { color: string; label: string }> = {
   rascunho: { color: "bg-muted text-muted-foreground", label: "Rascunho" },
-  agendada: { color: "bg-blue-500/20 text-blue-400", label: "Agendada" },
-  enviada: { color: "bg-emerald-500/20 text-emerald-400", label: "Enviada" },
-  enviando: { color: "bg-amber-500/20 text-amber-400", label: "Enviando" },
 };
 
 // ── Block Renderer ──
@@ -160,7 +158,7 @@ const BlockRenderer = ({ block, onUpdate, onDelete }: { block: EmailBlock; onUpd
         return (
           <div style={{ textAlign: (block.settings.align as any) || "center" }}>
             <span className="inline-block px-6 py-3 rounded-lg text-sm font-bold text-white cursor-default"
-              style={{ background: block.settings.color || "#D4A843" }}>
+              style={{ background: block.settings.color || "#58C8F5" }}>
               {block.content || "Botão CTA"}
             </span>
           </div>
@@ -225,7 +223,7 @@ const BlockRenderer = ({ block, onUpdate, onDelete }: { block: EmailBlock; onUpd
               placeholder="URL de destino" className="w-full px-3 py-2 bg-secondary border border-border rounded-lg text-xs text-foreground" />
             <div className="flex gap-2 items-center">
               <label className="text-xs text-muted-foreground">Cor:</label>
-              <input type="color" value={block.settings.color || "#D4A843"}
+              <input type="color" value={block.settings.color || "#58C8F5"}
                 onChange={e => onUpdate({ ...block, settings: { ...block.settings, color: e.target.value } })}
                 className="w-8 h-8 rounded border border-border cursor-pointer" />
               <select value={block.settings.align || "center"} onChange={e => onUpdate({ ...block, settings: { ...block.settings, align: e.target.value } })}
@@ -269,64 +267,43 @@ const BlockRenderer = ({ block, onUpdate, onDelete }: { block: EmailBlock; onUpd
 };
 
 // ── Editor Panel ──
-const EditorPanel = ({ onClose, initialBlocks, campaignName, initialSubject, selectedProductId, products }: {
+const EditorPanel = ({ onClose, onSave, campaignId, initialBlocks, campaignName, initialSubject, initialPreheader, initialSenderName, initialSenderEmail, selectedProductId, products }: {
   onClose: () => void;
+  onSave: (draft: CampaignDraft, id?: string) => Promise<boolean>;
+  campaignId?: string;
   initialBlocks?: EmailBlock[];
   campaignName?: string;
   initialSubject?: string;
+  initialPreheader?: string;
+  initialSenderName?: string;
+  initialSenderEmail?: string;
   selectedProductId?: string;
   products: any[];
 }) => {
-  const { user } = useAuth();
   const [editorTab, setEditorTab] = useState<"conteudo" | "design" | "preview" | "config">("conteudo");
   const [subject, setSubject] = useState(initialSubject || "");
-  const [preheader, setPreheader] = useState("");
+  const [preheader, setPreheader] = useState(initialPreheader || "");
   const [name, setName] = useState(campaignName || "");
   const [blocks, setBlocks] = useState<EmailBlock[]>(initialBlocks || []);
-  const [senderName, setSenderName] = useState("Queenify");
-  const [senderEmail, setSenderEmail] = useState("contato@queenify.com");
+  const [senderName, setSenderName] = useState(initialSenderName || "Queenify");
+  const [senderEmail, setSenderEmail] = useState(initialSenderEmail || "");
   const [productTarget, setProductTarget] = useState(selectedProductId || "");
-  const [scheduleDate, setScheduleDate] = useState("");
-  const [scheduleTime, setScheduleTime] = useState("");
-  const [designBg, setDesignBg] = useState("#0a0a0a");
+  const [designBg, setDesignBg] = useState("#0b1018");
   const [designText, setDesignText] = useState("#ffffff");
-  const [designAccent, setDesignAccent] = useState("#D4A843");
+  const [designAccent, setDesignAccent] = useState("#58c8f5");
   const [designFont, setDesignFont] = useState("Inter");
   const [designWidth, setDesignWidth] = useState("600");
   const [showBlockPanel, setShowBlockPanel] = useState(true);
-  const [sending, setSending] = useState(false);
-
-  // Fetch buyers of selected product
-  const { data: productBuyers = [] } = useQuery({
-    queryKey: ["product_buyers", productTarget],
-    queryFn: async () => {
-      if (!productTarget) return [];
-      const { data } = await supabase
-        .from("sales")
-        .select("buyer_email, buyer_name")
-        .eq("product_id", productTarget)
-        .eq("status", "completed");
-      // Deduplicate by email
-      const map = new Map<string, string>();
-      (data || []).forEach((s: any) => {
-        if (!map.has(s.buyer_email)) map.set(s.buyer_email, s.buyer_name || "");
-      });
-      return Array.from(map.entries()).map(([email, name]) => ({ email, name }));
-    },
-    enabled: !!productTarget,
-  });
-
-  const selectedProduct = products.find(p => p.id === productTarget);
-  const recipientCount = productBuyers.length;
+  const [saving, setSaving] = useState(false);
 
   const addBlock = (type: EmailBlock["type"]) => {
     const newBlock: EmailBlock = {
       id: Date.now().toString(),
       type,
       content: "",
-      settings: type === "botao" ? { url: "#", color: designAccent, align: "center" } :
+      settings: type === "botao" ? { url: "", color: designAccent, align: "center" } :
         type === "titulo" ? { align: "center", size: "24" } :
-          type === "social" ? { instagram: "#", youtube: "#", tiktok: "#" } : {},
+          type === "social" ? {} : {},
     };
     setBlocks([...blocks, newBlock]);
   };
@@ -347,31 +324,13 @@ const EditorPanel = ({ onClose, initialBlocks, campaignName, initialSubject, sel
     setBlocks(newBlocks);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name.trim()) { toast.error("Dê um nome à campanha"); return; }
     if (!subject.trim()) { toast.error("Defina o assunto do email"); return; }
-    toast.success("Campanha salva como rascunho!");
-    onClose();
-  };
-
-  const handleSend = async () => {
-    if (!name.trim() || !subject.trim()) { toast.error("Preencha nome e assunto"); return; }
-    if (!productTarget) { toast.error("Selecione um produto para enviar"); return; }
-    if (recipientCount === 0) { toast.error("Este produto não possui compradores para enviar o email"); return; }
-
-    setSending(true);
-
-    // Simulate sending — in production this would use a real email service
-    await new Promise(r => setTimeout(r, 2000));
-
-    if (scheduleDate && scheduleTime) {
-      toast.success(`Campanha agendada para ${scheduleDate} às ${scheduleTime} — ${recipientCount} compradores de "${selectedProduct?.name}"`);
-    } else {
-      toast.success(`Campanha enviada para ${recipientCount} compradores de "${selectedProduct?.name}"!`);
-    }
-
-    setSending(false);
-    onClose();
+    setSaving(true);
+    const saved = await onSave({ name: name.trim(), subject: subject.trim(), productId: productTarget, preheader, senderName, senderEmail, blocks }, campaignId);
+    setSaving(false);
+    if (saved) onClose();
   };
 
   const editorBlocks = [
@@ -388,16 +347,13 @@ const EditorPanel = ({ onClose, initialBlocks, campaignName, initialSubject, sel
       {/* Top bar */}
       <div className="border-b border-border px-3 sm:px-4 py-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <button onClick={onClose} className="text-xs sm:text-sm text-muted-foreground hover:text-foreground flex-shrink-0">← Voltar</button>
+          <button type="button" onClick={onClose} className="text-xs sm:text-sm text-muted-foreground hover:text-foreground flex-shrink-0">← Voltar</button>
           <input value={name} onChange={e => setName(e.target.value)} placeholder="Nome da campanha"
             className="text-sm font-semibold text-foreground bg-transparent border-none outline-none min-w-0 w-full max-w-[200px]" />
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <button onClick={handleSave} className="px-3 py-1.5 text-xs border border-border rounded-lg text-foreground hover:bg-secondary flex items-center gap-1">
-            <Save className="w-3 h-3" /> <span className="hidden sm:inline">Salvar</span>
-          </button>
-          <button onClick={handleSend} disabled={sending} className="px-3 py-1.5 text-xs gradient-gold rounded-lg text-primary-foreground font-semibold flex items-center gap-1 disabled:opacity-50">
-            <Send className="w-3 h-3" /> <span className="hidden sm:inline">{sending ? "Enviando..." : "Enviar"}</span>
+          <button type="button" onClick={handleSave} disabled={saving} className="px-3 py-1.5 text-xs gradient-gold rounded-lg text-primary-foreground font-semibold flex items-center gap-1 disabled:opacity-50">
+            <Save className="w-3 h-3" /> <span>{saving ? "Salvando..." : "Salvar rascunho"}</span>
           </button>
         </div>
       </div>
@@ -448,25 +404,6 @@ const EditorPanel = ({ onClose, initialBlocks, campaignName, initialSubject, sel
                   <Plus className="w-4 h-4 text-primary" /> {showBlockPanel ? "Fechar blocos" : "Adicionar bloco"}
                 </button>
 
-                {/* Product selector */}
-                <div className="p-3 rounded-lg border border-primary/20 bg-primary/5 space-y-2">
-                  <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                    <Package className="w-3.5 h-3.5 text-primary" /> Produto destinatário *
-                  </label>
-                  <select value={productTarget} onChange={e => setProductTarget(e.target.value)}
-                    className="w-full px-3 py-2 bg-secondary border border-border rounded-lg text-sm text-foreground">
-                    <option value="">Selecione um produto...</option>
-                    {products.map(p => (
-                      <option key={p.id} value={p.id}>{p.name} — R$ {Number(p.price).toFixed(2)}</option>
-                    ))}
-                  </select>
-                  {productTarget && (
-                    <p className="text-[10px] text-muted-foreground">
-                      📧 {recipientCount} comprador{recipientCount !== 1 ? "es" : ""} receberão este email
-                    </p>
-                  )}
-                </div>
-
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Assunto do email *</label>
                   <input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Ex: 🔥 Oferta imperdível!"
@@ -476,6 +413,11 @@ const EditorPanel = ({ onClose, initialBlocks, campaignName, initialSubject, sel
                   <label className="text-xs text-muted-foreground mb-1 block">Pré-header</label>
                   <input value={preheader} onChange={e => setPreheader(e.target.value)} placeholder="Texto que aparece após o assunto na caixa de entrada"
                     className="w-full px-4 py-2.5 rounded-lg bg-secondary border border-border text-sm text-foreground" />
+                </div>
+
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+                  <p className="text-xs font-semibold text-foreground">Envio de campanhas indisponível</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Você pode editar e salvar o rascunho. Para enviar e agendar mensagens, a Queenify precisa de um provedor de e-mail configurado.</p>
                 </div>
 
                 {blocks.length === 0 ? (
@@ -586,9 +528,10 @@ const EditorPanel = ({ onClose, initialBlocks, campaignName, initialSubject, sel
               </div>
 
               <div className="glass-card p-4 space-y-3">
-                <h4 className="text-xs font-semibold text-foreground">Destinatários — por produto</h4>
+                <h4 className="text-xs font-semibold text-foreground">Produto associado ao rascunho</h4>
+                <p className="text-[10px] text-muted-foreground">Esse vínculo organiza a campanha. Nenhuma mensagem será enviada enquanto o provedor não estiver configurado.</p>
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Produto *</label>
+                  <label className="text-xs text-muted-foreground mb-1 block">Produto (opcional)</label>
                   <select value={productTarget} onChange={e => setProductTarget(e.target.value)}
                     className="w-full px-3 py-2 bg-secondary border border-border rounded-lg text-sm text-foreground">
                     <option value="">Selecione um produto...</option>
@@ -596,41 +539,6 @@ const EditorPanel = ({ onClose, initialBlocks, campaignName, initialSubject, sel
                       <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
                   </select>
-                </div>
-                {productTarget && (
-                  <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
-                    <p className="text-xs text-foreground font-medium">{selectedProduct?.name}</p>
-                    <p className="text-[10px] text-muted-foreground mt-1">
-                      📧 {recipientCount} comprador{recipientCount !== 1 ? "es" : ""} — O email será enviado para todos que compraram este produto.
-                    </p>
-                    {recipientCount > 0 && (
-                      <div className="mt-2 max-h-32 overflow-y-auto space-y-1">
-                        {productBuyers.slice(0, 10).map((b, i) => (
-                          <p key={i} className="text-[10px] text-muted-foreground truncate">
-                            {b.name || "—"} · {b.email}
-                          </p>
-                        ))}
-                        {recipientCount > 10 && <p className="text-[10px] text-primary">+{recipientCount - 10} mais...</p>}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <div className="glass-card p-4 space-y-3">
-                <h4 className="text-xs font-semibold text-foreground">Agendamento</h4>
-                <p className="text-xs text-muted-foreground">Deixe vazio para enviar imediatamente ao clicar em "Enviar".</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Data</label>
-                    <input type="date" value={scheduleDate} onChange={e => setScheduleDate(e.target.value)}
-                      className="w-full px-3 py-2 bg-secondary border border-border rounded-lg text-xs text-foreground" />
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Hora</label>
-                    <input type="time" value={scheduleTime} onChange={e => setScheduleTime(e.target.value)}
-                      className="w-full px-3 py-2 bg-secondary border border-border rounded-lg text-xs text-foreground" />
-                  </div>
                 </div>
               </div>
             </div>
@@ -648,9 +556,30 @@ const EmailMarketing = () => {
   const [tab, setTab] = useState<Tab>("campanhas");
   const [search, setSearch] = useState("");
   const [showEditor, setShowEditor] = useState(false);
-  const [editorProps, setEditorProps] = useState<{ blocks?: EmailBlock[]; name?: string; subject?: string; productId?: string }>({});
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [editorProps, setEditorProps] = useState<{ id?: string; blocks?: EmailBlock[]; name?: string; subject?: string; preheader?: string; senderName?: string; senderEmail?: string; productId?: string }>({});
   const [templateCategory, setTemplateCategory] = useState("Todos");
+  const queryClient = useQueryClient();
+
+  const { data: campaigns = [] } = useQuery({
+    queryKey: ["email-campaigns", user?.id],
+    queryFn: async (): Promise<Campaign[]> => {
+      const { data, error } = await supabase.from("email_campaigns").select("*").eq("user_id", user!.id).order("updated_at", { ascending: false });
+      if (error) throw error;
+      return (data || []).map(campaign => ({
+        id: campaign.id,
+        name: campaign.name,
+        subject: campaign.subject,
+        status: "rascunho",
+        productId: campaign.product_id || "",
+        preheader: campaign.preheader,
+        senderName: campaign.sender_name,
+        senderEmail: campaign.sender_email,
+        blocks: campaign.blocks as unknown as EmailBlock[],
+        updatedAt: campaign.updated_at,
+      }));
+    },
+    enabled: !!user,
+  });
 
   // Build product-based buyer lists
   const productBuyerCounts = useMemo(() => {
@@ -685,15 +614,13 @@ const EmailMarketing = () => {
     { key: "metricas", label: "Métricas", icon: BarChart3 },
   ];
 
-  const [segmentedContacts, setSegmentedContacts] = useState<{ email: string; name: string }[]>([]);
-
   const openNewCampaign = () => {
     setEditorProps({});
     setShowEditor(true);
   };
 
   const openEditCampaign = (c: Campaign) => {
-    setEditorProps({ name: c.name, subject: c.subject, productId: c.productId });
+    setEditorProps({ id: c.id, name: c.name, subject: c.subject, preheader: c.preheader, senderName: c.senderName, senderEmail: c.senderEmail, productId: c.productId, blocks: c.blocks });
     setShowEditor(true);
   };
 
@@ -702,23 +629,55 @@ const EmailMarketing = () => {
     setShowEditor(true);
   };
 
-  const duplicateCampaign = (c: Campaign) => {
-    const dup: Campaign = { ...c, id: Date.now().toString(), name: `${c.name} (cópia)`, status: "rascunho", sentAt: null, scheduledAt: null };
-    setCampaigns([dup, ...campaigns]);
-    toast.success("Campanha duplicada!");
+  const saveCampaign = async (draft: CampaignDraft, id?: string): Promise<boolean> => {
+    if (!user) { toast.error("Entre na sua conta para salvar o rascunho."); return false; }
+    const values = {
+      name: draft.name,
+      subject: draft.subject,
+      preheader: draft.preheader,
+      sender_name: draft.senderName,
+      sender_email: draft.senderEmail,
+      product_id: draft.productId || null,
+      blocks: draft.blocks as unknown as import("@/integrations/supabase/types").Json,
+      updated_at: new Date().toISOString(),
+    };
+    const { error } = id
+      ? await supabase.from("email_campaigns").update(values).eq("id", id).eq("user_id", user.id)
+      : await supabase.from("email_campaigns").insert({ ...values, user_id: user.id });
+    if (error) {
+      console.error("Could not save campaign draft", error);
+      toast.error("Não foi possível salvar o rascunho. Tente novamente.");
+      return false;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["email-campaigns", user.id] });
+    toast.success("Rascunho salvo na sua conta.");
+    return true;
   };
 
-  const deleteCampaign = (id: string) => {
-    setCampaigns(campaigns.filter(c => c.id !== id));
-    toast.success("Campanha removida!");
+  const duplicateCampaign = async (campaign: Campaign) => {
+    const { id: _id, updatedAt: _updatedAt, ...draft } = campaign;
+    const saved = await saveCampaign({ ...draft, name: `${campaign.name} (cópia)` });
+    if (saved) toast.success("Rascunho duplicado.");
+  };
+
+  const deleteCampaign = async (id: string) => {
+    const { error } = await supabase.from("email_campaigns").delete().eq("id", id);
+    if (error) { toast.error("Não foi possível excluir o rascunho."); return; }
+    await queryClient.invalidateQueries({ queryKey: ["email-campaigns", user?.id] });
+    toast.success("Rascunho excluído.");
   };
 
   if (showEditor) return (
     <EditorPanel
       onClose={() => setShowEditor(false)}
+      onSave={saveCampaign}
+      campaignId={editorProps.id}
       initialBlocks={editorProps.blocks}
       campaignName={editorProps.name}
       initialSubject={editorProps.subject}
+      initialPreheader={editorProps.preheader}
+      initialSenderName={editorProps.senderName}
+      initialSenderEmail={editorProps.senderEmail}
       selectedProductId={editorProps.productId}
       products={products}
     />
@@ -729,7 +688,7 @@ const EmailMarketing = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
         <div>
           <h1 className="text-xl sm:text-2xl font-display font-bold text-foreground">Email Marketing</h1>
-          <p className="text-xs sm:text-sm text-muted-foreground">Envie campanhas de email para os compradores dos seus produtos.</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">Monte campanhas, organize rascunhos e acompanhe a base dos seus produtos.</p>
         </div>
         <button onClick={openNewCampaign} className="flex items-center gap-2 px-4 py-2 gradient-gold rounded-lg text-sm font-semibold text-primary-foreground hover:opacity-90">
           <Plus className="w-4 h-4" /> Nova Campanha
@@ -742,7 +701,7 @@ const EmailMarketing = () => {
           { label: "Compradores únicos", value: stats.totalBuyers.toLocaleString("pt-BR"), sub: "Base total de emails" },
           { label: "Produtos ativos", value: stats.totalProducts.toString(), sub: "Com compradores" },
           { label: "Vendas concluídas", value: stats.totalSales.toLocaleString("pt-BR"), sub: "Total geral" },
-          { label: "Campanhas criadas", value: campaigns.length.toString(), sub: "Nesta sessão" },
+          { label: "Rascunhos salvos", value: campaigns.length.toString(), sub: "Na sua conta" },
         ].map(s => (
           <div key={s.label} className="glass-card p-3 sm:p-4">
             <p className="text-[10px] sm:text-xs text-muted-foreground">{s.label}</p>
@@ -776,7 +735,7 @@ const EmailMarketing = () => {
             <div className="text-center py-12 glass-card">
               <Mail className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
               <p className="text-sm text-foreground font-medium">Nenhuma campanha criada</p>
-              <p className="text-xs text-muted-foreground mt-1">Clique em "Nova Campanha" para enviar emails aos compradores dos seus produtos.</p>
+              <p className="text-xs text-muted-foreground mt-1">Crie e salve um rascunho. O envio será liberado após a integração de um provedor de e-mail.</p>
               <button onClick={openNewCampaign} className="mt-4 px-4 py-2 gradient-gold rounded-lg text-xs font-semibold text-primary-foreground">
                 <Plus className="w-3.5 h-3.5 inline mr-1" /> Criar Campanha
               </button>
@@ -790,18 +749,8 @@ const EmailMarketing = () => {
                   <span className={`text-[10px] px-2 py-0.5 rounded-full ${statusConfig[c.status].color}`}>{statusConfig[c.status].label}</span>
                 </div>
                 <p className="text-xs text-muted-foreground truncate">{c.subject}</p>
-                <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground flex-wrap">
-                  {c.sentAt && <span>Enviado: {c.sentAt}</span>}
-                  {c.scheduledAt && <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {c.scheduledAt}</span>}
-                  {c.recipients > 0 && <span>{c.recipients.toLocaleString("pt-BR")} destinatários</span>}
-                </div>
+                <p className="mt-1.5 text-[10px] text-muted-foreground">Atualizado em {new Date(c.updatedAt).toLocaleString("pt-BR")}</p>
               </div>
-              {c.status === "enviada" && (
-                <div className="flex items-center gap-4">
-                  <div className="text-center"><p className="text-sm font-bold text-foreground">{c.openRate}%</p><p className="text-[10px] text-muted-foreground">Abertura</p></div>
-                  <div className="text-center"><p className="text-sm font-bold text-foreground">{c.clickRate}%</p><p className="text-[10px] text-muted-foreground">Clique</p></div>
-                </div>
-              )}
               <div className="flex items-center gap-1">
                 <button onClick={() => openEditCampaign(c)} className="p-2 hover:bg-secondary rounded-lg text-muted-foreground hover:text-foreground" title="Editar"><Edit2 className="w-3.5 h-3.5" /></button>
                 <button onClick={() => duplicateCampaign(c)} className="p-2 hover:bg-secondary rounded-lg text-muted-foreground hover:text-foreground" title="Duplicar"><Copy className="w-3.5 h-3.5" /></button>
@@ -858,7 +807,6 @@ const EmailMarketing = () => {
           <SegmentationPanel
             allSales={allSales}
             products={products}
-            onSegmentChange={setSegmentedContacts}
           />
 
           {/* Product list with buyer counts */}
@@ -875,7 +823,7 @@ const EmailMarketing = () => {
                 </div>
                 <button onClick={() => { setEditorProps({ productId: p.id }); setShowEditor(true); }}
                   className="text-xs px-3 py-1.5 gradient-gold rounded-lg text-primary-foreground font-medium flex items-center gap-1">
-                  <Send className="w-3 h-3" /> Enviar Email
+                  <FileText className="w-3 h-3" /> Criar rascunho
                 </button>
               </div>
             ))}
@@ -884,14 +832,6 @@ const EmailMarketing = () => {
             )}
           </div>
 
-          {segmentedContacts.length > 0 && (
-            <button
-              onClick={() => { setEditorProps({}); setShowEditor(true); }}
-              className="w-full py-3 gradient-gold rounded-lg text-sm font-semibold text-primary-foreground flex items-center justify-center gap-2"
-            >
-              <Send className="w-4 h-4" /> Enviar para {segmentedContacts.length} contatos segmentados
-            </button>
-          )}
         </div>
       )}
 
@@ -936,8 +876,8 @@ const EmailMarketing = () => {
                   <span className="text-xs font-semibold text-foreground">{Object.keys(productBuyerCounts).length}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2"><BarChart3 className="w-4 h-4 text-blue-400" /><span className="text-xs text-foreground">Campanhas enviadas</span></div>
-                  <span className="text-xs font-semibold text-foreground">{campaigns.filter(c => c.status === "enviada").length}</span>
+                  <div className="flex items-center gap-2"><FileText className="w-4 h-4 text-primary" /><span className="text-xs text-foreground">Rascunhos salvos</span></div>
+                  <span className="text-xs font-semibold text-foreground">{campaigns.length}</span>
                 </div>
               </div>
             </div>

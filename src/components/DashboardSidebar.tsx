@@ -55,7 +55,7 @@ const menuItems: MenuItem[] = [
   
   { icon: Zap, label: "Automações", path: "/automacoes" },
   { icon: BookOpen, label: "Tutoriais", path: "/tutoriais" },
-  { icon: GraduationCap, label: "Aulas Queenify", path: "/aulas" },
+  { icon: GraduationCap, label: "Meus cursos", path: "/painel-aluno" },
   {
     icon: ShieldAlert, label: "Suporte & Denúncias",
     children: [

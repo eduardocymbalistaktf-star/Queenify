@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 
-type AccentMode = "anchor" | "gold-emphasis";
+type AccentMode = "anchor" | "metal-emphasis";
 
 interface ThemeAccentContextValue {
   accent: AccentMode;
@@ -17,7 +17,8 @@ const ThemeAccentContext = createContext<ThemeAccentContextValue | null>(null);
 export function ThemeAccentProvider({ children }: { children: ReactNode }) {
   const [accent, setAccentState] = useState<AccentMode>(() => {
     if (typeof window === "undefined") return "anchor";
-    return (localStorage.getItem(ACCENT_KEY) as AccentMode) || "anchor";
+    const savedAccent = localStorage.getItem(ACCENT_KEY);
+    return savedAccent === "gold-emphasis" ? "metal-emphasis" : savedAccent === "metal-emphasis" ? savedAccent : "anchor";
   });
 
   const [reduceMotion, setReduceMotionState] = useState<boolean>(() => {
@@ -31,7 +32,7 @@ export function ThemeAccentProvider({ children }: { children: ReactNode }) {
   // Apply body class for accent mode.
   useEffect(() => {
     if (typeof document === "undefined") return;
-    document.body.classList.toggle("theme-gold-emphasis", accent === "gold-emphasis");
+    document.body.classList.toggle("theme-metal-emphasis", accent === "metal-emphasis");
     try { localStorage.setItem(ACCENT_KEY, accent); } catch { /* ignore */ }
   }, [accent]);
 

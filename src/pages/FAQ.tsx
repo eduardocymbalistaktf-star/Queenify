@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Search, HelpCircle, ShoppingCart, CreditCard, Users, Shield, Settings, Smartphone, Headphones } from "lucide-react";
@@ -85,9 +85,10 @@ const categories: FaqCategory[] = [
 ];
 
 const FAQ = () => {
+  const [searchParams] = useSearchParams();
   const [activeCategory, setActiveCategory] = useState("Começando");
   const [openQ, setOpenQ] = useState<number | null>(null);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => searchParams.get("search") || "");
 
   const currentCat = categories.find((c) => c.name === activeCategory)!;
 
@@ -178,9 +179,7 @@ const FAQ = () => {
           <div className="text-center mt-10">
             <p className="text-sm text-muted-foreground mb-4">Não encontrou o que procurava?</p>
             <a
-              href="https://wa.me/5500000000000"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="mailto:suporte@queenify.com.br?subject=Ajuda%20Queenify"
               className="inline-flex items-center gap-2 px-6 py-3 gradient-gold rounded-xl text-sm font-bold text-primary-foreground hover:opacity-90 transition-all hover:scale-105 shadow-lg shadow-primary/20"
             >
               <Headphones className="w-4 h-4" /> Falar com o Suporte

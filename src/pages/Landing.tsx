@@ -6,7 +6,7 @@ import { motion, useScroll, useTransform, AnimatePresence, useInView, useMotionV
 import {
   ShieldCheck, Headphones, Zap, MousePointerClick, Cpu,
   CreditCard, Clock, PaintBucket, Handshake, Store, Users,
-  Trophy, Crown, Star, Shield, ChevronDown, Instagram, Facebook,
+  Trophy, Crown, Star, Shield, ChevronDown,
   Sparkles, Smartphone, MessageCircle, Megaphone, Menu, X, Quote,
   TrendingUp, BarChart3, Globe, Bot, Rocket, ArrowRight,
   CheckCircle2, Play, Target, Layers, RefreshCcw, Gauge,
@@ -79,7 +79,7 @@ function useCounter(end: number, duration = 2000, startOnView = true) {
 const FloatingParticle = ({ delay = 0, x = 0, y = 0, size = 3 }: { delay?: number; x?: number; y?: number; size?: number }) => (
   <motion.div
     className="absolute rounded-full"
-    style={{ width: size * 1.5, height: size * 1.5, left: `${x}%`, top: `${y}%`, background: 'hsl(43 96% 56% / 0.6)', boxShadow: `0 0 ${size * 4}px hsl(43 96% 56% / 0.4)` }}
+    style={{ width: size * 1.5, height: size * 1.5, left: `${x}%`, top: `${y}%`, background: 'hsl(196 92% 56% / 0.6)', boxShadow: `0 0 ${size * 4}px hsl(196 92% 56% / 0.4)` }}
     animate={{ y: [0, -25, 0], opacity: [0.3, 0.9, 0.3], scale: [1, 1.4, 1] }}
     transition={{ duration: 4 + Math.random() * 3, repeat: Infinity, delay, ease: "easeInOut" }}
   />
@@ -89,7 +89,7 @@ const FloatingParticle = ({ delay = 0, x = 0, y = 0, size = 3 }: { delay?: numbe
 const GoldenStreak = ({ delay = 0, x = 0, y = 0, rotation = 45, width = 80 }: { delay?: number; x?: number; y?: number; rotation?: number; width?: number }) => (
   <motion.div
     className="absolute pointer-events-none"
-    style={{ left: `${x}%`, top: `${y}%`, width: `${width}px`, height: '2px', rotate: `${rotation}deg`, background: 'linear-gradient(90deg, transparent, hsl(43 96% 56% / 0.5), hsl(43 96% 56% / 0.8), transparent)', boxShadow: '0 0 8px hsl(43 96% 56% / 0.3)' }}
+    style={{ left: `${x}%`, top: `${y}%`, width: `${width}px`, height: '2px', rotate: `${rotation}deg`, background: 'linear-gradient(90deg, transparent, hsl(196 92% 56% / 0.5), hsl(196 92% 56% / 0.8), transparent)', boxShadow: '0 0 8px hsl(196 92% 56% / 0.3)' }}
     animate={{ opacity: [0, 0.8, 0], scaleX: [0.3, 1, 0.3] }}
     transition={{ duration: 4 + Math.random() * 2, repeat: Infinity, delay, ease: "easeInOut" }}
   />
@@ -99,7 +99,7 @@ const GoldenStreak = ({ delay = 0, x = 0, y = 0, rotation = 45, width = 80 }: { 
 const GlowDot = ({ delay = 0, x = 0, y = 0, size = 2 }: { delay?: number; x?: number; y?: number; size?: number }) => (
   <motion.div
     className="absolute rounded-full"
-    style={{ left: `${x}%`, top: `${y}%`, width: size * 2, height: size * 2, background: 'hsl(43 96% 56%)', boxShadow: `0 0 ${size * 6}px hsl(43 96% 56% / 0.7), 0 0 ${size * 12}px hsl(43 96% 56% / 0.3)` }}
+    style={{ left: `${x}%`, top: `${y}%`, width: size * 2, height: size * 2, background: 'hsl(196 92% 56%)', boxShadow: `0 0 ${size * 6}px hsl(196 92% 56% / 0.7), 0 0 ${size * 12}px hsl(196 92% 56% / 0.3)` }}
     animate={{ opacity: [0.1, 1, 0.1], scale: [0.5, 1.5, 0.5] }}
     transition={{ duration: 3 + Math.random() * 2, repeat: Infinity, delay, ease: "easeInOut" }}
   />
@@ -446,7 +446,7 @@ const DashboardCloneDesktop = () => (
   <div
     className="w-full h-full flex"
     style={{
-      // Match real dashboard tokens: dark theme, near-black background, gold accent (43 96% 56%)
+      // Match real dashboard tokens: dark theme, near-black background, electric blue accent (196 92% 58%)
       background: "hsl(0 0% 7%)",
       color: "hsl(0 0% 95%)",
       fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
@@ -474,12 +474,12 @@ const DashboardCloneDesktop = () => (
             className="flex items-center gap-1.5 px-1.5 py-[5px] rounded"
             style={{
               background: item.active ? "hsl(0 0% 12%)" : "transparent",
-              color: item.active ? "hsl(43 96% 56%)" : "hsl(0 0% 70%)",
+              color: item.active ? "hsl(196 92% 56%)" : "hsl(0 0% 70%)",
               fontSize: 6.5,
               fontWeight: item.active ? 600 : 400,
             }}
           >
-            <span className="w-2 text-center text-[6px]" style={{ color: item.active ? "hsl(43 96% 56%)" : "hsl(0 0% 50%)" }}>
+            <span className="w-2 text-center text-[6px]" style={{ color: item.active ? "hsl(196 92% 56%)" : "hsl(0 0% 50%)" }}>
               {item.icon}
             </span>
             <span className="truncate flex-1">{item.label}</span>
@@ -491,7 +491,7 @@ const DashboardCloneDesktop = () => (
       <div
         className="mx-1.5 mb-2 p-1.5 rounded"
         style={{
-          background: "linear-gradient(135deg, hsl(43 96% 56%), hsl(43 96% 46%))",
+          background: "linear-gradient(135deg, hsl(196 92% 56%), hsl(196 92% 46%))",
           color: "hsl(0 0% 8%)",
         }}
       >
@@ -534,7 +534,7 @@ const DashboardCloneDesktop = () => (
           <div className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px]" style={{ background: "hsl(0 0% 12%)", color: "hsl(0 0% 70%)" }}>
             ♪
           </div>
-          <div className="w-4 h-4 rounded-full" style={{ background: "linear-gradient(135deg, hsl(43 96% 56%), hsl(43 96% 36%))" }} />
+          <div className="w-4 h-4 rounded-full" style={{ background: "linear-gradient(135deg, hsl(196 92% 56%), hsl(196 92% 36%))" }} />
         </div>
       </header>
 
@@ -550,7 +550,7 @@ const DashboardCloneDesktop = () => (
             <div className="px-1.5 py-1 rounded text-[6.5px] flex items-center gap-1" style={{ background: "hsl(0 0% 10%)", border: "1px solid hsl(0 0% 14%)" }}>
               📅 Últimos 30 dias ▾
             </div>
-            <div className="px-2 py-1 rounded text-[6.5px] font-semibold" style={{ background: "linear-gradient(135deg, hsl(43 96% 56%), hsl(43 96% 46%))", color: "hsl(0 0% 8%)" }}>
+            <div className="px-2 py-1 rounded text-[6.5px] font-semibold" style={{ background: "linear-gradient(135deg, hsl(196 92% 56%), hsl(196 92% 46%))", color: "hsl(0 0% 8%)" }}>
               + Novo Produto
             </div>
           </div>
@@ -564,7 +564,7 @@ const DashboardCloneDesktop = () => (
             style={{
               background: "hsl(0 0% 100%)",
               color: "hsl(0 0% 8%)",
-              boxShadow: "0 0 0 1px hsl(43 96% 56% / 0.3), 0 4px 12px -4px hsl(43 96% 56% / 0.4)",
+              boxShadow: "0 0 0 1px hsl(196 92% 56% / 0.3), 0 4px 12px -4px hsl(196 92% 56% / 0.4)",
             }}
           >
             <div className="flex items-start justify-between">
@@ -572,7 +572,7 @@ const DashboardCloneDesktop = () => (
                 <p className="text-[6px] opacity-60">Vendas</p>
                 <p className="text-[5.5px] opacity-50">Últimos 30 dias</p>
               </div>
-              <span className="text-[5px] font-bold px-1 py-[1px] rounded" style={{ background: "hsl(43 96% 56% / 0.15)", color: "hsl(43 96% 36%)" }}>★ DESTAQUE</span>
+              <span className="text-[5px] font-bold px-1 py-[1px] rounded" style={{ background: "hsl(196 92% 56% / 0.15)", color: "hsl(196 92% 36%)" }}>★ DESTAQUE</span>
             </div>
             <p className="font-bold text-[12px] mt-1">R$ 47.892</p>
             <span className="text-[6px] font-semibold" style={{ color: "hsl(142 71% 45%)" }}>↗ Ativo</span>
@@ -607,7 +607,7 @@ const DashboardCloneDesktop = () => (
           <div className="flex items-center justify-between mb-1.5">
             <p className="font-semibold text-[7px]">Vendas por Período</p>
             <div className="flex gap-1">
-              <span className="text-[5.5px] px-1 py-[1px] rounded" style={{ background: "hsl(43 96% 56% / 0.15)", color: "hsl(43 96% 56%)" }}>30D</span>
+              <span className="text-[5.5px] px-1 py-[1px] rounded" style={{ background: "hsl(196 92% 56% / 0.15)", color: "hsl(196 92% 56%)" }}>30D</span>
               <span className="text-[5.5px] px-1 py-[1px] rounded" style={{ color: "hsl(0 0% 55%)" }}>7D</span>
               <span className="text-[5.5px] px-1 py-[1px] rounded" style={{ color: "hsl(0 0% 55%)" }}>HOJE</span>
             </div>
@@ -621,11 +621,11 @@ const DashboardCloneDesktop = () => (
             <p className="font-semibold text-[7px] mb-1.5">Top Afiliados</p>
             {["Marina S.", "Carlos B.", "Juliana R."].map((name, i) => (
               <div key={name} className="flex items-center gap-1.5 py-[3px]">
-                <div className="w-3 h-3 rounded-full flex items-center justify-center text-[5px] font-bold" style={{ background: i === 0 ? "hsl(43 96% 56%)" : "hsl(0 0% 18%)", color: i === 0 ? "hsl(0 0% 8%)" : "hsl(0 0% 90%)" }}>
+                <div className="w-3 h-3 rounded-full flex items-center justify-center text-[5px] font-bold" style={{ background: i === 0 ? "hsl(196 92% 56%)" : "hsl(0 0% 18%)", color: i === 0 ? "hsl(0 0% 8%)" : "hsl(0 0% 90%)" }}>
                   {i + 1}
                 </div>
                 <span className="flex-1 text-[6px]">{name}</span>
-                <span className="text-[6px] font-semibold" style={{ color: "hsl(43 96% 56%)" }}>
+                <span className="text-[6px] font-semibold" style={{ color: "hsl(196 92% 56%)" }}>
                   R$ {(8420 - i * 1900).toLocaleString("pt-BR")}
                 </span>
               </div>
@@ -666,14 +666,14 @@ const MiniSalesChart = () => {
     <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-[44px]" preserveAspectRatio="none">
       <defs>
         <linearGradient id="goldFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="hsl(43 96% 56%)" stopOpacity="0.5" />
-          <stop offset="100%" stopColor="hsl(43 96% 56%)" stopOpacity="0" />
+          <stop offset="0%" stopColor="hsl(196 92% 56%)" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="hsl(196 92% 56%)" stopOpacity="0" />
         </linearGradient>
       </defs>
       <path d={area} fill="url(#goldFill)" />
-      <path d={path} fill="none" stroke="hsl(43 96% 56%)" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d={path} fill="none" stroke="hsl(196 92% 56%)" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round" />
       {points.map((v, i) => (
-        <circle key={i} cx={(i / (points.length - 1)) * w} cy={h - (v / max) * h} r="0.6" fill="hsl(43 96% 56%)" />
+        <circle key={i} cx={(i / (points.length - 1)) * w} cy={h - (v / max) * h} r="0.6" fill="hsl(196 92% 56%)" />
       ))}
     </svg>
   );
@@ -710,7 +710,7 @@ const DashboardCloneMobile = () => (
       </div>
       <div className="flex items-center gap-1.5">
         <div className="w-4 h-4 rounded-full flex items-center justify-center text-[8px]" style={{ background: "hsl(0 0% 12%)", color: "hsl(0 0% 80%)" }}>♪</div>
-        <div className="w-5 h-5 rounded-full" style={{ background: "linear-gradient(135deg, hsl(43 96% 56%), hsl(43 96% 36%))" }} />
+        <div className="w-5 h-5 rounded-full" style={{ background: "linear-gradient(135deg, hsl(196 92% 56%), hsl(196 92% 36%))" }} />
       </div>
     </div>
 
@@ -726,7 +726,7 @@ const DashboardCloneMobile = () => (
           style={{
             background: "hsl(0 0% 100%)",
             color: "hsl(0 0% 8%)",
-            boxShadow: "0 0 0 1px hsl(43 96% 56% / 0.3), 0 4px 12px -4px hsl(43 96% 56% / 0.4)",
+            boxShadow: "0 0 0 1px hsl(196 92% 56% / 0.3), 0 4px 12px -4px hsl(196 92% 56% / 0.4)",
           }}
         >
           <div className="flex items-start justify-between">
@@ -734,7 +734,7 @@ const DashboardCloneMobile = () => (
               <p className="text-[8px] opacity-60">Vendas</p>
               <p className="text-[7px] opacity-50">Últimos 30 dias</p>
             </div>
-            <span className="text-[7px] font-bold px-1.5 py-[1px] rounded" style={{ background: "hsl(43 96% 56% / 0.15)", color: "hsl(43 96% 36%)" }}>★ DESTAQUE</span>
+            <span className="text-[7px] font-bold px-1.5 py-[1px] rounded" style={{ background: "hsl(196 92% 56% / 0.15)", color: "hsl(196 92% 36%)" }}>★ DESTAQUE</span>
           </div>
           <p className="font-bold text-[18px] mt-1">R$ 47.892</p>
           <span className="text-[8px] font-semibold" style={{ color: "hsl(142 71% 45%)" }}>↗ Ativo</span>
@@ -758,7 +758,7 @@ const DashboardCloneMobile = () => (
       <div className="p-2 rounded mb-3" style={{ background: "hsl(0 0% 10%)", border: "1px solid hsl(0 0% 14%)" }}>
         <div className="flex items-center justify-between mb-1">
           <p className="font-semibold text-[9px]">Vendas</p>
-          <span className="text-[7px] px-1.5 py-[1px] rounded" style={{ background: "hsl(43 96% 56% / 0.15)", color: "hsl(43 96% 56%)" }}>30D</span>
+          <span className="text-[7px] px-1.5 py-[1px] rounded" style={{ background: "hsl(196 92% 56% / 0.15)", color: "hsl(196 92% 56%)" }}>30D</span>
         </div>
         <MiniSalesChart />
       </div>
@@ -843,7 +843,7 @@ const CheckoutEditorPhone = () => (
               <p className="text-[8px]" style={{ color: "hsl(0 0% 55%)" }}>Mentoria Lucros Reais</p>
             </div>
           </div>
-          <div className="px-2 py-[3px] rounded text-[8px] font-bold" style={{ background: "hsl(43 96% 56%)", color: "hsl(0 0% 8%)" }}>
+          <div className="px-2 py-[3px] rounded text-[8px] font-bold" style={{ background: "hsl(196 92% 56%)", color: "hsl(0 0% 8%)" }}>
             SALVAR
           </div>
         </div>
@@ -855,7 +855,7 @@ const CheckoutEditorPhone = () => (
               key={t}
               className="flex-1 text-center py-1 rounded text-[8px] font-semibold"
               style={{
-                background: i === 0 ? "hsl(43 96% 56%)" : "transparent",
+                background: i === 0 ? "hsl(196 92% 56%)" : "transparent",
                 color: i === 0 ? "hsl(0 0% 8%)" : "hsl(0 0% 60%)",
               }}
             >
@@ -867,7 +867,7 @@ const CheckoutEditorPhone = () => (
         {/* Live preview card */}
         <div className="rounded-xl p-3 mb-3" style={{ background: "hsl(0 0% 10%)", border: "1px solid hsl(0 0% 14%)" }}>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[8px] font-bold uppercase tracking-wider" style={{ color: "hsl(43 96% 56%)" }}>Pré-visualização</span>
+            <span className="text-[8px] font-bold uppercase tracking-wider" style={{ color: "hsl(196 92% 56%)" }}>Pré-visualização</span>
             <span className="text-[8px]" style={{ color: "hsl(0 0% 50%)" }}>Mobile</span>
           </div>
           <div className="rounded-lg p-2.5" style={{ background: "hsl(0 0% 5%)", border: "1px solid hsl(0 0% 14%)" }}>
@@ -878,10 +878,10 @@ const CheckoutEditorPhone = () => (
             <p className="font-semibold text-[9px] leading-tight">Mentoria Lucros Reais</p>
             <p className="text-[8px] mb-1.5" style={{ color: "hsl(0 0% 60%)" }}>Acesso vitalício + bônus</p>
             <div className="flex items-baseline gap-1.5 mb-2">
-              <span className="font-bold text-[14px]" style={{ color: "hsl(43 96% 56%)" }}>R$ 1.497</span>
+              <span className="font-bold text-[14px]" style={{ color: "hsl(196 92% 56%)" }}>R$ 1.497</span>
               <span className="line-through text-[8px]" style={{ color: "hsl(0 0% 45%)" }}>R$ 2.497</span>
             </div>
-            <div className="rounded p-1.5 mb-1.5 text-center text-[8px] font-bold" style={{ background: "hsl(43 96% 56%)", color: "hsl(0 0% 8%)" }}>
+            <div className="rounded p-1.5 mb-1.5 text-center text-[8px] font-bold" style={{ background: "hsl(196 92% 56%)", color: "hsl(0 0% 8%)" }}>
               FINALIZAR COMPRA
             </div>
             <div className="flex items-center justify-center gap-1 text-[7px]" style={{ color: "hsl(0 0% 55%)" }}>
@@ -894,13 +894,13 @@ const CheckoutEditorPhone = () => (
         <div className="rounded-xl p-2.5 mb-2" style={{ background: "hsl(0 0% 10%)", border: "1px solid hsl(0 0% 14%)" }}>
           <p className="text-[9px] font-semibold mb-1.5">Cor primária</p>
           <div className="flex gap-1.5">
-            {["hsl(43 96% 56%)", "hsl(0 0% 100%)", "hsl(280 60% 60%)", "hsl(200 70% 55%)", "hsl(142 71% 45%)"].map((c, i) => (
+            {["hsl(196 92% 56%)", "hsl(0 0% 100%)", "hsl(280 60% 60%)", "hsl(200 70% 55%)", "hsl(142 71% 45%)"].map((c, i) => (
               <div
                 key={c}
                 className="w-6 h-6 rounded-full"
                 style={{
                   background: c,
-                  boxShadow: i === 0 ? "0 0 0 2px hsl(0 0% 7%), 0 0 0 4px hsl(43 96% 56%)" : "0 0 0 1px hsl(0 0% 18%)",
+                  boxShadow: i === 0 ? "0 0 0 2px hsl(0 0% 7%), 0 0 0 4px hsl(196 92% 56%)" : "0 0 0 1px hsl(0 0% 18%)",
                 }}
               />
             ))}
@@ -919,7 +919,7 @@ const CheckoutEditorPhone = () => (
               <div
                 className="w-7 h-4 rounded-full flex items-center transition-all"
                 style={{
-                  background: t.on ? "hsl(43 96% 56%)" : "hsl(0 0% 22%)",
+                  background: t.on ? "hsl(196 92% 56%)" : "hsl(0 0% 22%)",
                   padding: "0 2px",
                   justifyContent: t.on ? "flex-end" : "flex-start",
                 }}
@@ -999,7 +999,7 @@ const Landing = () => {
         <motion.div
           className="absolute -top-[30%] -left-[20%] w-[160%] h-[60%] opacity-[0.18]"
           style={{
-            background: "conic-gradient(from 180deg at 50% 50%, hsl(43 96% 56% / 0.6), transparent 20%, hsl(280 60% 50% / 0.35), transparent 45%, hsl(43 96% 56% / 0.5), transparent 70%, hsl(200 70% 50% / 0.25), transparent)",
+            background: "conic-gradient(from 180deg at 50% 50%, hsl(196 92% 56% / 0.6), transparent 20%, hsl(280 60% 50% / 0.35), transparent 45%, hsl(196 92% 56% / 0.5), transparent 70%, hsl(200 70% 50% / 0.25), transparent)",
             filter: "blur(60px)",
           }}
           animate={{ rotate: [0, 360] }}
@@ -1008,7 +1008,7 @@ const Landing = () => {
         <motion.div
           className="absolute -bottom-[20%] -right-[20%] w-[140%] h-[50%] opacity-[0.14]"
           style={{
-            background: "conic-gradient(from 0deg at 50% 50%, hsl(280 50% 50% / 0.4), transparent 25%, hsl(43 96% 56% / 0.45), transparent 55%, hsl(200 60% 50% / 0.3), transparent)",
+            background: "conic-gradient(from 0deg at 50% 50%, hsl(280 50% 50% / 0.4), transparent 25%, hsl(196 92% 56% / 0.45), transparent 55%, hsl(200 60% 50% / 0.3), transparent)",
             filter: "blur(70px)",
           }}
           animate={{ rotate: [360, 0] }}
@@ -1018,7 +1018,7 @@ const Landing = () => {
         <motion.div
           className="absolute top-[20%] left-[30%] w-[80%] h-[60%] opacity-[0.1]"
           style={{
-            background: "conic-gradient(from 90deg at 50% 50%, hsl(43 96% 56% / 0.3), transparent 30%, hsl(35 100% 50% / 0.25), transparent 60%, hsl(43 96% 56% / 0.2), transparent)",
+            background: "conic-gradient(from 90deg at 50% 50%, hsl(196 92% 56% / 0.3), transparent 30%, hsl(35 100% 50% / 0.25), transparent 60%, hsl(196 92% 56% / 0.2), transparent)",
             filter: "blur(90px)",
           }}
           animate={{ rotate: [0, -360] }}
@@ -1027,26 +1027,26 @@ const Landing = () => {
         {/* Shooting comet streaks — BRIGHTER & THICKER */}
         <motion.div
           className="absolute top-[12%] left-0 w-[300px] h-[3px]"
-          style={{ background: "linear-gradient(90deg, transparent, hsl(43 96% 56% / 0.3), hsl(43 96% 56% / 0.9), hsl(43 96% 56%), hsl(43 96% 56% / 0.9), transparent)", borderRadius: "3px", boxShadow: "0 0 12px hsl(43 96% 56% / 0.5)" }}
+          style={{ background: "linear-gradient(90deg, transparent, hsl(196 92% 56% / 0.3), hsl(196 92% 56% / 0.9), hsl(196 92% 56%), hsl(196 92% 56% / 0.9), transparent)", borderRadius: "3px", boxShadow: "0 0 12px hsl(196 92% 56% / 0.5)" }}
           animate={{ x: ["-300px", "110vw"], opacity: [0, 1, 1, 0] }}
           transition={{ duration: 3, repeat: Infinity, repeatDelay: 6, ease: "easeInOut" }}
         />
         <motion.div
           className="absolute top-[40%] right-0 w-[250px] h-[2.5px]"
-          style={{ background: "linear-gradient(270deg, transparent, hsl(43 96% 56% / 0.3), hsl(43 96% 56% / 0.8), hsl(43 96% 56% / 0.9), transparent)", borderRadius: "3px", boxShadow: "0 0 10px hsl(43 96% 56% / 0.4)" }}
+          style={{ background: "linear-gradient(270deg, transparent, hsl(196 92% 56% / 0.3), hsl(196 92% 56% / 0.8), hsl(196 92% 56% / 0.9), transparent)", borderRadius: "3px", boxShadow: "0 0 10px hsl(196 92% 56% / 0.4)" }}
           animate={{ x: ["300px", "-110vw"], opacity: [0, 1, 1, 0] }}
           transition={{ duration: 4, repeat: Infinity, repeatDelay: 9, ease: "easeInOut", delay: 4 }}
         />
         <motion.div
           className="absolute top-[70%] left-0 w-[200px] h-[2px]"
-          style={{ background: "linear-gradient(90deg, transparent, hsl(43 96% 56% / 0.4), hsl(43 96% 56% / 0.8), transparent)", borderRadius: "2px", boxShadow: "0 0 8px hsl(43 96% 56% / 0.3)" }}
+          style={{ background: "linear-gradient(90deg, transparent, hsl(196 92% 56% / 0.4), hsl(196 92% 56% / 0.8), transparent)", borderRadius: "2px", boxShadow: "0 0 8px hsl(196 92% 56% / 0.3)" }}
           animate={{ x: ["-200px", "110vw"], opacity: [0, 0.9, 0.9, 0] }}
           transition={{ duration: 3.5, repeat: Infinity, repeatDelay: 12, ease: "easeInOut", delay: 2 }}
         />
         {/* Diagonal comet — new */}
         <motion.div
           className="absolute top-[5%] left-0 w-[180px] h-[2px]"
-          style={{ background: "linear-gradient(90deg, transparent, hsl(43 96% 56% / 0.5), hsl(43 96% 56%), transparent)", borderRadius: "2px", rotate: "15deg", boxShadow: "0 0 6px hsl(43 96% 56% / 0.4)" }}
+          style={{ background: "linear-gradient(90deg, transparent, hsl(196 92% 56% / 0.5), hsl(196 92% 56%), transparent)", borderRadius: "2px", rotate: "15deg", boxShadow: "0 0 6px hsl(196 92% 56% / 0.4)" }}
           animate={{ x: ["-200px", "120vw"], y: ["-10vh", "20vh"], opacity: [0, 1, 1, 0] }}
           transition={{ duration: 4.5, repeat: Infinity, repeatDelay: 14, ease: "easeInOut", delay: 8 }}
         />
@@ -1054,7 +1054,7 @@ const Landing = () => {
         <motion.div
           className="absolute inset-0"
           style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, hsl(43 96% 56% / 0.1) 1.5px, transparent 1.5px)`,
+            backgroundImage: `radial-gradient(circle at 1px 1px, hsl(196 92% 56% / 0.1) 1.5px, transparent 1.5px)`,
             backgroundSize: "40px 40px",
           }}
           animate={{ opacity: [0.4, 0.8, 0.4] }}
@@ -1120,9 +1120,9 @@ const Landing = () => {
             }}
           />
           {/* Gold wash on the seam */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_55%_60%_at_62%_50%,hsl(43_96%_56%/0.28),transparent_65%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_55%_60%_at_62%_50%,hsl(196_92%_56%/0.28),transparent_65%)]" />
           {/* Subtle gold streak top-right */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_30%_25%_at_88%_18%,hsl(43_96%_60%/0.22),transparent_70%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_30%_25%_at_88%_18%,hsl(196_92%_60%/0.22),transparent_70%)]" />
           {/* Soft dark vignette bottom-left for depth */}
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_45%_45%_at_8%_92%,hsl(0_0%_0%/0.5),transparent_60%)]" />
           {/* Fine grain overlay */}
@@ -1523,7 +1523,6 @@ const Landing = () => {
                 <li><Link to="/taxas" className="hover:text-foreground hover:translate-x-1 transition-all inline-block">Taxas</Link></li>
                 <li><Link to="/faq" className="hover:text-foreground hover:translate-x-1 transition-all inline-block">FAQ</Link></li>
                 <li><Link to="/ajuda" className="hover:text-foreground hover:translate-x-1 transition-all inline-block">Ajuda</Link></li>
-                <li><Link to="/cursos-queenify" className="hover:text-foreground hover:translate-x-1 transition-all inline-block">Cursos Queenify</Link></li>
                 <li><Link to="/status" className="hover:text-foreground hover:translate-x-1 transition-all inline-block">Página de Status</Link></li>
                 <li><Link to="/comunicacoes-oficiais" className="hover:text-foreground hover:translate-x-1 transition-all inline-block">Comunicações Oficiais</Link></li>
               </ul>
@@ -1568,13 +1567,9 @@ const Landing = () => {
                 <motion.span className="absolute -bottom-1 left-0 h-[2px] bg-primary/30" initial={{ width: 0 }} whileInView={{ width: "100%" }} viewport={{ once: true }} transition={{ delay: 0.6, duration: 0.5 }} />
               </motion.h4>
               <ul className="space-y-2 text-xs text-muted-foreground">
-                <li><a href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer" className="hover:text-foreground hover:translate-x-1 transition-all inline-block">WhatsApp</a></li>
+                <li><Link to="/ajuda" className="hover:text-foreground hover:translate-x-1 transition-all inline-block">Central de ajuda</Link></li>
                 <li><a href="mailto:suporte@queenify.com.br" className="hover:text-foreground hover:translate-x-1 transition-all inline-block">suporte@queenify.com.br</a></li>
               </ul>
-              <div className="flex items-center gap-3 mt-4">
-                <a href="#" className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground hover:scale-110 hover:bg-primary/10 transition-all duration-300"><Instagram className="w-4 h-4" /></a>
-                <a href="#" className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground hover:scale-110 hover:bg-primary/10 transition-all duration-300"><Facebook className="w-4 h-4" /></a>
-              </div>
             </div>
           </div>
         </div>
@@ -1607,7 +1602,7 @@ const Landing = () => {
             <motion.span
               aria-hidden
               className="absolute inset-0 rounded-full"
-              style={{ background: "hsl(43 96% 56%)", filter: "blur(18px)", opacity: 0.45 }}
+              style={{ background: "hsl(196 92% 56%)", filter: "blur(18px)", opacity: 0.45 }}
               animate={{ scale: [1, 1.18, 1], opacity: [0.35, 0.6, 0.35] }}
               transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
             />
@@ -1624,9 +1619,9 @@ const Landing = () => {
               className="relative flex items-center gap-2.5 pl-5 pr-6 py-3.5 rounded-full font-bold text-sm text-primary-foreground overflow-hidden"
               style={{
                 background:
-                  "linear-gradient(135deg, hsl(43 96% 62%) 0%, hsl(43 96% 50%) 50%, hsl(38 95% 45%) 100%)",
+                  "linear-gradient(135deg, hsl(196 92% 62%) 0%, hsl(196 92% 50%) 50%, hsl(38 95% 45%) 100%)",
                 boxShadow:
-                  "0 12px 32px -8px hsl(43 96% 50% / 0.6), 0 4px 12px -2px hsl(0 0% 0% / 0.3), inset 0 1px 0 hsl(0 0% 100% / 0.4), inset 0 -1px 0 hsl(0 0% 0% / 0.15)",
+                  "0 12px 32px -8px hsl(196 92% 50% / 0.6), 0 4px 12px -2px hsl(0 0% 0% / 0.3), inset 0 1px 0 hsl(0 0% 100% / 0.4), inset 0 -1px 0 hsl(0 0% 0% / 0.15)",
               }}
             >
               {/* Shimmer sweep */}

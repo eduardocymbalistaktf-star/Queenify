@@ -1,9 +1,8 @@
 import LegalLayout from "@/components/LegalLayout";
-import { MessageCircle, Mail, Clock, MapPin } from "lucide-react";
+import { Mail, Clock } from "lucide-react";
 
 const channels = [
-  { icon: MessageCircle, title: "WhatsApp", description: "Atendimento rápido e direto com nossa equipe de suporte.", link: "https://wa.me/5500000000000", linkText: "Abrir WhatsApp", highlight: true },
-  { icon: Mail, title: "E-mail", description: "Para questões detalhadas ou envio de documentos.", link: "mailto:suporte@queenify.com.br", linkText: "suporte@queenify.com.br" },
+  { icon: Mail, title: "E-mail de suporte", description: "Para questões detalhadas ou envio de documentos. Tempo de resposta estimado: até 48 horas.", link: "mailto:suporte@queenify.com.br?subject=Ajuda%20Queenify", linkText: "suporte@queenify.com.br", highlight: true },
 ];
 
 const Contato = () => (
@@ -12,7 +11,7 @@ const Contato = () => (
 
     <div className="mt-8 grid gap-4">
       {channels.map((ch) => (
-        <a key={ch.title} href={ch.link} target="_blank" rel="noopener noreferrer"
+        <a key={ch.title} href={ch.link}
           className={`flex items-start gap-4 p-5 rounded-xl border transition-colors ${ch.highlight ? "border-primary/40 bg-primary/[0.04] hover:bg-primary/[0.08]" : "border-border bg-card/50 hover:bg-card"}`}
         >
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${ch.highlight ? "bg-primary/20" : "bg-primary/10"}`}>
@@ -27,10 +26,10 @@ const Contato = () => (
       ))}
     </div>
 
-    <h2>Horário de Atendimento</h2>
+    <h2>Disponibilidade</h2>
     <div className="flex items-center gap-2 text-sm text-muted-foreground">
       <Clock className="w-4 h-4 text-primary" />
-      <span>Segunda a Domingo, das 08h00 às 22h00 (horário de Brasília)</span>
+      <span>QueenIA disponível 24 horas; suporte por e-mail em até 48 horas.</span>
     </div>
 
     <h2>Para Autoridades e Questões Jurídicas</h2>

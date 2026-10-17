@@ -9,26 +9,26 @@
     scroll-behavior: smooth;
   }
   :root {
-    --background: 38 30% 96%;
-    --foreground: 225 18% 14%;
+    --background: 222 20% 7%;
+    --foreground: 213 25% 93%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 225 18% 14%;
+    --card: 222 18% 11%;
+    --card-foreground: 213 25% 93%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 225 18% 14%;
+    --popover: 222 19% 10%;
+    --popover-foreground: 213 25% 93%;
 
-    --primary: 38 88% 38%;
-    --primary-foreground: 0 0% 4%;
+    --primary: 196 92% 58%;
+    --primary-foreground: 222 25% 8%;
 
-    --secondary: 38 24% 92%;
-    --secondary-foreground: 225 15% 24%;
+    --secondary: 220 16% 16%;
+    --secondary-foreground: 213 20% 88%;
 
-    --muted: 38 20% 92%;
-    --muted-foreground: 225 9% 42%;
+    --muted: 220 16% 16%;
+    --muted-foreground: 216 12% 66%;
 
-    --accent: 38 88% 38%;
-    --accent-foreground: 0 0% 4%;
+    --accent: 195 85% 46%;
+    --accent-foreground: 222 25% 8%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
@@ -36,20 +36,20 @@
     --success: 142 61% 32%;
     --success-foreground: 0 0% 98%;
 
-    --border: 38 18% 86%;
-    --input: 38 18% 86%;
-    --ring: 38 88% 38%;
+    --border: 218 15% 24%;
+    --input: 218 15% 24%;
+    --ring: 196 92% 58%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 260 24% 13%;
-    --sidebar-foreground: 260 18% 82%;
-    --sidebar-primary: 43 96% 56%;
-    --sidebar-primary-foreground: 0 0% 4%;
-    --sidebar-accent: 260 22% 21%;
+    --sidebar-background: 225 24% 6%;
+    --sidebar-foreground: 213 20% 85%;
+    --sidebar-primary: 196 92% 58%;
+    --sidebar-primary-foreground: 222 25% 8%;
+    --sidebar-accent: 222 20% 12%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 260 18% 22%;
-    --sidebar-ring: 43 96% 56%;
+    --sidebar-border: 220 16% 17%;
+    --sidebar-ring: 196 92% 58%;
 
     --chart-orange: 25 95% 53%;
     --chart-purple: 270 70% 60%;
@@ -66,7 +66,7 @@
     @apply bg-background text-foreground font-sans;
     font-family: 'Inter', sans-serif;
     min-width: 320px;
-    background-image: radial-gradient(ellipse at 50% -24rem, hsl(43 96% 56% / 0.11), transparent 58rem);
+    background-image: radial-gradient(ellipse at 50% -24rem, hsl(196 92% 58% / 0.12), transparent 58rem), linear-gradient(145deg, hsl(220 18% 9%), hsl(225 20% 6%));
     background-attachment: fixed;
   }
 
@@ -92,81 +92,75 @@
 @layer utilities {
   .glass-card {
     @apply bg-card border border-border rounded-xl;
-    background: linear-gradient(145deg, hsl(0 0% 100%), hsl(38 32% 98%));
-    box-shadow: 0 1px 2px hsl(225 18% 14% / 0.03), 0 12px 30px hsl(225 18% 14% / 0.045);
+    background: linear-gradient(145deg, hsl(220 17% 14%), hsl(224 20% 10%));
+    border-color: hsl(215 18% 35% / 0.55);
+    box-shadow: inset 0 1px 0 hsl(210 30% 96% / 0.07), 0 18px 42px hsl(225 30% 2% / 0.28);
   }
 
-  /* ─── Inverted "light" section ───────────────────────────────────────
-     White surface for marketing and legal pages. Re-scopes the design
-     tokens so all child semantic classes (text-foreground, bg-card,
-     border-border, glass-card…) flip cleanly without hardcoded colors.
-     The gold primary is darkened slightly here for AA contrast on white. */
+  /* Shared graphite-metal surface for marketing sections and KPI cards. */
   .section-light {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 6%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 6%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 6%;
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 32%;
-    --border: 0 0% 88%;
-    --input: 0 0% 88%;
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 10%;
-    --primary: 38 92% 42%;          /* darker gold for AA on white */
-    --primary-foreground: 0 0% 100%;
-    --accent: 38 92% 42%;
-    --accent-foreground: 0 0% 100%;
-    --ring: 38 92% 42%;
-    background-color: hsl(0 0% 100%) !important;
+    --background: 222 18% 10%;
+    --foreground: 213 25% 93%;
+    --card: 220 17% 13%;
+    --card-foreground: 213 25% 93%;
+    --popover: 220 17% 12%;
+    --popover-foreground: 213 25% 93%;
+    --muted: 220 16% 16%;
+    --muted-foreground: 216 12% 68%;
+    --border: 218 15% 25%;
+    --input: 218 15% 25%;
+    --secondary: 220 16% 17%;
+    --secondary-foreground: 213 20% 90%;
+    --primary: 196 92% 62%;
+    --primary-foreground: 222 25% 8%;
+    --accent: 196 92% 62%;
+    --accent-foreground: 222 25% 8%;
+    --ring: 196 92% 62%;
+    background: linear-gradient(145deg, hsl(220 17% 12%), hsl(224 20% 8%)) !important;
     color: hsl(var(--foreground));
-    /* Lift above the fixed aurora overlay so the white surface stays clean */
     position: relative;
     z-index: 1;
     isolation: isolate;
   }
   .section-light .glass-card {
-    background: linear-gradient(135deg, hsl(0 0% 100%), hsl(0 0% 97%));
-    border-color: hsl(0 0% 90%);
-    box-shadow: 0 1px 2px hsl(0 0% 0% / 0.04), 0 8px 24px hsl(0 0% 0% / 0.06);
+    background: linear-gradient(145deg, hsl(220 17% 16%), hsl(224 20% 11%));
+    border-color: hsl(210 20% 42% / 0.55);
+    box-shadow: inset 0 1px 0 hsl(210 30% 96% / 0.08), 0 12px 32px hsl(225 30% 2% / 0.3);
   }
   .section-light .text-gradient-gold {
-    background: linear-gradient(135deg, hsl(38 92% 38%), hsl(28 95% 42%));
+    background: linear-gradient(135deg, hsl(210 24% 88%), hsl(var(--primary)));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
   .section-light .gradient-gold {
-    background: linear-gradient(135deg, hsl(38 92% 42%), hsl(28 95% 45%));
+    background: linear-gradient(135deg, hsl(210 24% 88%), hsl(var(--primary)) 56%, hsl(205 28% 38%));
   }
   .section-light .glow-gold {
-    box-shadow: 0 0 24px hsl(38 92% 42% / 0.18);
+    box-shadow: 0 0 24px hsl(196 92% 58% / 0.2);
   }
 
-  /* ─── Gold-emphasis dashboard mode ───────────────────────────────────
-     Optional theme variant applied to <body> via the toggle. Boosts gold
-     saturation and lifts surface contrast for a more "premium" feel. */
-  .theme-gold-emphasis {
-    --primary: 38 92% 39%;
-    --ring: 38 92% 39%;
-    --card: 0 0% 100%;
-    --border: 38 30% 78%;
-    --muted-foreground: 225 10% 36%;
+  /* Optional brighter titanium surfaces, selected in the appearance menu. */
+  .theme-metal-emphasis {
+    --primary: 196 92% 64%;
+    --ring: 196 92% 64%;
+    --card: 220 17% 14%;
+    --border: 215 18% 33%;
+    --muted-foreground: 216 12% 70%;
   }
-  .theme-gold-emphasis .glass-card {
-    background: linear-gradient(145deg, hsl(0 0% 100%), hsl(42 55% 97%));
-    border-color: hsl(43 55% 75% / 0.8);
+  .theme-metal-emphasis .glass-card {
+    background: linear-gradient(145deg, hsl(215 16% 19%), hsl(222 19% 12%));
+    border-color: hsl(210 22% 47% / 0.75);
   }
-  .theme-gold-emphasis .glow-gold {
-    box-shadow: 0 0 28px hsl(45 100% 58% / 0.30);
+  .theme-metal-emphasis .glow-gold {
+    box-shadow: 0 0 28px hsl(196 92% 58% / 0.30);
   }
-  .theme-gold-emphasis .kpi-highlight {
+  .theme-metal-emphasis .kpi-highlight {
     box-shadow: 0 1px 2px hsl(0 0% 0% / 0.04),
                 0 10px 30px hsl(0 0% 0% / 0.10),
-                0 0 0 1px hsl(45 100% 58% / 0.18);
+                0 0 0 1px hsl(196 92% 58% / 0.20);
   }
-  .theme-gold-emphasis .kpi-highlight::before {
-    background: linear-gradient(135deg, hsl(45 100% 58% / 0.7), transparent 60%);
+  .theme-metal-emphasis .kpi-highlight::before {
+    background: linear-gradient(135deg, hsl(210 28% 90% / 0.55), transparent 60%);
   }
 
   /* ─── Highlight KPI card microinteractions ─────────────────────────── */
@@ -176,7 +170,7 @@
                 box-shadow 0.35s ease;
     box-shadow: 0 1px 2px hsl(0 0% 0% / 0.04),
                 0 10px 30px hsl(0 0% 0% / 0.08),
-                0 0 0 1px hsl(38 92% 42% / 0.06);
+                0 0 0 1px hsl(196 92% 58% / 0.10);
   }
   .kpi-highlight::before {
     content: "";
@@ -184,7 +178,7 @@
     inset: -1px;
     border-radius: inherit;
     padding: 1px;
-    background: linear-gradient(135deg, hsl(38 92% 42% / 0.55), transparent 60%);
+    background: linear-gradient(135deg, hsl(210 28% 90% / 0.55), hsl(196 92% 58% / 0.16), transparent 65%);
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask-composite: xor;
             mask-composite: exclude;
@@ -197,7 +191,7 @@
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    background: radial-gradient(120% 80% at 0% 0%, hsl(45 100% 55% / 0.10), transparent 55%);
+    background: radial-gradient(120% 80% at 0% 0%, hsl(196 92% 58% / 0.12), transparent 55%);
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.4s ease;
@@ -206,18 +200,18 @@
     transform: translateY(-3px);
     box-shadow: 0 4px 8px hsl(0 0% 0% / 0.06),
                 0 22px 40px hsl(0 0% 0% / 0.10),
-                0 0 0 1px hsl(38 92% 42% / 0.18);
+                0 0 0 1px hsl(196 92% 58% / 0.22);
   }
   .kpi-highlight:hover::before { opacity: 1; }
   .kpi-highlight:hover::after  { opacity: 1; }
 
-  @keyframes kpiPulseGold {
-    0%, 100% { box-shadow: 0 0 0 0 hsl(38 92% 42% / 0.0),
+  @keyframes kpiPulseMetal {
+    0%, 100% { box-shadow: 0 0 0 0 hsl(196 92% 58% / 0.0),
                            0 10px 30px hsl(0 0% 0% / 0.08); }
-    50%      { box-shadow: 0 0 0 6px hsl(38 92% 42% / 0.10),
+    50%      { box-shadow: 0 0 0 6px hsl(196 92% 58% / 0.12),
                            0 14px 34px hsl(0 0% 0% / 0.10); }
   }
-  .kpi-highlight.kpi-pulse { animation: kpiPulseGold 2.8s ease-in-out infinite; }
+  .kpi-highlight.kpi-pulse { animation: kpiPulseMetal 2.8s ease-in-out infinite; }
 
   /* ─── Reduce motion mode ─────────────────────────────────────────────
      Toggled via <body class="reduce-motion"> by ThemeAccentContext. Disables
@@ -242,15 +236,15 @@
   }
 
   .glow-gold {
-    box-shadow: 0 0 20px hsl(43 96% 56% / 0.15);
+    box-shadow: 0 0 20px hsl(196 92% 58% / 0.2);
   }
 
   .gradient-gold {
-    background: linear-gradient(135deg, hsl(43 96% 56%), hsl(35 100% 50%));
+    background: linear-gradient(135deg, hsl(210 24% 88%), hsl(var(--primary)) 56%, hsl(205 28% 38%));
   }
 
   .text-gradient-gold {
-    background: linear-gradient(135deg, hsl(43 96% 56%), hsl(35 100% 50%));
+    background: linear-gradient(135deg, hsl(210 24% 88%), hsl(var(--primary)) 55%, hsl(205 28% 55%));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }

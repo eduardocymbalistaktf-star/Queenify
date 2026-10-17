@@ -314,7 +314,7 @@ const DashboardHeader = ({ onMenuToggle, supportOpen = false, onSupportChange }:
 
         <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
           {/* Theme & motion menu (centralized) */}
-          {!isMobile && <DashboardThemeMenu />}
+          <DashboardThemeMenu />
           {/* Notifications Bell */}
           <div className="relative" ref={notifRef}>
             <button

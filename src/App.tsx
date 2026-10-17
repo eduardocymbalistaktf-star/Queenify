@@ -22,7 +22,6 @@ const Boost = lazy(() => import("./pages/Boost"));
 const Trackeamento = lazy(() => import("./pages/Trackeamento"));
 const Tutoriais = lazy(() => import("./pages/Tutoriais"));
 const Denuncias = lazy(() => import("./pages/Denuncias"));
-const AulasQueenify = lazy(() => import("./pages/AulasQueenify"));
 const Colaboradores = lazy(() => import("./pages/Colaboradores"));
 const PainelAluno = lazy(() => import("./pages/PainelAluno"));
 const Cupons = lazy(() => import("./pages/Cupons"));
@@ -44,7 +43,6 @@ const Taxas = lazy(() => import("./pages/Taxas"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const Ajuda = lazy(() => import("./pages/Ajuda"));
 const SobreNos = lazy(() => import("./pages/SobreNos"));
-const CursosQueenify = lazy(() => import("./pages/CursosQueenify"));
 const TermosDeUso = lazy(() => import("./pages/TermosDeUso"));
 const PoliticaPrivacidade = lazy(() => import("./pages/PoliticaPrivacidade"));
 const PoliticaConteudo = lazy(() => import("./pages/PoliticaConteudo"));
@@ -125,7 +123,7 @@ const App = () => {
             <Route path="/faq" element={<FAQ />} />
             <Route path="/ajuda" element={<Ajuda />} />
             <Route path="/sobre" element={<SobreNos />} />
-            <Route path="/cursos-queenify" element={<CursosQueenify />} />
+            <Route path="/cursos-queenify" element={<Navigate to="/faq?search=curso" replace />} />
             <Route path="/termos-de-uso" element={<TermosDeUso />} />
             <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
             <Route path="/politica-de-conteudo" element={<PoliticaConteudo />} />
@@ -160,7 +158,7 @@ const App = () => {
             <Route path="/anuncios" element={<Navigate to="/trackeamento" replace />} />
             <Route path="/tutoriais" element={<ProtectedRoute><Tutoriais /></ProtectedRoute>} />
             <Route path="/denuncias" element={<ProtectedRoute><Denuncias /></ProtectedRoute>} />
-            <Route path="/aulas" element={<ProtectedRoute><AulasQueenify /></ProtectedRoute>} />
+            <Route path="/aulas" element={<Navigate to="/painel-aluno" replace />} />
             <Route path="/colaboradores" element={<ProtectedRoute><Colaboradores /></ProtectedRoute>} />
             <Route path="/painel-aluno" element={<ProtectedRoute><PainelAluno /></ProtectedRoute>} />
             <Route path="/curso/:courseId" element={<ProtectedRoute><CursoPlayer /></ProtectedRoute>} />

@@ -4,7 +4,6 @@ import { Filter, Users, Calendar, Tag, ShoppingCart, CreditCard, TrendingUp, Che
 interface SegmentationPanelProps {
   allSales: any[];
   products: any[];
-  onSegmentChange: (emails: { email: string; name: string }[]) => void;
 }
 
 type SegmentFilter = {
@@ -15,7 +14,7 @@ type SegmentFilter = {
   hasRepurchased: "all" | "yes" | "no";
 };
 
-const SegmentationPanel = ({ allSales, products, onSegmentChange }: SegmentationPanelProps) => {
+const SegmentationPanel = ({ allSales, products }: SegmentationPanelProps) => {
   const [filters, setFilters] = useState<SegmentFilter>({
     productIds: [],
     status: "completed",
@@ -72,11 +71,6 @@ const SegmentationPanel = ({ allSales, products, onSegmentChange }: Segmentation
     return buyers;
   }, [allSales, filters]);
 
-  // Notify parent
-  useMemo(() => {
-    onSegmentChange(segmentedBuyers.map(b => ({ email: b.email, name: b.name })));
-  }, [segmentedBuyers]);
-
   const toggleProduct = (id: string) => {
     setFilters(f => ({
       ...f,
@@ -99,6 +93,7 @@ const SegmentationPanel = ({ allSales, products, onSegmentChange }: Segmentation
           </span>
         </div>
       </div>
+      <p className="text-[10px] text-muted-foreground">Use os filtros para analisar sua base. O envio de campanhas ainda exige um provedor de e-mail conectado.</p>
 
       {/* Quick filters */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
