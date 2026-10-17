@@ -45,7 +45,7 @@ const DashboardThemeMenu = () => {
             }`}
           >
             <Moon className="w-4 h-4" />
-            <span className="flex-1 text-left">Preto-âncora</span>
+            <span className="flex-1 text-left">Areia e grafite</span>
             {accent === "anchor" && <Check className="w-3.5 h-3.5 text-primary" />}
           </button>
 
@@ -56,7 +56,7 @@ const DashboardThemeMenu = () => {
             }`}
           >
             <Sun className="w-4 h-4" />
-            <span className="flex-1 text-left">Realce dourado</span>
+            <span className="flex-1 text-left">Destaque dourado</span>
             {accent === "gold-emphasis" && <Check className="w-3.5 h-3.5 text-primary" />}
           </button>
 

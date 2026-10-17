@@ -1,7 +1,7 @@
 import DashboardLayout from "@/layouts/DashboardLayout";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Filter, Star, ShoppingCart, TrendingUp, X, MessageSquare, CheckCircle, Loader2, Trophy, Crown, Award } from "lucide-react";
+import { Search, Filter, Star, ShoppingCart, MessageSquare, CheckCircle, Loader2, Trophy, Crown, RefreshCw } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -23,26 +23,6 @@ const RatingStars = ({ rating, size = "sm" }: { rating: number; size?: "sm" | "m
   );
 };
 
-const topSellerRewards = [
-  {
-    range: "Top 1-5",
-    icon: Trophy,
-    color: "text-primary",
-    benefits: [
-      "Destaque de 30 dias gratuito (aparecer mais no marketplace)",
-      "Curso da sua escolha gratuito (obrigatório ser um dos seus próprios cursos — afiliados não têm direito)",
-    ],
-  },
-  {
-    range: "Top 6-10",
-    icon: Award,
-    color: "text-muted-foreground",
-    benefits: [
-      "Destaque de 15 dias gratuito (aparecer mais no marketplace)",
-    ],
-  },
-];
-
 const Marketplace = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -57,7 +37,7 @@ const Marketplace = () => {
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState("");
 
-  const { data: products = [], isLoading } = useQuery({
+  const { data: products = [], isLoading, isError: productsError, refetch: refetchProducts } = useQuery({
     queryKey: ["marketplace-products"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -83,19 +63,6 @@ const Marketplace = () => {
     },
   });
 
-  // Fetch sales to compute top sellers
-  const { data: salesData = [] } = useQuery({
-    queryKey: ["marketplace-sales-ranking"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("sales")
-        .select("user_id, amount")
-        .eq("status", "completed");
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
   // Fetch profiles for top sellers
   const { data: profiles = [] } = useQuery({
     queryKey: ["marketplace-profiles"],
@@ -111,8 +78,8 @@ const Marketplace = () => {
   // Compute top sellers
   const topSellers = (() => {
     const sellerMap = new Map<string, number>();
-    salesData.forEach((s: any) => {
-      sellerMap.set(s.user_id, (sellerMap.get(s.user_id) || 0) + Number(s.amount));
+    products.forEach((product: any) => {
+      sellerMap.set(product.user_id, (sellerMap.get(product.user_id) || 0) + Number(product.total_sales || 0));
     });
     return Array.from(sellerMap.entries())
       .sort((a, b) => b[1] - a[1])
@@ -147,15 +114,17 @@ const Marketplace = () => {
       const { error } = await supabase.from("product_reviews").insert({
         product_id: selectedProduct.id,
         reviewer_id: user.id,
-        reviewer_name: user.email?.split("@")[0] || "Usuário",
+        reviewer_name: user.user_metadata?.full_name || user.user_metadata?.display_name || "Usuário",
         rating: reviewRating,
         comment: reviewComment || null,
+        is_approved: false,
+        is_verified_purchase: false,
       });
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["marketplace-reviews"] });
-      toast.success("Avaliação enviada!");
+      toast.success("Avaliação enviada para análise.");
       setShowReviewForm(false);
       setReviewComment("");
       setReviewRating(5);
@@ -187,9 +156,16 @@ const Marketplace = () => {
 
   return (
     <DashboardLayout>
-      <div className="mb-6">
-        <h1 className="text-2xl font-display font-bold text-foreground">Marketplace</h1>
-        <p className="text-sm text-muted-foreground">Descubra produtos para promover como afiliado.</p>
+      <div className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-primary">Vitrine Queenify</p>
+          <h1 className="text-3xl font-display font-bold tracking-tight text-foreground">Marketplace</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Encontre produtos para promover e acompanhe os destaques da comunidade.</p>
+        </div>
+        <div className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs text-muted-foreground shadow-sm">
+          <span className="h-2 w-2 rounded-full bg-success" />
+          {productsError || isLoading ? "Vitrine atualizando" : `${products.length} ${products.length === 1 ? "produto ativo" : "produtos ativos"}`}
+        </div>
       </div>
 
       {/* Top Sellers Section */}
@@ -197,11 +173,12 @@ const Marketplace = () => {
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-4">
             <Trophy className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-display font-bold text-foreground">Top Vendedores</h2>
+            <h2 className="text-lg font-display font-bold text-foreground">Produtores em destaque</h2>
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-1 gap-4 mb-4">
             {/* Ranking list */}
             <div className="glass-card p-4">
+              <p className="mb-3 text-xs text-muted-foreground">Ranking por vendas registradas em produtos ativos. Valores financeiros individuais não são exibidos.</p>
               <div className="space-y-2">
                 {topSellers.map(seller => (
                   <div key={seller.userId} className={`flex items-center gap-3 p-2.5 rounded-lg transition-colors ${
@@ -221,52 +198,22 @@ const Marketplace = () => {
                           <Star className="w-3.5 h-3.5 text-primary fill-primary flex-shrink-0" />
                         )}
                       </div>
-                      <p className="text-[10px] text-muted-foreground">
-                        R$ {seller.totalSales.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} em vendas
-                      </p>
+                      <p className="text-[10px] text-muted-foreground">{seller.totalSales.toLocaleString("pt-BR")} vendas registradas</p>
                     </div>
-                    {seller.rank <= 5 && (
-                      <span className="text-[9px] px-2 py-0.5 rounded-full bg-success/10 text-success font-medium flex-shrink-0">30 dias grátis</span>
-                    )}
-                    {seller.rank > 5 && seller.rank <= 10 && (
-                      <span className="text-[9px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium flex-shrink-0">15 dias grátis</span>
-                    )}
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Rewards info */}
-            <div className="space-y-3">
-              {topSellerRewards.map(r => (
-                <div key={r.range} className="glass-card p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <r.icon className={`w-4 h-4 ${r.color}`} />
-                    <h4 className="text-sm font-semibold text-foreground">{r.range}</h4>
-                  </div>
-                  <ul className="space-y-1.5">
-                    {r.benefits.map((b, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <CheckCircle className="w-3 h-3 text-success mt-0.5 flex-shrink-0" />
-                        <span className="text-xs text-muted-foreground leading-tight">{b}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-              <div className="glass-card p-4 border-primary/20">
-                <div className="flex items-center gap-2 mb-2">
-                  <Star className="w-4 h-4 text-primary fill-primary" />
-                  <h4 className="text-sm font-semibold text-foreground">Sistema de Estrelas</h4>
-                </div>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  O <strong className="text-foreground">Top 1</strong> ganha uma ⭐ estrela acumulativa a cada período no topo. 
-                  Ao reunir <strong className="text-foreground">5 estrelas</strong>, o produtor recebe uma <strong className="text-primary">moldura personalizada de Top 1 Queenify</strong> e 
-                  o <strong className="text-foreground">Boost de 90 dias gratuito</strong>.
-                </p>
-              </div>
-            </div>
           </div>
+        </div>
+      )}
+
+      {productsError && (
+        <div className="glass-card mb-5 flex flex-col items-center gap-3 px-6 py-10 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-destructive/10 text-destructive"><RefreshCw className="h-5 w-5" /></div>
+          <div><h2 className="font-semibold text-foreground">Não foi possível carregar os produtos</h2><p className="mt-1 text-sm text-muted-foreground">Confira sua conexão e tente novamente.</p></div>
+          <button onClick={() => refetchProducts()} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Tentar novamente</button>
         </div>
       )}
 
@@ -318,7 +265,7 @@ const Marketplace = () => {
       {/* Products Grid */}
       {isLoading ? (
         <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
-      ) : filtered.length === 0 ? (
+      ) : productsError ? null : filtered.length === 0 ? (
         <div className="text-center py-12">
           <ShoppingCart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-display font-bold text-foreground mb-2">Nenhum produto encontrado</h3>
@@ -331,9 +278,9 @@ const Marketplace = () => {
             const avgRating = getAvgRating(p.id);
             const sellerRank = topSellers.find(s => s.userId === p.user_id)?.rank;
             const isTopSeller = sellerRank !== undefined && sellerRank <= 5;
-            const isPremium = (p.total_sales || 0) >= 50;
+            const isPopular = (p.total_sales || 0) >= 50;
             return (
-              <div key={p.id} className="glass-card p-4 cursor-pointer hover:border-primary/30 transition-all relative" onClick={() => setSelectedProduct(p)}>
+              <div key={p.id} className="glass-card p-4 transition-all relative">
                 {/* Boost badges */}
                 <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
                   {isTopSeller && (
@@ -341,9 +288,9 @@ const Marketplace = () => {
                       <Trophy className="w-3 h-3" /> Em Destaque
                     </span>
                   )}
-                  {isPremium && (
+                  {isPopular && (
                     <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-foreground/80 text-background text-[10px] font-bold backdrop-blur-sm">
-                      <Crown className="w-3 h-3" /> Premium
+                      <Crown className="w-3 h-3" /> Popular
                     </span>
                   )}
                 </div>
@@ -456,14 +403,15 @@ const Marketplace = () => {
                       <p className="text-xs text-muted-foreground">Nota:</p>
                       <div className="flex gap-1">
                         {[1, 2, 3, 4, 5].map(i => (
-                          <button key={i} onClick={() => setReviewRating(i)}>
+                          <button key={i} onClick={() => setReviewRating(i)} aria-label={`${i} ${i === 1 ? "estrela" : "estrelas"}`} aria-pressed={reviewRating === i}>
                             <Star className={`w-5 h-5 ${i <= reviewRating ? "text-primary fill-primary" : "text-muted-foreground/30"}`} />
                           </button>
                         ))}
                       </div>
                     </div>
-                    <textarea value={reviewComment} onChange={e => setReviewComment(e.target.value)} placeholder="Escreva sua avaliação..."
+                    <textarea value={reviewComment} onChange={e => setReviewComment(e.target.value)} placeholder="Escreva sua avaliação..." maxLength={3000}
                       className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm text-foreground resize-none" rows={3} />
+                    <p className="text-right text-[10px] text-muted-foreground">{reviewComment.length}/3000</p>
                     <button onClick={() => submitReview.mutate()} disabled={submitReview.isPending}
                       className="w-full py-2 rounded-lg gradient-gold text-primary-foreground text-xs font-bold disabled:opacity-50">
                       {submitReview.isPending ? "Enviando..." : "Enviar Avaliação"}

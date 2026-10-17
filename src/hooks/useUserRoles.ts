@@ -51,4 +51,8 @@ export function useHasRole(role: AppRole) {
 // Only admin page requires special permission - all other pages are accessible to authenticated producers
 export const ROUTE_PERMISSIONS: Record<string, string> = {
   "/admin": "gerenciar_roles",
+  "/admin/auditoria-seguranca": "gerenciar_roles",
+  "/dashboard/audit": "gerenciar_roles",
+  "/dashboard/audit/events": "gerenciar_roles",
+  "/dashboard/audit/headers": "gerenciar_roles",
 };

@@ -44,13 +44,38 @@ button:disabled {
 }
 
 .glass-card {
-  box-shadow: 0 14px 38px hsl(0 0% 0% / 0.12);
+  box-shadow: 0 1px 2px hsl(225 18% 14% / 0.03), 0 12px 30px hsl(225 18% 14% / 0.045);
   transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
 }
 
 .glass-card:hover {
-  border-color: hsl(var(--primary) / 0.22);
-  box-shadow: 0 18px 44px hsl(0 0% 0% / 0.18);
+  border-color: hsl(var(--primary) / 0.28);
+  box-shadow: 0 4px 12px hsl(225 18% 14% / 0.045), 0 18px 42px hsl(225 18% 14% / 0.08);
+}
+
+.dashboard-sidebar {
+  box-shadow: 10px 0 32px hsl(260 24% 10% / 0.09);
+}
+
+.dashboard-sidebar .text-muted-foreground {
+  color: hsl(var(--sidebar-foreground) / 0.68);
+}
+
+.dashboard-sidebar .border-border {
+  border-color: hsl(var(--sidebar-border));
+}
+
+.dashboard-sidebar .bg-secondary {
+  background-color: hsl(var(--sidebar-accent));
+}
+
+.dashboard-main > * {
+  animation: dashboard-enter 360ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes dashboard-enter {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

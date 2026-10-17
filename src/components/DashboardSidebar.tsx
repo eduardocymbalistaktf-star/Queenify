@@ -117,10 +117,10 @@ const DashboardSidebar = ({ onNavigate, onOpenSupport }: DashboardSidebarProps) 
     item.children?.some(c => location.pathname === c.path) || false;
 
   return (
-    <aside className="w-64 h-full max-h-screen bg-sidebar border-r border-sidebar-border flex flex-col overflow-hidden">
+    <aside className="dashboard-sidebar w-64 h-full max-h-screen bg-sidebar border-r border-sidebar-border flex flex-col overflow-hidden">
       <div className="p-6 flex items-center gap-3">
         <img src={queenifyBee} alt="Queenify" className="h-8 w-auto" />
-        <span className="font-display text-xl font-bold text-foreground">Queenify</span>
+        <span className="font-display text-xl font-bold text-sidebar-foreground">Queenify</span>
       </div>
 
       <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
@@ -133,6 +133,7 @@ const DashboardSidebar = ({ onNavigate, onOpenSupport }: DashboardSidebarProps) 
               <div key={item.label}>
                 <button
                   onClick={() => toggleExpand(item.label)}
+                  aria-expanded={isExpanded}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
                     childActive
                       ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
@@ -152,6 +153,7 @@ const DashboardSidebar = ({ onNavigate, onOpenSupport }: DashboardSidebarProps) 
                         <button
                           key={child.path}
                           onClick={() => handleNavigate(child.path)}
+                          aria-current={isActive ? "page" : undefined}
                           className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs transition-all ${
                             isActive
                               ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
@@ -179,6 +181,7 @@ const DashboardSidebar = ({ onNavigate, onOpenSupport }: DashboardSidebarProps) 
             <button
               key={item.label}
               onClick={() => handleNavigate(item.path!)}
+              aria-current={isActive ? "page" : undefined}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
                 isActive
                   ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
@@ -207,13 +210,13 @@ const DashboardSidebar = ({ onNavigate, onOpenSupport }: DashboardSidebarProps) 
         </div>
         <div>
           <p className="text-sm text-sidebar-accent-foreground font-medium">Suporte</p>
-          <p className="text-xs text-muted-foreground">Central de ajuda</p>
+        <p className="text-xs text-sidebar-foreground/65">Central de ajuda</p>
         </div>
       </div>
       <div className="px-4 pb-4">
         <button
           onClick={() => navigate("/termos")}
-          className="flex items-center gap-2 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+          className="flex items-center gap-2 text-[11px] text-sidebar-foreground/65 hover:text-sidebar-foreground transition-colors"
         >
           <FileText className="w-3 h-3" />
           Termos e Políticas

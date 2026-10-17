@@ -12,6 +12,7 @@ import frameSilver from "@/assets/frame-silver.png";
 import frameGold from "@/assets/frame-gold.png";
 import frameCrown from "@/assets/frame-crown.png";
 import DashboardThemeMenu from "@/components/DashboardThemeMenu";
+import { toast } from "sonner";
 
 const frameMap: Record<string, string> = {
   Bronze: frameBronze,
@@ -76,8 +77,9 @@ const DashboardHeader = ({ onMenuToggle, supportOpen = false, onSupportChange }:
   const searchRef = useRef<HTMLDivElement>(null);
   const [supportMessage, setSupportMessage] = useState("");
   const [chatMessages, setChatMessages] = useState([
-    { from: "bot", text: "Olá! 👋 Sou o assistente da Queenify. Como posso ajudar?" },
+    { from: "bot", text: "Olá! Sou a assistente QueenIA. Escreva sua dúvida para consultar o suporte." },
   ]);
+  const [supportLoading, setSupportLoading] = useState(false);
   const [notifList, setNotifList] = useState<Notification[]>([]);
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -185,22 +187,26 @@ const DashboardHeader = ({ onMenuToggle, supportOpen = false, onSupportChange }:
     ).slice(0, 3).map(p => ({ label: p.label, path: p.path, type: "Página", icon: Search }));
 
     setSearchResults(pageResults);
+    if (!user) return;
 
     // Debounce DB search
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
     searchTimerRef.current = setTimeout(async () => {
       setSearchLoading(true);
       try {
-        const [productsRes, coursesRes, salesRes] = await Promise.all([
-          supabase.from("products").select("id, name").ilike("name", `%${q}%`).limit(3),
-          supabase.from("courses").select("id, name").ilike("name", `%${q}%`).limit(3),
-          supabase.from("sales").select("id, buyer_name, buyer_email").or(`buyer_name.ilike.%${q}%,buyer_email.ilike.%${q}%`).limit(3),
+        const [productsRes, coursesRes, buyerNameRes, buyerEmailRes] = await Promise.all([
+          supabase.from("products").select("id, name").eq("user_id", user!.id).ilike("name", `%${q}%`).limit(3),
+          supabase.from("courses").select("id, name").eq("user_id", user!.id).ilike("name", `%${q}%`).limit(3),
+          supabase.from("sales").select("id, buyer_name, buyer_email").eq("user_id", user!.id).ilike("buyer_name", `%${q}%`).limit(3),
+          supabase.from("sales").select("id, buyer_name, buyer_email").eq("user_id", user!.id).ilike("buyer_email", `%${q}%`).limit(3),
         ]);
 
         const dbResults: typeof searchResults = [];
         (productsRes.data || []).forEach(p => dbResults.push({ label: p.name, path: "/meus-produtos", type: "Produto", icon: Package }));
         (coursesRes.data || []).forEach(c => dbResults.push({ label: c.name, path: "/area-membros", type: "Curso", icon: GraduationCap }));
-        (salesRes.data || []).forEach(s => dbResults.push({ label: `${s.buyer_name || s.buyer_email}`, path: "/vendas", type: "Venda", icon: ShoppingCart }));
+        const matchedSales = [...(buyerNameRes.data || []), ...(buyerEmailRes.data || [])];
+        const uniqueSales = [...new Map(matchedSales.map(s => [s.id, s])).values()];
+        uniqueSales.forEach(s => dbResults.push({ label: `${s.buyer_name || s.buyer_email}`, path: "/vendas", type: "Venda", icon: ShoppingCart }));
 
         setSearchResults(prev => [...prev.filter(r => r.type === "Página"), ...dbResults].slice(0, 8));
       } catch {} finally {
@@ -209,26 +215,55 @@ const DashboardHeader = ({ onMenuToggle, supportOpen = false, onSupportChange }:
     }, 300);
   };
 
-  const sendMessage = () => {
-    if (!supportMessage.trim()) return;
-    setChatMessages(prev => [...prev, { from: "user", text: supportMessage }]);
+  const sendMessage = async () => {
+    const message = supportMessage.trim();
+    if (!message || supportLoading || !user) return;
+    const history = [...chatMessages, { from: "user", text: message }].slice(-20);
+    setChatMessages(history);
     setSupportMessage("");
-    setTimeout(() => {
-      setChatMessages(prev => [...prev, { from: "bot", text: "Obrigado pela mensagem! Um membro da equipe irá responder em breve. 🐝" }]);
-    }, 1000);
-  };
+    setSupportLoading(true);
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      if (!supabaseUrl || !publishableKey) throw new Error("O suporte está indisponível neste ambiente.");
 
-  const markAllRead = async () => {
-    setNotifList(prev => prev.map(n => ({ ...n, is_read: true })));
-    if (user) {
-      await supabase.from("notifications").update({ is_read: true }).eq("user_id", user.id).eq("is_read", false);
+      const response = await fetch(`${supabaseUrl}/functions/v1/support-chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${publishableKey}` },
+        body: JSON.stringify({
+          messages: history.map(({ from, text }) => ({ role: from === "bot" ? "assistant" : "user", content: text })),
+        }),
+      });
+      const responseBody = await response.text();
+      if (!response.ok) {
+        let errorMessage = "O suporte não conseguiu responder agora.";
+        try { errorMessage = JSON.parse(responseBody).error || errorMessage; } catch { /* use friendly fallback */ }
+        throw new Error(errorMessage);
+      }
+
+      const reply = responseBody.split("\n").reduce((text, line) => {
+        if (!line.startsWith("data: ") || line.slice(6).trim() === "[DONE]") return text;
+        try { return text + (JSON.parse(line.slice(6)).choices?.[0]?.delta?.content || ""); }
+        catch { return text; }
+      }, "").trim();
+      if (!reply) throw new Error("O suporte retornou uma resposta vazia. Tente novamente.");
+      setChatMessages(prev => [...prev, { from: "bot", text: reply }]);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível conectar ao suporte.");
+    } finally {
+      setSupportLoading(false);
     }
   };
 
-  const closeAll = () => {
-    setShowNotifications(false);
-    setShowProfile(false);
-    setShowHelp(false);
+  const markAllRead = async () => {
+    if (!user) return;
+    const previous = notifList;
+    setNotifList(previous.map(n => ({ ...n, is_read: true })));
+    const { error } = await supabase.from("notifications").update({ is_read: true }).eq("user_id", user.id).eq("is_read", false);
+    if (error) {
+      setNotifList(previous);
+      toast.error("Não foi possível atualizar as notificações.");
+    }
   };
 
   return (
@@ -236,13 +271,13 @@ const DashboardHeader = ({ onMenuToggle, supportOpen = false, onSupportChange }:
       <header className="dashboard-topbar h-14 md:h-16 border-b border-border flex items-center justify-between px-3 md:px-6 gap-2">
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {isMobile && (
-            <button onClick={onMenuToggle} className="text-foreground p-1">
+            <button onClick={onMenuToggle} aria-label="Abrir navegação" className="text-foreground p-1">
               <Menu className="w-5 h-5" />
             </button>
           )}
 
           {isMobile ? (
-            <button onClick={() => setShowSearch(!showSearch)} className="text-muted-foreground p-1">
+            <button onClick={() => setShowSearch(!showSearch)} aria-label="Pesquisar" aria-expanded={showSearch} className="text-muted-foreground p-1">
               <Search className="w-5 h-5" />
             </button>
           ) : (
@@ -252,6 +287,7 @@ const DashboardHeader = ({ onMenuToggle, supportOpen = false, onSupportChange }:
                 type="text"
                 value={searchQuery}
                 onChange={e => handleSearch(e.target.value)}
+                aria-label="Pesquisar na Queenify"
                 placeholder="Pesquisar na Queenify..."
                 className="w-full bg-secondary rounded-lg pl-10 pr-4 py-2 text-sm text-foreground placeholder:text-muted-foreground border border-border focus:outline-none focus:ring-1 focus:ring-ring"
               />
@@ -283,6 +319,8 @@ const DashboardHeader = ({ onMenuToggle, supportOpen = false, onSupportChange }:
           <div className="relative" ref={notifRef}>
             <button
               onClick={() => { setShowNotifications(!showNotifications); setShowProfile(false); setShowHelp(false); }}
+              aria-label={unreadCount ? `Notificações, ${unreadCount} não lidas` : "Notificações"}
+              aria-expanded={showNotifications}
               className="relative text-muted-foreground hover:text-foreground transition-colors"
             >
               <Bell className="w-5 h-5" />
@@ -353,6 +391,8 @@ const DashboardHeader = ({ onMenuToggle, supportOpen = false, onSupportChange }:
           {/* Support Chat */}
           <button
             onClick={() => setShowSupport(!showSupport)}
+            aria-label="Abrir suporte"
+            aria-expanded={showSupport}
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
             <MessageSquare className="w-5 h-5" />
@@ -362,6 +402,8 @@ const DashboardHeader = ({ onMenuToggle, supportOpen = false, onSupportChange }:
           <div className="relative" ref={helpRef}>
             <button
               onClick={() => { setShowHelp(!showHelp); setShowNotifications(false); setShowProfile(false); }}
+              aria-label="Ajuda"
+              aria-expanded={showHelp}
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               <HelpCircle className="w-5 h-5" />
@@ -386,6 +428,8 @@ const DashboardHeader = ({ onMenuToggle, supportOpen = false, onSupportChange }:
           <div className="relative" ref={profileRef}>
             <button
               onClick={() => { setShowProfile(!showProfile); setShowNotifications(false); setShowHelp(false); }}
+              aria-label="Menu do perfil"
+              aria-expanded={showProfile}
               className={`flex items-center gap-2 ${isMobile ? '' : 'ml-2 pl-4 border-l border-border'}`}
             >
               <div className="relative flex-shrink-0" style={{ width: showFrame && userLevel ? 44 : 36, height: showFrame && userLevel ? 44 : 36 }}>
@@ -468,6 +512,7 @@ const DashboardHeader = ({ onMenuToggle, supportOpen = false, onSupportChange }:
               type="text"
               value={searchQuery}
               onChange={e => handleSearch(e.target.value)}
+              aria-label="Pesquisar na Queenify"
               placeholder="Pesquisar na Queenify..."
               autoFocus
               className="w-full bg-secondary rounded-lg pl-10 pr-4 py-2 text-sm text-foreground placeholder:text-muted-foreground border border-border focus:outline-none focus:ring-1 focus:ring-ring"
@@ -496,13 +541,13 @@ const DashboardHeader = ({ onMenuToggle, supportOpen = false, onSupportChange }:
       {/* Support Chat Widget */}
       {showSupport && (
         <div className={`fixed bottom-4 ${isMobile ? 'left-3 right-3' : 'right-4 w-80'} bg-card border border-border rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden`} style={{ height: isMobile ? 380 : 420 }}>
-          <div className="p-3 border-b border-border gradient-gold flex items-center gap-2">
+          <div className="p-3 border-b border-sidebar-border bg-sidebar flex items-center gap-2">
             <img src={queenifyBee} alt="" className="w-6 h-6" />
             <div>
-              <p className="text-sm font-semibold text-primary-foreground">Suporte Queenify</p>
-              <p className="text-[10px] text-primary-foreground/70">Online agora</p>
+              <p className="text-sm font-semibold text-sidebar-foreground">QueenIA · Suporte</p>
+              <p className="text-[10px] text-sidebar-foreground/65">Conectada à central de ajuda</p>
             </div>
-            <button onClick={() => setShowSupport(false)} className="ml-auto text-primary-foreground/70 hover:text-primary-foreground text-lg">×</button>
+            <button onClick={() => setShowSupport(false)} aria-label="Fechar suporte" className="ml-auto text-sidebar-foreground/65 hover:text-sidebar-foreground text-lg">×</button>
           </div>
           <div className="flex-1 overflow-y-auto p-3 space-y-2">
             {chatMessages.map((m, i) => (
@@ -517,17 +562,20 @@ const DashboardHeader = ({ onMenuToggle, supportOpen = false, onSupportChange }:
               </div>
             ))}
           </div>
+          {supportLoading && <p className="px-3 pb-1 text-[10px] text-muted-foreground" role="status">QueenIA está respondendo…</p>}
           <div className="p-3 border-t border-border flex gap-2">
             <input
               type="text"
               value={supportMessage}
+              maxLength={4000}
               onChange={(e) => setSupportMessage(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
               placeholder="Digite sua mensagem..."
+              disabled={supportLoading}
               className="flex-1 bg-secondary rounded-lg px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground border border-border focus:outline-none focus:ring-1 focus:ring-primary"
             />
-            <button onClick={sendMessage} className="px-3 py-2 rounded-lg gradient-gold text-primary-foreground text-xs font-medium">
-              Enviar
+            <button onClick={sendMessage} disabled={supportLoading || !supportMessage.trim()} className="px-3 py-2 rounded-lg gradient-gold text-primary-foreground text-xs font-medium disabled:opacity-50">
+              {supportLoading ? "Enviando" : "Enviar"}
             </button>
           </div>
         </div>

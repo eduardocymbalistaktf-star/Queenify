@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -8,70 +9,70 @@ import { TutorialGuideProvider } from "@/contexts/TutorialGuideContext";
 import { ThemeAccentProvider } from "@/contexts/ThemeAccentContext";
 import TutorialGuideOverlay from "@/components/TutorialGuideOverlay";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import Index from "./pages/Index";
-import Vendas from "./pages/Vendas";
-import MeusProdutos from "./pages/MeusProdutos";
-import Afiliados from "./pages/Afiliados";
-import Financeiro from "./pages/Financeiro";
-import Avisos from "./pages/Avisos";
-import Relatorios from "./pages/Relatorios";
-import Configuracoes from "./pages/Configuracoes";
-import Marketplace from "./pages/Marketplace";
-import Boost from "./pages/Boost";
-import Trackeamento from "./pages/Trackeamento";
-import Tutoriais from "./pages/Tutoriais";
-import Denuncias from "./pages/Denuncias";
-import AulasQueenify from "./pages/AulasQueenify";
-import Colaboradores from "./pages/Colaboradores";
-import PainelAluno from "./pages/PainelAluno";
-import Cupons from "./pages/Cupons";
-import RecuperacaoVendas from "./pages/RecuperacaoVendas";
-import FunilVendas from "./pages/FunilVendas";
-import AreaMembros from "./pages/AreaMembros";
+const Index = lazy(() => import("./pages/Index"));
+const Vendas = lazy(() => import("./pages/Vendas"));
+const MeusProdutos = lazy(() => import("./pages/MeusProdutos"));
+const Afiliados = lazy(() => import("./pages/Afiliados"));
+const Financeiro = lazy(() => import("./pages/Financeiro"));
+const Avisos = lazy(() => import("./pages/Avisos"));
+const Relatorios = lazy(() => import("./pages/Relatorios"));
+const Configuracoes = lazy(() => import("./pages/Configuracoes"));
+const Marketplace = lazy(() => import("./pages/Marketplace"));
+const Boost = lazy(() => import("./pages/Boost"));
+const Trackeamento = lazy(() => import("./pages/Trackeamento"));
+const Tutoriais = lazy(() => import("./pages/Tutoriais"));
+const Denuncias = lazy(() => import("./pages/Denuncias"));
+const AulasQueenify = lazy(() => import("./pages/AulasQueenify"));
+const Colaboradores = lazy(() => import("./pages/Colaboradores"));
+const PainelAluno = lazy(() => import("./pages/PainelAluno"));
+const Cupons = lazy(() => import("./pages/Cupons"));
+const RecuperacaoVendas = lazy(() => import("./pages/RecuperacaoVendas"));
+const FunilVendas = lazy(() => import("./pages/FunilVendas"));
+const AreaMembros = lazy(() => import("./pages/AreaMembros"));
 
-import Automacoes from "./pages/Automacoes";
-import Analytics from "./pages/Analytics";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
-import NotFound from "./pages/NotFound";
-import PublicProfile from "./pages/PublicProfile";
-import Landing from "./pages/Landing";
-import Checkout from "./pages/Checkout";
-import Taxas from "./pages/Taxas";
-import FAQ from "./pages/FAQ";
-import Ajuda from "./pages/Ajuda";
-import SobreNos from "./pages/SobreNos";
-import CursosQueenify from "./pages/CursosQueenify";
-import TermosDeUso from "./pages/TermosDeUso";
-import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
-import PoliticaConteudo from "./pages/PoliticaConteudo";
-import LicencaSoftware from "./pages/LicencaSoftware";
-import TermosQueeniPay from "./pages/TermosQueeniPay";
-import TermosContaDigital from "./pages/TermosContaDigital";
-import PaginaDeStatus from "./pages/PaginaDeStatus";
-import ComunicacoesOficiais from "./pages/ComunicacoesOficiais";
-import Contato from "./pages/Contato";
-import DenunciasProduto from "./pages/DenunciasProduto";
-import ProibidoPlagio from "./pages/ProibidoPlagio";
-import TransparenciaSalarial from "./pages/TransparenciaSalarial";
-import CanalDenuncias from "./pages/CanalDenuncias";
-import Ouvidoria from "./pages/Ouvidoria";
-import CheckoutPersonalizar from "./pages/CheckoutPersonalizar";
-import ConviteColaboracao from "./pages/ConviteColaboracao";
-import TermosAnuncios from "./pages/TermosAnuncios";
-import TermosAfiliados from "./pages/TermosAfiliados";
-import RetencaoAlunos from "./pages/RetencaoAlunos";
-import CursoPlayer from "./pages/CursoPlayer";
-import ReportarBug from "./pages/ReportarBug";
-import Sugestoes from "./pages/Sugestoes";
-import Admin from "./pages/Admin";
-import AuditoriaSeguranca from "./pages/AuditoriaSeguranca";
-import HeadersChecker from "./pages/HeadersChecker";
-import AuditEvents from "./pages/AuditEvents";
-import EmailMarketing from "./pages/EmailMarketing";
-import Termos from "./pages/Termos";
+const Automacoes = lazy(() => import("./pages/Automacoes"));
+const Analytics = lazy(() => import("./pages/Analytics"));
+const Login = lazy(() => import("./pages/Login"));
+const Signup = lazy(() => import("./pages/Signup"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const PublicProfile = lazy(() => import("./pages/PublicProfile"));
+const Landing = lazy(() => import("./pages/Landing"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const Taxas = lazy(() => import("./pages/Taxas"));
+const FAQ = lazy(() => import("./pages/FAQ"));
+const Ajuda = lazy(() => import("./pages/Ajuda"));
+const SobreNos = lazy(() => import("./pages/SobreNos"));
+const CursosQueenify = lazy(() => import("./pages/CursosQueenify"));
+const TermosDeUso = lazy(() => import("./pages/TermosDeUso"));
+const PoliticaPrivacidade = lazy(() => import("./pages/PoliticaPrivacidade"));
+const PoliticaConteudo = lazy(() => import("./pages/PoliticaConteudo"));
+const LicencaSoftware = lazy(() => import("./pages/LicencaSoftware"));
+const TermosQueeniPay = lazy(() => import("./pages/TermosQueeniPay"));
+const TermosContaDigital = lazy(() => import("./pages/TermosContaDigital"));
+const PaginaDeStatus = lazy(() => import("./pages/PaginaDeStatus"));
+const ComunicacoesOficiais = lazy(() => import("./pages/ComunicacoesOficiais"));
+const Contato = lazy(() => import("./pages/Contato"));
+const DenunciasProduto = lazy(() => import("./pages/DenunciasProduto"));
+const ProibidoPlagio = lazy(() => import("./pages/ProibidoPlagio"));
+const TransparenciaSalarial = lazy(() => import("./pages/TransparenciaSalarial"));
+const CanalDenuncias = lazy(() => import("./pages/CanalDenuncias"));
+const Ouvidoria = lazy(() => import("./pages/Ouvidoria"));
+const CheckoutPersonalizar = lazy(() => import("./pages/CheckoutPersonalizar"));
+const ConviteColaboracao = lazy(() => import("./pages/ConviteColaboracao"));
+const TermosAnuncios = lazy(() => import("./pages/TermosAnuncios"));
+const TermosAfiliados = lazy(() => import("./pages/TermosAfiliados"));
+const RetencaoAlunos = lazy(() => import("./pages/RetencaoAlunos"));
+const CursoPlayer = lazy(() => import("./pages/CursoPlayer"));
+const ReportarBug = lazy(() => import("./pages/ReportarBug"));
+const Sugestoes = lazy(() => import("./pages/Sugestoes"));
+const Admin = lazy(() => import("./pages/Admin"));
+const AuditoriaSeguranca = lazy(() => import("./pages/AuditoriaSeguranca"));
+const HeadersChecker = lazy(() => import("./pages/HeadersChecker"));
+const AuditEvents = lazy(() => import("./pages/AuditEvents"));
+const EmailMarketing = lazy(() => import("./pages/EmailMarketing"));
+const Termos = lazy(() => import("./pages/Termos"));
 import { isSupabaseConfigured } from "@/integrations/supabase/client";
 
 const queryClient = new QueryClient();
@@ -110,6 +111,7 @@ const App = () => {
           <ThemeAccentProvider>
           <TutorialGuideProvider>
           <TutorialGuideOverlay />
+          <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background"><div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" role="status" aria-label="Carregando página" /></div>}>
           <Routes>
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
@@ -181,6 +183,7 @@ const App = () => {
             <Route path="/dashboard/audit/headers" element={<ProtectedRoute><HeadersChecker /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </Suspense>
           </TutorialGuideProvider>
           </ThemeAccentProvider>
         </AuthProvider>

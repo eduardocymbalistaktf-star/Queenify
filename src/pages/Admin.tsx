@@ -3,26 +3,28 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Navigate } from "react-router-dom";
 import DashboardLayout from "@/layouts/DashboardLayout";
-import { Shield, Users, Package, DollarSign, AlertTriangle, BarChart3, Search, Ban, Check, Eye, RefreshCw, UserCog, Plus, Trash2, Activity, Mail } from "lucide-react";
+import { Shield, Users, Package, DollarSign, AlertTriangle, BarChart3, Search, Ban, Check, Eye, RefreshCw, UserCog, Plus, Trash2, Activity, Mail, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
+import { useHasRole } from "@/hooks/useUserRoles";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 
-const ADMIN_EMAIL = "queenifyadm@gmail.com";
-const ADMIN_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 type AppRole = Database["public"]["Enums"]["app_role"];
 const ALL_ROLES: AppRole[] = ["admin", "moderador", "produtor", "afiliado"];
 
-type AdminTab = "overview" | "users" | "products" | "finance" | "chargebacks" | "reports" | "roles" | "analytics";
+type AdminTab = "overview" | "users" | "products" | "finance" | "chargebacks" | "reports" | "roles" | "analytics" | "reviews";
 
 const Admin = () => {
   const { user } = useAuth();
+  const { hasRole: isAdmin, isLoading: roleLoading } = useHasRole("admin");
   const [tab, setTab] = useState<AdminTab>("overview");
   const [users, setUsers] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [sales, setSales] = useState<any[]>([]);
   const [chargebacks, setChargebacks] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
+  const [pendingReviews, setPendingReviews] = useState<any[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ totalUsers: 0, totalProducts: 0, totalSales: 0, totalRevenue: 0, pendingProducts: 0, activeChargebacks: 0 });
@@ -35,36 +37,6 @@ const Admin = () => {
   const [auditLog, setAuditLog] = useState<any[]>([]);
   const [auditLoading, setAuditLoading] = useState(false);
 
-  // Admin gate: require password re-auth + 30min timeout
-  const [adminAuthed, setAdminAuthed] = useState(false);
-  const [gatePassword, setGatePassword] = useState("");
-  const [gateLoading, setGateLoading] = useState(false);
-  const [gateError, setGateError] = useState("");
-  const [lastAuthTime, setLastAuthTime] = useState<number>(0);
-
-  // Timeout: expire admin session after 30 min of inactivity
-  useEffect(() => {
-    if (!adminAuthed) return;
-    const checkTimeout = () => {
-      if (Date.now() - lastAuthTime > ADMIN_TIMEOUT_MS) {
-        setAdminAuthed(false);
-        setGatePassword("");
-        toast.info("Sessão admin expirada. Faça login novamente.");
-      }
-    };
-    const interval = setInterval(checkTimeout, 60_000);
-    const resetTimer = () => setLastAuthTime(Date.now());
-    window.addEventListener("mousemove", resetTimer);
-    window.addEventListener("keydown", resetTimer);
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener("mousemove", resetTimer);
-      window.removeEventListener("keydown", resetTimer);
-    };
-  }, [adminAuthed, lastAuthTime]);
-
-  const isAdmin = user?.email === ADMIN_EMAIL;
-
   useEffect(() => {
     if (isAdmin) loadData();
   }, [isAdmin]);
@@ -72,6 +44,39 @@ const Admin = () => {
   useEffect(() => {
     if (isAdmin && tab === "roles") loadAuditLog();
   }, [isAdmin, tab]);
+
+  useEffect(() => {
+    if (isAdmin && tab === "reviews") loadPendingReviews();
+  }, [isAdmin, tab]);
+
+  const loadPendingReviews = async () => {
+    setReviewsLoading(true);
+    const { data, error } = await supabase.from("product_reviews").select("*").eq("is_approved", false).order("created_at", { ascending: true });
+    if (error) toast.error("Não foi possível carregar as avaliações pendentes.");
+    setPendingReviews(data || []);
+    setReviewsLoading(false);
+  };
+
+  const moderateReview = async (reviewId: string, approve: boolean) => {
+    if (!approve && !window.confirm("Excluir esta avaliação pendente?")) return;
+    if (approve) {
+      const { data, error } = await supabase.from("product_reviews").update({ is_approved: true })
+        .eq("id", reviewId).eq("is_approved", false).select("id").maybeSingle();
+      if (error || !data) {
+        toast.error("Não foi possível atualizar a avaliação. Confira o acesso de moderador.");
+        return;
+      }
+    } else {
+      const { count, error } = await supabase.from("product_reviews").delete({ count: "exact" })
+        .eq("id", reviewId).eq("is_approved", false);
+      if (error || !count) {
+        toast.error("Não foi possível atualizar a avaliação. Confira o acesso de moderador.");
+        return;
+      }
+    }
+    setPendingReviews(prev => prev.filter(review => review.id !== reviewId));
+    toast.success(approve ? "Avaliação publicada." : "Avaliação recusada.");
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -262,6 +267,7 @@ const Admin = () => {
     { id: "finance" as const, label: "Financeiro", icon: DollarSign },
     { id: "chargebacks" as const, label: "Chargebacks", icon: AlertTriangle },
     { id: "reports" as const, label: "Denúncias", icon: Shield },
+    { id: "reviews" as const, label: "Avaliações", icon: MessageSquare },
   ];
 
   const formatCurrency = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -269,75 +275,14 @@ const Admin = () => {
   const roleColor = (role: AppRole) => {
     switch (role) {
       case "admin": return "bg-destructive/20 text-destructive";
-      case "moderador": return "bg-blue-500/20 text-blue-400";
-      case "produtor": return "bg-emerald-500/20 text-emerald-400";
-      case "afiliado": return "bg-amber-500/20 text-amber-400";
+      case "moderador": return "bg-blue-500/10 text-blue-700";
+      case "produtor": return "bg-emerald-500/10 text-emerald-700";
+      case "afiliado": return "bg-amber-500/10 text-amber-800";
     }
   };
 
+  if (roleLoading) return <div className="min-h-screen flex items-center justify-center bg-background"><div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" role="status" aria-label="Verificando acesso administrativo" /></div>;
   if (!isAdmin) return <Navigate to="/dashboard" replace />;
-
-  const handleAdminGate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setGateLoading(true);
-    setGateError("");
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: ADMIN_EMAIL,
-        password: gatePassword,
-      });
-      if (error) {
-        setGateError("Senha incorreta.");
-      } else {
-        setAdminAuthed(true);
-        setLastAuthTime(Date.now());
-      }
-    } catch {
-      setGateError("Erro ao verificar credenciais.");
-    }
-    setGateLoading(false);
-  };
-
-  if (!adminAuthed) {
-    return (
-      <DashboardLayout>
-        <div className="min-h-[60vh] flex items-center justify-center">
-          <form onSubmit={handleAdminGate} className="glass-card p-8 max-w-md w-full space-y-4">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center">
-                <Shield className="w-5 h-5 text-destructive" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-foreground">Acesso Administrativo</h2>
-                <p className="text-xs text-muted-foreground">Confirme sua senha para continuar</p>
-              </div>
-            </div>
-            {gateError && (
-              <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg">{gateError}</div>
-            )}
-            <div>
-              <label className="text-sm font-medium text-foreground mb-1 block">Senha</label>
-              <input
-                type="password"
-                value={gatePassword}
-                onChange={(e) => setGatePassword(e.target.value)}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                placeholder="••••••••"
-                required
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={gateLoading}
-              className="w-full h-10 bg-primary text-primary-foreground rounded-lg font-medium text-sm hover:bg-primary/90 transition-colors disabled:opacity-50"
-            >
-              {gateLoading ? "Verificando..." : "Entrar no Painel"}
-            </button>
-          </form>
-        </div>
-      </DashboardLayout>
-    );
-  }
 
   return (
     <DashboardLayout>
@@ -374,6 +319,49 @@ const Admin = () => {
         </div>
       ) : (
         <>
+          {tab === "reviews" && (
+            <section className="space-y-3" aria-labelledby="pending-reviews-title">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <h2 id="pending-reviews-title" className="text-lg font-semibold text-foreground">Moderação de avaliações</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">As avaliações só aparecem no Marketplace depois da aprovação.</p>
+                </div>
+                <button onClick={loadPendingReviews} className="inline-flex items-center gap-2 self-start rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary sm:self-auto">
+                  <RefreshCw className="h-3.5 w-3.5" /> Atualizar fila
+                </button>
+              </div>
+              {reviewsLoading ? (
+                <div className="flex justify-center py-12"><div className="h-7 w-7 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+              ) : pendingReviews.length === 0 ? (
+                <div className="glass-card py-12 text-center">
+                  <MessageSquare className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
+                  <p className="font-medium text-foreground">Nenhuma avaliação pendente</p>
+                  <p className="mt-1 text-sm text-muted-foreground">A fila está em dia.</p>
+                </div>
+              ) : pendingReviews.map(review => (
+                <article key={review.id} className="glass-card flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="font-semibold text-foreground">{review.reviewer_name || "Usuário"}</h3>
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">{review.rating}/5 estrelas</span>
+                      <span className="text-xs text-muted-foreground">{new Date(review.created_at).toLocaleDateString("pt-BR")}</span>
+                    </div>
+                    <p className="mt-1 break-all text-[11px] text-muted-foreground">Produto {review.product_id}</p>
+                    <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-foreground">{review.comment || "Sem comentário escrito."}</p>
+                  </div>
+                  <div className="flex shrink-0 gap-2">
+                    <button onClick={() => moderateReview(review.id, false)} className="inline-flex items-center gap-2 rounded-lg border border-destructive/30 px-3 py-2 text-xs font-medium text-destructive hover:bg-destructive/5">
+                      <Ban className="h-3.5 w-3.5" /> Recusar
+                    </button>
+                    <button onClick={() => moderateReview(review.id, true)} className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90">
+                      <Check className="h-3.5 w-3.5" /> Publicar
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </section>
+          )}
+
           {tab === "overview" && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
