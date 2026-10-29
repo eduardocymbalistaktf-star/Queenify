@@ -25,21 +25,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let active = true;
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
+        if (!active) return;
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error("Session lookup timed out")), 10_000);
     });
 
-    return () => subscription.unsubscribe();
+    void Promise.race([supabase.auth.getSession(), timeout])
+      .then(({ data: { session } }) => {
+        if (!active) return;
+        setSession(session);
+        setUser(session?.user ?? null);
+      })
+      .catch(() => {
+        if (!active) return;
+        // Fail closed: protected pages redirect to sign in if session storage
+        // or Supabase cannot be checked, instead of remaining on a spinner.
+        setSession(null);
+        setUser(null);
+      })
+      .finally(() => {
+        if (timeoutId) clearTimeout(timeoutId);
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+      if (timeoutId) clearTimeout(timeoutId);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {

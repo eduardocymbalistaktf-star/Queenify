@@ -17,19 +17,36 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (!session) { setMfaStatus("none"); return; }
     let active = true;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
     setMfaStatus("checking");
     const checkAssurance = async () => {
-      const [{ data: assurance, error: assuranceError }, { data: factors, error: factorsError }] = await Promise.all([
-        supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
-        supabase.auth.mfa.listFactors(),
-      ]);
-      if (!active) return;
-      if (assuranceError || factorsError) { setMfaStatus("error"); return; }
-      const hasVerifiedTotp = !!factors?.totp?.some(factor => factor.status === "verified");
-      setMfaStatus(hasVerifiedTotp && assurance?.currentLevel !== "aal2" ? "required" : "ok");
+      const timeout = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error("MFA verification timed out")), 10_000);
+      });
+
+      try {
+        const [{ data: assurance, error: assuranceError }, { data: factors, error: factorsError }] = await Promise.race([
+          Promise.all([
+            supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
+            supabase.auth.mfa.listFactors(),
+          ]),
+          timeout,
+        ]);
+        if (!active) return;
+        if (assuranceError || factorsError) { setMfaStatus("error"); return; }
+        const hasVerifiedTotp = !!factors?.totp?.some(factor => factor.status === "verified");
+        setMfaStatus(hasVerifiedTotp && assurance?.currentLevel !== "aal2" ? "required" : "ok");
+      } catch {
+        if (active) setMfaStatus("error");
+      } finally {
+        if (timeoutId) clearTimeout(timeoutId);
+      }
     };
     void checkAssurance();
-    return () => { active = false; };
+    return () => {
+      active = false;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [session?.access_token, session?.user.id, mfaRetry]);
 
   if (loading || (session && (mfaStatus === "checking" || (requiredPermission && permLoading)))) {
